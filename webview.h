@@ -136,6 +136,7 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #include <future>
 #include <map>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -165,7 +166,7 @@ static inline char hex2char(const char *p) {
   return hex2nibble(p[0]) * 16 + hex2nibble(p[1]);
 }
 
-inline std::string url_encode(const std::string &s) {
+inline std::string url_encode(const std::string_view s) {
   std::string encoded;
   std::size_t length = s.length();
   encoded.reserve(length);
@@ -182,7 +183,7 @@ inline std::string url_encode(const std::string &s) {
   return encoded;
 }
 
-inline std::string url_decode(const std::string &st) {
+inline std::string url_decode(const std::string_view st) {
   std::string decoded;
   std::size_t length = st.length();
   decoded.reserve(length);
@@ -200,7 +201,7 @@ inline std::string url_decode(const std::string &st) {
   return decoded;
 }
 
-inline std::string html_from_uri(const std::string &s) {
+inline std::string html_from_uri(const std::string_view s) {
   if (s.substr(0, 15) == "data:text/html,") {
     return url_decode(s.substr(15));
   }
@@ -406,7 +407,7 @@ inline int json_unescape(const char *s, size_t n, char *out) {
   return r;
 }
 
-inline std::string json_parse(const std::string &s, const std::string &key,
+inline std::string json_parse(const std::string_view s, const std::string_view key,
                               const int index) {
   const char *value;
   size_t value_sz;
