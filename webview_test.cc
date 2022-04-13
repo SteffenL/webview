@@ -1,6 +1,7 @@
 //bin/echo; [ $(uname) = "Darwin" ] && FLAGS="-framework Webkit" || FLAGS="$(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0)" ; c++ "$0" $FLAGS -std=c++11 -Wall -Wextra -pedantic -g -o webview_test && ./webview_test ; exit
 // +build ignore
 
+#define WEBVIEW_IMPLEMENTATION
 #include "webview.h"
 
 #include <cassert>

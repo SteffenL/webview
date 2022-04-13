@@ -25,7 +25,7 @@
 #define WEBVIEW_H
 
 #ifndef WEBVIEW_API
-#define WEBVIEW_API extern
+#define WEBVIEW_API
 #endif
 
 #ifdef __cplusplus
@@ -114,10 +114,10 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
                                 const char *result);
 
 #ifdef __cplusplus
-}
-#endif
+} /* extern "C" */
+#endif /* __cplusplus */
 
-#ifndef WEBVIEW_HEADER
+#if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
 #if !defined(WEBVIEW_GTK) && !defined(WEBVIEW_COCOA) && !defined(WEBVIEW_EDGE)
 #if defined(__APPLE__)
@@ -1210,6 +1210,9 @@ private:
 };
 } // namespace webview
 
+#ifdef WEBVIEW_IMPLEMENTATION
+extern "C" {
+
 WEBVIEW_API webview_t webview_create(int debug, void *wnd) {
   return new webview::webview(debug, wnd);
 }
@@ -1281,6 +1284,9 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
   static_cast<webview::webview *>(w)->resolve(seq, status, result);
 }
 
-#endif /* WEBVIEW_HEADER */
+} /* extern "C" */
+#endif /* WEBVIEW_IMPLEMENTATION */
+
+#endif /* defined(__cplusplus) && !defined(WEBVIEW_HEADER) */
 
 #endif /* WEBVIEW_H */
