@@ -25,7 +25,7 @@
 #define WEBVIEW_H
 
 #ifndef WEBVIEW_API
-#  ifdef __cplusplus
+#  if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #    define WEBVIEW_API inline
 #  else
 #    define WEBVIEW_API extern
