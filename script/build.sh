@@ -9,7 +9,7 @@ BUILD_DIR=$DIR/build
 BUILD_INT_DIR=$DIR/build/intermediate
 BUILD_LIB_DIR=$DIR/build/lib
 BUILD_BIN_DIR=$BUILD_DIR/bin
-EXAMPLES_SOURCE_DIR=$SOURCE_DIR/examples
+EXAMPLES_SOURCE_DIR=$DIR/examples
 EXAMPLES_INT_DIR=$BUILD_INT_DIR/examples
 EXAMPLES_BIN_DIR=$BUILD_BIN_DIR/examples
 TEST_SOURCE_DIR=$DIR/test
@@ -44,8 +44,9 @@ echo "Building library"
 c++ -c "$SOURCE_DIR/webview.cc" $FLAGS -o "$BUILD_INT_DIR/webview.o"
 
 echo "Building C++ example"
-c++ -c "$EXAMPLES_SOURCE_DIR/main.cc" $FLAGS -o "$EXAMPLES_INT_DIR/cpp_example.o"
-c++ "$EXAMPLES_INT_DIR/cpp_example.o" "$BUILD_INT_DIR/webview.o" $FLAGS -o "$EXAMPLES_BIN_DIR/cpp_example"
+c++ "$EXAMPLES_SOURCE_DIR/main.cc" "$BUILD_INT_DIR/webview.o" $FLAGS -o "$EXAMPLES_BIN_DIR/cpp_example"
+
+exit 0
 
 echo "Building C example"
 cc -c "$EXAMPLES_SOURCE_DIR/main.c" -o "$EXAMPLES_INT_DIR/c_example.o" "-I$INCLUDE_DIR"
