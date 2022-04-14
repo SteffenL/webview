@@ -20,7 +20,7 @@ else
 	FLAGS="-DWEBVIEW_GTK -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -I$DIR"
 fi
 
-if [[ ! -z SKIP_CHECK ]]; then
+if [ -z "${SKIP_CHECK}" ]; then
 	if command -v clang-format >/dev/null 2>&1 ; then
 		echo "Formatting..."
 		find . -type f -regextype posix-extended -iregex '.*\.(h|cc?)$' -exec clang-format -i {} +
@@ -29,7 +29,7 @@ if [[ ! -z SKIP_CHECK ]]; then
 	fi
 fi
 
-if [[ ! -z SKIP_LINT ]]; then
+if [ -z "${SKIP_LINT}" ]; then
 	if command -v clang-tidy >/dev/null 2>&1 ; then
 		echo "Linting..."
 		find . -type f -regextype posix-extended -iregex '.*\.cc$' -exec clang-tidy {} -- $FLAGS \;
@@ -54,14 +54,13 @@ c++ "$EXAMPLES_INT_DIR/c_example.o" "$BUILD_INT_DIR/webview.o" $FLAGS -o "$EXAMP
 echo "Building test app"
 c++ "$TEST_SOURCE_DIR/webview_test.cc" "$BUILD_INT_DIR/webview.o" $FLAGS -o "$BUILD_BIN_DIR/webview_test"
 
-if [[ ! -z SKIP_TEST ]]; then
+if [ -z "${SKIP_TEST}" ]; then
 	echo "Running tests"
 	"$BUILD_BIN_DIR/webview_test"
 
 	if command -v go >/dev/null 2>&1 ; then
 		echo "Running Go tests"
-		CGO_ENABLED=1 go install ./bindings/go/package
-		CGO_ENABLED=1 go test -v ./bindings/go/test
+		CGO_ENABLED=1 go test -v
 	else
 		echo "SKIP: Go tests"
 	fi
