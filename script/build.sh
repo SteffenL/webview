@@ -15,10 +15,12 @@ EXAMPLES_SOURCE_DIR=$DIR/examples
 EXAMPLES_INT_DIR=$BUILD_INT_DIR/examples
 EXAMPLES_BIN_DIR=$BUILD_BIN_DIR/examples
 
+CFLAGS="-I$INCLUDE_DIR"
+
 if [ "$(uname)" = "Darwin" ]; then
-	FLAGS="-DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic -framework WebKit -I$INCLUDE_DIR"
+	CXXFLAGS="-DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic -framework WebKit -I$INCLUDE_DIR"
 else
-	FLAGS="-DWEBVIEW_GTK -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -I$INCLUDE_DIR"
+	CXXFLAGS="-DWEBVIEW_GTK -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -I$INCLUDE_DIR"
 fi
 
 if [ -z "${SKIP_CHECK}" ]; then
@@ -33,7 +35,7 @@ fi
 if [ -z "${SKIP_LINT}" ]; then
 	if command -v clang-tidy >/dev/null 2>&1 ; then
 		echo "Linting..."
-		find . -type f -regextype posix-extended -iregex '.*\.cc$' -exec clang-tidy {} -- $FLAGS \;
+		find . -type f -regextype posix-extended -iregex '.*\.cc$' -exec clang-tidy {} -- $CXXFLAGS \;
 	else
 		echo "SKIP: Linting (clang-tidy not installed)"
 	fi
@@ -42,15 +44,15 @@ fi
 mkdir --parents "$TEST_BIN_DIR" "$EXAMPLES_INT_DIR" "$EXAMPLES_BIN_DIR"
 
 echo "Building C++ example"
-c++ "$EXAMPLES_SOURCE_DIR/main.cc" $FLAGS -o "$EXAMPLES_BIN_DIR/cpp_example"
+c++ "$EXAMPLES_SOURCE_DIR/main.cc" $CXXFLAGS -o "$EXAMPLES_BIN_DIR/cpp_example"
 
 echo "Building C example"
-c++ -c "$SOURCE_DIR/webview.cc" $FLAGS -o "$BUILD_INT_DIR/webview.o"
-cc -c "$EXAMPLES_SOURCE_DIR/main.c" -o "$EXAMPLES_INT_DIR/c_example.o" "-I$INCLUDE_DIR"
-c++ "$EXAMPLES_INT_DIR/c_example.o" "$BUILD_INT_DIR/webview.o" $FLAGS -o "$EXAMPLES_BIN_DIR/c_example"
+c++ -c "$SOURCE_DIR/webview.cc" $CXXFLAGS -o "$BUILD_INT_DIR/webview.o"
+cc -c "$EXAMPLES_SOURCE_DIR/main.c" $CFLAGS -o "$EXAMPLES_INT_DIR/c_example.o"
+c++ "$EXAMPLES_INT_DIR/c_example.o" "$BUILD_INT_DIR/webview.o" $CXXFLAGS -o "$EXAMPLES_BIN_DIR/c_example"
 
 echo "Building test app"
-c++ "$TEST_SOURCE_DIR/webview_test.cc" $FLAGS -o "$TEST_BIN_DIR/webview_test"
+c++ "$TEST_SOURCE_DIR/webview_test.cc" $CXXFLAGS -o "$TEST_BIN_DIR/webview_test"
 
 if [ -z "${SKIP_TEST}" ]; then
 	echo "Running tests"
