@@ -38,7 +38,7 @@ if [ -z "${SKIP_LINT}" ]; then
 	fi
 fi
 
-mkdir --parents "$STATIC_LIB_DIR" "$EXAMPLES_INT_DIR" "$EXAMPLES_BIN_DIR"
+mkdir --parents "$EXAMPLES_INT_DIR" "$EXAMPLES_BIN_DIR"
 
 echo "Building library"
 c++ -c "$SOURCE_DIR/webview.cc" $FLAGS -o "$BUILD_INT_DIR/webview.o"
