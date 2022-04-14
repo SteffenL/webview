@@ -1,6 +1,9 @@
 package webview
 
 /*
+#cgo CFLAGS: -I${SRCDIR}/include
+#cgo CXXFLAGS: -I${SRCDIR}/include
+
 #cgo linux openbsd freebsd netbsd CXXFLAGS: -DWEBVIEW_GTK -std=c++11
 #cgo linux openbsd freebsd netbsd pkg-config: gtk+-3.0 webkit2gtk-4.0
 

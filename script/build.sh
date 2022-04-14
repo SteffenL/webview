@@ -4,15 +4,16 @@ set -e
 
 DIR="$(cd "$(dirname "$0")/../" && pwd)"
 INCLUDE_DIR=$DIR/include
-SOURCE_DIR=$DIR/src
+SOURCE_DIR=$DIR
 BUILD_DIR=$DIR/build
 BUILD_INT_DIR=$DIR/build/intermediate
 BUILD_LIB_DIR=$DIR/build/lib
 BUILD_BIN_DIR=$BUILD_DIR/bin
+TEST_SOURCE_DIR=$DIR/test
+TEST_BIN_DIR=$BUILD_BIN_DIR/test
 EXAMPLES_SOURCE_DIR=$DIR/examples
 EXAMPLES_INT_DIR=$BUILD_INT_DIR/examples
 EXAMPLES_BIN_DIR=$BUILD_BIN_DIR/examples
-TEST_SOURCE_DIR=$DIR/test
 
 if [ "$(uname)" = "Darwin" ]; then
 	FLAGS="-DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic -framework WebKit -I$INCLUDE_DIR"
@@ -38,26 +39,22 @@ if [ -z "${SKIP_LINT}" ]; then
 	fi
 fi
 
-mkdir --parents "$EXAMPLES_INT_DIR" "$EXAMPLES_BIN_DIR"
-
-echo "Building library"
-c++ -c "$SOURCE_DIR/webview.cc" $FLAGS -o "$BUILD_INT_DIR/webview.o"
+mkdir --parents "$TEST_BIN_DIR" "$EXAMPLES_INT_DIR" "$EXAMPLES_BIN_DIR"
 
 echo "Building C++ example"
-c++ "$EXAMPLES_SOURCE_DIR/main.cc" "$BUILD_INT_DIR/webview.o" $FLAGS -o "$EXAMPLES_BIN_DIR/cpp_example"
-
-exit 0
+c++ "$EXAMPLES_SOURCE_DIR/main.cc" $FLAGS -o "$EXAMPLES_BIN_DIR/cpp_example"
 
 echo "Building C example"
+c++ -c "$SOURCE_DIR/webview.cc" $FLAGS -o "$BUILD_INT_DIR/webview.o"
 cc -c "$EXAMPLES_SOURCE_DIR/main.c" -o "$EXAMPLES_INT_DIR/c_example.o" "-I$INCLUDE_DIR"
 c++ "$EXAMPLES_INT_DIR/c_example.o" "$BUILD_INT_DIR/webview.o" $FLAGS -o "$EXAMPLES_BIN_DIR/c_example"
 
 echo "Building test app"
-c++ "$TEST_SOURCE_DIR/webview_test.cc" "$BUILD_INT_DIR/webview.o" $FLAGS -o "$BUILD_BIN_DIR/webview_test"
+c++ "$TEST_SOURCE_DIR/webview_test.cc" $FLAGS -o "$TEST_BIN_DIR/webview_test"
 
 if [ -z "${SKIP_TEST}" ]; then
 	echo "Running tests"
-	"$BUILD_BIN_DIR/webview_test"
+	find "$TEST_BIN_DIR" -type f -exec {} \;
 
 	if command -v go >/dev/null 2>&1 ; then
 		echo "Running Go tests"
