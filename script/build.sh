@@ -16,11 +16,12 @@ EXAMPLES_INT_DIR=$BUILD_INT_DIR/examples
 EXAMPLES_BIN_DIR=$BUILD_BIN_DIR/examples
 
 CFLAGS="-I$INCLUDE_DIR"
+CXXFLAGS=="-I$INCLUDE_DIR"
 
 if [ "$(uname)" = "Darwin" ]; then
-	CXXFLAGS="-DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic -framework WebKit -I$INCLUDE_DIR"
+	CXXFLAGS="$CXXFLAGS -DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic -framework WebKit"
 else
-	CXXFLAGS="-DWEBVIEW_GTK -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -I$INCLUDE_DIR"
+	CXXFLAGS="$CXXFLAGS -DWEBVIEW_GTK -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0)"
 fi
 
 if [ -z "${SKIP_CHECK}" ]; then
