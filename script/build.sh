@@ -15,9 +15,9 @@ EXAMPLES_BIN_DIR=$BUILD_BIN_DIR/examples
 TEST_SOURCE_DIR=$DIR/test
 
 if [ "$(uname)" = "Darwin" ]; then
-	FLAGS="-DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic -framework WebKit -I$DIR"
+	FLAGS="-DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic -framework WebKit -I$INCLUDE_DIR"
 else
-	FLAGS="-DWEBVIEW_GTK -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -I$DIR"
+	FLAGS="-DWEBVIEW_GTK -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -I$INCLUDE_DIR"
 fi
 
 if [ -z "${SKIP_CHECK}" ]; then
