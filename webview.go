@@ -16,6 +16,7 @@ package webview
 
 #define WEBVIEW_HEADER
 #include "webview.h"
+#include "src/webview.cc"
 
 #include <stdlib.h>
 #include <stdint.h>

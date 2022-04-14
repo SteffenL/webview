@@ -16,7 +16,7 @@ EXAMPLES_INT_DIR=$BUILD_INT_DIR/examples
 EXAMPLES_BIN_DIR=$BUILD_BIN_DIR/examples
 
 CFLAGS="-I$INCLUDE_DIR"
-CXXFLAGS=="-I$INCLUDE_DIR"
+CXXFLAGS="-I$INCLUDE_DIR"
 
 if [ "$(uname)" = "Darwin" ]; then
 	CXXFLAGS="$CXXFLAGS -DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic -framework WebKit"
