@@ -50,7 +50,7 @@ if not exist "%src_dir%\dll\x64\webview.dll" (
 	cl /D "WEBVIEW_API=__declspec(dllexport)" ^
 		/I "%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\include" ^
 		"%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\x86\WebView2Loader.dll.lib" ^
-		/std:c++17 /EHsc "/Fo%build_dir%"\ ^
+		/std:c++11 /EHsc "/Fo%build_dir%"\ ^
 		"%src_dir%\webview.cc" /link /DLL "/OUT:%src_dir%\dll\x86\webview.dll" || exit \b
 
 	call "%vc_dir%\Common7\Tools\vsdevcmd.bat" -arch=x64 -host_arch=x64
@@ -58,7 +58,7 @@ if not exist "%src_dir%\dll\x64\webview.dll" (
 	cl /D "WEBVIEW_API=__declspec(dllexport)" ^
 		/I "%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\include" ^
 		"%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\x64\WebView2Loader.dll.lib" ^
-		/std:c++17 /EHsc "/Fo%build_dir%"\ ^
+		/std:c++11 /EHsc "/Fo%build_dir%"\ ^
 		"%src_dir%\webview.cc" /link /DLL "/OUT:%src_dir%\dll\x64\webview.dll" || exit \b
 )
 if not exist "%build_dir%\webview.dll" (
@@ -74,13 +74,13 @@ echo Building webview.exe (x64)
 cl /I "%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\include" ^
 	"%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\x64\WebView2Loader.dll.lib" ^
 	"%src_dir%\dll\x64\webview.lib" ^
-	/std:c++17 /EHsc "/Fo%build_dir%"\ ^
+	/std:c++11 /EHsc "/Fo%build_dir%"\ ^
 	"%src_dir%\main.cc" /link "/OUT:%build_dir%\webview.exe" || exit \b
 
 echo Building webview_test.exe (x64)
 cl /I "%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\include" ^
 	"%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\x64\WebView2Loader.dll.lib" ^
-	/std:c++17 /EHsc "/Fo%build_dir%"\ ^
+	/std:c++11 /EHsc "/Fo%build_dir%"\ ^
 	"%src_dir%\webview_test.cc" /link "/OUT:%build_dir%\webview_test.exe" || exit \b
 
 echo Running Go tests
