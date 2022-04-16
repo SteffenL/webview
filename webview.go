@@ -1,7 +1,7 @@
 package webview
 
 /*
-#cgo CXXFLAGS: -DWEBVIEW_EXPORTS -DWEBVIEW_STATIC -std=c++11
+#cgo CXXFLAGS: -DWEBVIEW_BUILDING -DWEBVIEW_STATIC -std=c++11
 
 #cgo linux openbsd freebsd netbsd CXXFLAGS: -DWEBVIEW_GTK
 #cgo linux openbsd freebsd netbsd pkg-config: gtk+-3.0 webkit2gtk-4.0
