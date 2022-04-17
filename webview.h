@@ -28,7 +28,8 @@
 #error Cannot combine WEBVIEW_SHARED and WEBVIEW_STATIC.
 #endif
 
-#if !defined(WEBVIEW_SHARED) && !defined(WEBVIEW_STATIC) && defined(WEBVIEW_HEADER)
+#if !defined(WEBVIEW_SHARED) && !defined(WEBVIEW_STATIC) &&                    \
+    defined(WEBVIEW_HEADER)
 #error Cannot use WEBVIEW_HEADER with header-only library.
 #endif
 
@@ -43,7 +44,8 @@
 #else
 #define WEBVIEW_API __attribute__((visibility("default")))
 #endif
-#elif !defined(WEBVIEW_STATIC) && !defined(WEBVIEW_HEADER) && defined(__cplusplus)
+#elif !defined(WEBVIEW_STATIC) && !defined(WEBVIEW_HEADER) &&                  \
+    defined(__cplusplus)
 #define WEBVIEW_API inline
 #else
 #define WEBVIEW_API
