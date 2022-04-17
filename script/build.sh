@@ -63,6 +63,8 @@ ar rcs "$STATIC_BUILD_LIB_DIR/libwebview.a" "$STATIC_BUILD_INT_DIR/webview.o"
 echo "Building shared library"
 c++ -c "$SOURCE_DIR/webview.cc" -DWEBVIEW_BUILDING -DWEBVIEW_SHARED -fPIC -fvisibility=hidden -fvisibility-inlines-hidden $CXXFLAGS -o "$SHARED_BUILD_INT_DIR/webview.o"
 c++ -shared "$SHARED_BUILD_INT_DIR/webview.o" $LDFLAGS -o "$SHARED_BUILD_LIB_DIR/libwebview.so"
+ldd "$SHARED_BUILD_LIB_DIR/libwebview.so"
+readelf -d "$SHARED_BUILD_LIB_DIR/libwebview.so"
 
 echo "Building C++ example using header-only library"
 c++ "$EXAMPLES_SOURCE_DIR/main.cc" $CXXFLAGS $LDFLAGS -o "$EXAMPLES_BIN_DIR/cpp_example_header"
