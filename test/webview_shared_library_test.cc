@@ -10,11 +10,9 @@
 #error WEBVIEW_STATIC must not be defined
 #endif
 
-#ifdef WEBVIEW_SHARED
-#error WEBVIEW_SHARED is redundant for this test
+#ifndef WEBVIEW_SHARED
+#error WEBVIEW_SHARED must be defined
 #endif
-
-#define WEBVIEW_SHARED
 
 #include "webview.h"
 

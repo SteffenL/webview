@@ -76,7 +76,7 @@ c++ "$TEST_SOURCE_DIR/webview_test.cc" $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webv
 c++ "$TEST_SOURCE_DIR/webview_test.cc" "-L$STATIC_BUILD_LIB_DIR" -lwebview -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_test_static"
 
 echo "Building shared library test"
-c++ "$TEST_SOURCE_DIR/webview_shared_library_test.cc" "-L$SHARED_BUILD_LIB_DIR" -lwebview $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_shared_library_test"
+c++ "$TEST_SOURCE_DIR/webview_shared_library_test.cc" "-L$SHARED_BUILD_LIB_DIR" -lwebview -DWEBVIEW_SHARED $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_shared_library_test"
 
 echo "Building library type test"
 c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$SHARED_BUILD_LIB_DIR" -lwebview -DWEBVIEW_SHARED $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_shared"
