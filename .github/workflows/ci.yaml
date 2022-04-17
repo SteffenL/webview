@@ -34,6 +34,6 @@ jobs:
         with:
           source: '.'
           exclude: './script'
-          extensions: 'h,cc'
+          extensions: 'h,c,cc'
           clangFormatVersion: 9
           style: file
