@@ -19,6 +19,8 @@ TEST_BIN_DIR=$BUILD_BIN_DIR/test
 EXAMPLES_SOURCE_DIR=$DIR/examples
 EXAMPLES_INT_DIR=$BUILD_INT_DIR/examples
 EXAMPLES_BIN_DIR=$BUILD_BIN_DIR/examples
+LIB_NAME_PREFIX=lib
+LIB_NAME=webview
 
 CFLAGS="-I$INCLUDE_DIR"
 CXXFLAGS="-I$INCLUDE_DIR"
@@ -27,14 +29,14 @@ LDFLAGS=""
 if [ "$(uname)" = "Darwin" ]; then
 	LDFLAGS="-framework WebKit"
 	CXXFLAGS="$CXXFLAGS -DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic"
-	SHARED_LIB_BUILD_CXXFLAGS="-dynamiclib -install_name @rpath/libwebview.dylib"
-	SHARED_LIB_USAGE_LDFLAG="-rpath @executable_path"
+	SHARED_LIB_BUILD_CXXFLAGS="-dynamiclib -install_name @rpath/$LIB_NAME_PREFIX$LIB_NAME.dylib"
+	SHARED_LIB_USAGE_LDFLAG="-rpath @executable_path -rpath @executable_path/../lib -rpath $SHARED_BUILD_LIB_DIR"
 	SHARED_LIB_NAME_EXTENSION=".dylib"
 else
 	LDFLAGS="$(pkg-config --libs gtk+-3.0 webkit2gtk-4.0)"
 	CXXFLAGS="$CXXFLAGS -DWEBVIEW_GTK -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags gtk+-3.0 webkit2gtk-4.0)"
 	SHARED_LIB_BUILD_CXXFLAGS="-shared"
-	SHARED_LIB_USAGE_LDFLAG=""
+	SHARED_LIB_USAGE_LDFLAG="-rpath . -rpath ../lib -rpath $SHARED_BUILD_LIB_DIR"
 	SHARED_LIB_NAME_EXTENSION=".so"
 fi
 
@@ -61,29 +63,29 @@ mkdir -p "$TEST_INT_DIR" "$TEST_BIN_DIR" \
 
 echo "Building static library"
 c++ -c "$SOURCE_DIR/webview.cc" -DWEBVIEW_BUILDING -DWEBVIEW_STATIC $CXXFLAGS -o "$STATIC_BUILD_INT_DIR/webview.o"
-ar rcs "$STATIC_BUILD_LIB_DIR/libwebview.a" "$STATIC_BUILD_INT_DIR/webview.o"
+ar rcs "$STATIC_BUILD_LIB_DIR/$LIB_NAME_PREFIX$LIB_NAME.a" "$STATIC_BUILD_INT_DIR/webview.o"
 
 echo "Building shared library"
 c++ -c "$SOURCE_DIR/webview.cc" -DWEBVIEW_BUILDING -DWEBVIEW_SHARED -fPIC -fvisibility=hidden -fvisibility-inlines-hidden $CXXFLAGS -o "$SHARED_BUILD_INT_DIR/webview.o"
-c++ $SHARED_LIB_BUILD_CXXFLAGS "$SHARED_BUILD_INT_DIR/webview.o" $LDFLAGS -o "$SHARED_BUILD_LIB_DIR/libwebview${SHARED_LIB_NAME_EXTENSION}"
+c++ $SHARED_LIB_BUILD_CXXFLAGS "$SHARED_BUILD_INT_DIR/webview.o" $LDFLAGS -o "$SHARED_BUILD_LIB_DIR/$LIB_NAME_PREFIX$LIB_NAME${SHARED_LIB_NAME_EXTENSION}"
 
 echo "Building C++ example using header-only library"
 c++ "$EXAMPLES_SOURCE_DIR/main.cc" $CXXFLAGS $LDFLAGS -o "$EXAMPLES_BIN_DIR/cpp_example_header"
 
 echo "Building C++ example using static library"
-c++ "$EXAMPLES_SOURCE_DIR/main.cc" "-L$STATIC_BUILD_LIB_DIR" -lwebview -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$EXAMPLES_BIN_DIR/cpp_example_static"
+c++ "$EXAMPLES_SOURCE_DIR/main.cc" "-L$STATIC_BUILD_LIB_DIR" "-l$LIB_NAME" -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$EXAMPLES_BIN_DIR/cpp_example_static"
 
 echo "Building C example using shared library"
 cc -c "$EXAMPLES_SOURCE_DIR/main.c" -DWEBVIEW_SHARED $CFLAGS -o "$EXAMPLES_INT_DIR/c_example.o"
-c++ "$EXAMPLES_INT_DIR/c_example.o" "-L$SHARED_BUILD_LIB_DIR" -lwebview $LDFLAGS -o "$EXAMPLES_BIN_DIR/c_example"
+c++ "$EXAMPLES_INT_DIR/c_example.o" "-L$SHARED_BUILD_LIB_DIR" "-l$LIB_NAME" $LDFLAGS -o "$EXAMPLES_BIN_DIR/c_example"
 
 echo "Building test app"
 c++ "$TEST_SOURCE_DIR/webview_test.cc" $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_test_header"
-c++ "$TEST_SOURCE_DIR/webview_test.cc" "-L$STATIC_BUILD_LIB_DIR" -lwebview -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_test_static"
+c++ "$TEST_SOURCE_DIR/webview_test.cc" "-L$STATIC_BUILD_LIB_DIR" "-l$LIB_NAME" -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_test_static"
 
 echo "Building library type test"
-c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$SHARED_BUILD_LIB_DIR" -lwebview -DWEBVIEW_SHARED $CXXFLAGS $LDFLAGS $SHARED_LIB_USAGE_LDFLAG -o "$TEST_BIN_DIR/webview_library_type_test_shared"
-c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$STATIC_BUILD_LIB_DIR" -lwebview -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_static"
+c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$SHARED_BUILD_LIB_DIR" "-l$LIB_NAME" -DWEBVIEW_SHARED $CXXFLAGS $LDFLAGS $SHARED_LIB_USAGE_LDFLAG -o "$TEST_BIN_DIR/webview_library_type_test_shared"
+c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$STATIC_BUILD_LIB_DIR" "-l$LIB_NAME" -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_static"
 c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_header"
 
 # Run all tests except those that will be handled separately
