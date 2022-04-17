@@ -11,7 +11,10 @@ package webview
 #cgo windows,amd64 LDFLAGS: -L./dll/x64 -lwebview -lWebView2Loader
 #cgo windows,386 LDFLAGS: -L./dll/x86 -lwebview -lWebView2Loader
 
-#define WEBVIEW_STATIC
+#ifdef _MSC_VER
+#define WEBVIEW_SHARED
+#endif
+
 #include "webview.h"
 
 #include <stdlib.h>
