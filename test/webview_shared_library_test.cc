@@ -19,8 +19,7 @@
 #include <iostream>
 
 int main() {
-  auto w = webview_create(false, nullptr);
-  webview_destroy(w);
+  webview_destroy(webview_create(0, nullptr));
   std::cout << "OK" << std::endl;
   return 0;
 }

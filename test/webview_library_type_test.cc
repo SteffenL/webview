@@ -30,7 +30,7 @@
 #include <iostream>
 
 int main() {
-  webview_destroy(webview_create(false, nullptr));
+  webview_destroy(webview_create(0, nullptr));
   std::cout << "Type: " LIBRARY_TYPE << std::endl;
   std::cout << "Implementation included: " IMPL_INCLUDED << std::endl;
   std::cout << "Implementation opt-out: " IMPL_OPT_OUT << std::endl;
