@@ -27,9 +27,11 @@ LDFLAGS=""
 if [ "$(uname)" = "Darwin" ]; then
 	LDFLAGS="-framework WebKit"
 	CXXFLAGS="$CXXFLAGS -DWEBVIEW_COCOA -std=c++11 -Wall -Wextra -pedantic"
+	SHARED_LIB_FLAG="-dynamiclib"
 else
 	LDFLAGS="$(pkg-config --libs gtk+-3.0 webkit2gtk-4.0)"
 	CXXFLAGS="$CXXFLAGS -DWEBVIEW_GTK -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags gtk+-3.0 webkit2gtk-4.0)"
+	SHARED_LIB_FLAG="-shared"
 fi
 
 if command -v clang-format >/dev/null 2>&1 ; then
@@ -62,7 +64,7 @@ ar rcs "$STATIC_BUILD_LIB_DIR/libwebview.a" "$STATIC_BUILD_INT_DIR/webview.o"
 
 echo "Building shared library"
 c++ -c "$SOURCE_DIR/webview.cc" -DWEBVIEW_BUILDING -DWEBVIEW_SHARED -fPIC -fvisibility=hidden -fvisibility-inlines-hidden $CXXFLAGS -o "$SHARED_BUILD_INT_DIR/webview.o"
-c++ -shared "$SHARED_BUILD_INT_DIR/webview.o" $LDFLAGS -o "$SHARED_BUILD_LIB_DIR/libwebview.so"
+c++ $SHARED_LIB_FLAG "$SHARED_BUILD_INT_DIR/webview.o" $LDFLAGS -o "$SHARED_BUILD_LIB_DIR/libwebview.so"
 ldd "$SHARED_BUILD_LIB_DIR/libwebview.so"
 readelf -d "$SHARED_BUILD_LIB_DIR/libwebview.so"
 
