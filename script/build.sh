@@ -34,16 +34,19 @@ fi
 
 if command -v clang-format >/dev/null 2>&1 ; then
 	echo "Formatting..."
-	# TODO: Clean up examples and remove them from the exclusion list
-	find . -type f -not -name "$EXAMPLES_SOURCE_DIR" -regextype posix-extended -iregex '.*\.(h|cc?)$' -exec clang-format -i {} +
+	find "$DIR" -type f -regextype posix-extended -iregex '.+\.(h|cc?)$' -exec clang-format --verbose -i {} +
 else
 	echo "SKIP: Formatting (clang-format not installed)"
 fi
 
 if command -v clang-tidy >/dev/null 2>&1 ; then
 	echo "Linting..."
-	# TODO: Clean up examples and remove them from the exclusion list
-	find . -type f -not -name "$EXAMPLES_SOURCE_DIR" -regextype posix-extended -iregex '.*\.cc$' -exec clang-tidy {} -- $CXXFLAGS \;
+	# Run checks on all source files and check those that require special compile-time flags separately
+	find "$DIR" -type f -regextype posix-extended -iregex '.+\.c$' -exec clang-tidy {} -- $CFLAGS \;
+	find "$DIR" -type f -regextype posix-extended -iregex '.+\.cc$' -a \
+		\! -name 'webview_shared_library_test.cc' \
+		-exec clang-tidy {} -- $CXXFLAGS \;
+	clang-tidy "$TEST_SOURCE_DIR/webview_shared_library_test.cc" -- $CXXFLAGS -DWEBVIEW_SHARED
 else
 	echo "SKIP: Linting (clang-tidy not installed)"
 fi
