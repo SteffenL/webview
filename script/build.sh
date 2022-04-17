@@ -75,9 +75,9 @@ c++ "$EXAMPLES_SOURCE_DIR/main.cc" $CXXFLAGS $LDFLAGS -o "$EXAMPLES_BIN_DIR/cpp_
 echo "Building C++ example using static library"
 c++ "$EXAMPLES_SOURCE_DIR/main.cc" "-L$STATIC_BUILD_LIB_DIR" "-l$LIB_NAME" -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$EXAMPLES_BIN_DIR/cpp_example_static"
 
-echo "Building C example using shared library"
-cc -c "$EXAMPLES_SOURCE_DIR/main.c" -DWEBVIEW_SHARED $CFLAGS -o "$EXAMPLES_INT_DIR/c_example.o"
-c++ "$EXAMPLES_INT_DIR/c_example.o" "-L$SHARED_BUILD_LIB_DIR" "-l$LIB_NAME" $LDFLAGS -o "$EXAMPLES_BIN_DIR/c_example"
+echo "Building C example using static library"
+cc -c "$EXAMPLES_SOURCE_DIR/main.c" -DWEBVIEW_STATIC $CFLAGS -o "$EXAMPLES_INT_DIR/c_example.o"
+c++ "$EXAMPLES_INT_DIR/c_example.o" "-L$STATIC_BUILD_LIB_DIR" "-l$LIB_NAME" $LDFLAGS -o "$EXAMPLES_BIN_DIR/c_example"
 
 echo "Building test app"
 c++ "$TEST_SOURCE_DIR/webview_test.cc" $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_test_header"
