@@ -30,7 +30,7 @@
 
 #if !defined(WEBVIEW_SHARED) && !defined(WEBVIEW_STATIC) &&                    \
     defined(WEBVIEW_HEADER)
-#error Cannot use WEBVIEW_HEADER with header-only library.
+#error Cannot use WEBVIEW_HEADER with header-only library. Did you mean to define WEBVIEW_SHARED or WEBVIEW_STATIC?
 #endif
 
 #ifndef WEBVIEW_API
