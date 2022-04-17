@@ -75,28 +75,66 @@ echo "Building test app"
 c++ "$TEST_SOURCE_DIR/webview_test.cc" $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_test_header"
 c++ "$TEST_SOURCE_DIR/webview_test.cc" "-L$STATIC_BUILD_LIB_DIR" -lwebview -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_test_static"
 
-find "$TEST_BIN_DIR" -type f -not -name "webview_shared_library_test" | while read f; do
+echo "Building shared library test"
+c++ "$TEST_SOURCE_DIR/webview_shared_library_test.cc" "-L$SHARED_BUILD_LIB_DIR" -lwebview $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_shared_library_test"
+
+echo "Building library type test"
+c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$SHARED_BUILD_LIB_DIR" -lwebview -DWEBVIEW_SHARED $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_shared"
+c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$STATIC_BUILD_LIB_DIR" -lwebview -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_static"
+c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_header"
+c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$STATIC_BUILD_LIB_DIR" -lwebview -DWEBVIEW_STATIC -DWEBVIEW_HEADER $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_static_noimpl"
+
+# Run all tests except those that will be handled separately
+find "$TEST_BIN_DIR" -type f -not -name "webview_shared_library_test" -not -name "webview_library_type_test_*" | while read f; do
 	echo "Running test app: $(basename "$f")"
 	"$f"
 done
 
-test_shared_library() {
-	echo "Building shared library test"
-	c++ "$TEST_SOURCE_DIR/webview_shared_library_test.cc" "-L$SHARED_BUILD_LIB_DIR" -lwebview $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_shared_library_test"
-	echo "Running shared library tests"
-	set +e
-	local result
-	"$TEST_BIN_DIR/webview_shared_library_test" > /dev/null 2>&1
-	if [ $? != 0 ]; then result=OK; else result=FAILED; fi
-	echo "Should not be able to run shared library test without shared library: $result"
-	if [ "$result" != "OK" ]; then return 1; fi
-	LD_LIBRARY_PATH="$SHARED_BUILD_LIB_DIR" "$TEST_BIN_DIR/webview_shared_library_test" 2>&1 | grep --silent OK
-	if [ $? = 0 ]; then result=OK; else result=FAILED; fi
-	echo "Should be able to run shared library test using LD_LIBRARY_PATH: $result"
-	if [ "$result" != "OK" ]; then return 1; fi
-}
+echo -n "Should not be able to run shared library test without shared library: "
+if ! "$TEST_BIN_DIR/webview_shared_library_test" > /dev/null 2>&1; then
+	echo "OK"
+else
+	echo "FAILED"; exit 1
+fi
 
-test_shared_library
+echo -n "Should be able to run shared library test using LD_LIBRARY_PATH: "
+if LD_LIBRARY_PATH="$SHARED_BUILD_LIB_DIR" "$TEST_BIN_DIR/webview_shared_library_test" > /dev/null 2>&1; then
+	echo "OK"
+else
+	echo "FAILED"; exit 1
+fi
+
+echo -n "Checking expected compiler options for shared library: "
+OUTPUT=$(LD_LIBRARY_PATH="$SHARED_BUILD_LIB_DIR" "$TEST_BIN_DIR/webview_library_type_test_shared")
+if echo "$OUTPUT" | grep -q "Type: shared" && echo "$OUTPUT" | grep -q "Implementation included: no" && echo "$OUTPUT" | grep -q "Implementation opt-out: no"; then
+	echo "OK"
+else
+	echo "FAILED"; exit 1
+fi
+
+echo -n "Checking expected compiler options for static library: "
+OUTPUT=$("$TEST_BIN_DIR/webview_library_type_test_static")
+if echo "$OUTPUT" | grep -q "Type: static" && echo "$OUTPUT" | grep -q "Implementation included: yes" && echo "$OUTPUT" | grep -q "Implementation opt-out: no"; then
+	echo "OK"
+else
+	echo "FAILED"; exit 1
+fi
+
+echo -n "Checking expected compiler options for header-only library: "
+OUTPUT=$("$TEST_BIN_DIR/webview_library_type_test_header")
+if echo "$OUTPUT" | grep -q "Type: header-only" && echo "$OUTPUT" | grep -q "Implementation included: yes" && echo "$OUTPUT" | grep -q "Implementation opt-out: no"; then
+	echo "OK"
+else
+	echo "FAILED"; exit 1
+fi
+
+echo -n "Checking expected compiler options for static library without implementation: "
+OUTPUT=$("$TEST_BIN_DIR/webview_library_type_test_static_noimpl")
+if echo "$OUTPUT" | grep -q "Type: static" && echo "$OUTPUT" | grep -q "Implementation included: no" && echo "$OUTPUT" | grep -q "Implementation opt-out: yes"; then
+	echo "OK"
+else
+	echo "FAILED"; exit 1
+fi
 
 if command -v go >/dev/null 2>&1 ; then
 	echo "Running Go tests"
