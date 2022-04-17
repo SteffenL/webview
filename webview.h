@@ -24,6 +24,14 @@
 #ifndef WEBVIEW_H
 #define WEBVIEW_H
 
+#if defined(WEBVIEW_SHARED) && defined(WEBVIEW_STATIC)
+#error Cannot combine WEBVIEW_SHARED and WEBVIEW_STATIC.
+#endif
+
+#if !defined(WEBVIEW_SHARED) && !defined(WEBVIEW_STATIC) && defined(WEBVIEW_HEADER)
+#error Cannot use WEBVIEW_HEADER with header-only library.
+#endif
+
 #ifndef WEBVIEW_API
 #if defined(WEBVIEW_SHARED)
 #if defined(_WIN32) || defined(__CYGWIN__)
