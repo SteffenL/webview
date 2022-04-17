@@ -89,7 +89,6 @@ echo "Building library type test"
 c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$SHARED_BUILD_LIB_DIR" -lwebview -DWEBVIEW_SHARED $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_shared"
 c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$STATIC_BUILD_LIB_DIR" -lwebview -DWEBVIEW_STATIC $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_static"
 c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_header"
-c++ "$TEST_SOURCE_DIR/webview_library_type_test.cc" "-L$STATIC_BUILD_LIB_DIR" -lwebview -DWEBVIEW_STATIC -DWEBVIEW_HEADER $CXXFLAGS $LDFLAGS -o "$TEST_BIN_DIR/webview_library_type_test_static_noimpl"
 
 # Run all tests except those that will be handled separately
 find "$TEST_BIN_DIR" -type f -not -name "webview_shared_library_test" -not -name "webview_library_type_test_*" | while read f; do
@@ -130,14 +129,6 @@ fi
 echo -n "Checking expected compiler options for header-only library: "
 OUTPUT=$("$TEST_BIN_DIR/webview_library_type_test_header")
 if echo "$OUTPUT" | grep -q "Type: header-only" && echo "$OUTPUT" | grep -q "Implementation included: yes" && echo "$OUTPUT" | grep -q "Implementation opt-out: no"; then
-	echo "OK"
-else
-	echo "FAILED"; exit 1
-fi
-
-echo -n "Checking expected compiler options for static library without implementation: "
-OUTPUT=$("$TEST_BIN_DIR/webview_library_type_test_static_noimpl")
-if echo "$OUTPUT" | grep -q "Type: static" && echo "$OUTPUT" | grep -q "Implementation included: no" && echo "$OUTPUT" | grep -q "Implementation opt-out: yes"; then
 	echo "OK"
 else
 	echo "FAILED"; exit 1
