@@ -1,0 +1,10 @@
+include(CTest)
+if(BUILD_TESTING)
+    file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS *.c *.cc)
+
+    foreach(TEST_SOURCE ${TEST_SOURCES})
+        cmake_path(GET TEST_SOURCE STEM TARGET_NAME)
+        add_executable(${TARGET_NAME} WIN32 MACOSX_BUNDLE ${TEST_SOURCE})
+        target_link_libraries(${TARGET_NAME} PRIVATE webview_s)
+    endforeach()
+endif()
