@@ -1,5 +1,3 @@
-// +build ignore
-
 #include <stdio.h>
 #include <stdlib.h>
 #define WEBVIEW_HEADER
