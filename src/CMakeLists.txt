@@ -7,14 +7,6 @@ add_library(${TARGET_NAME}::${TARGET_NAME} ALIAS ${TARGET_NAME})
 add_library(${TARGET_NAME_S} ${CMAKE_CURRENT_SOURCE_DIR}/webview.cc)
 add_library(${TARGET_NAME_S}::${TARGET_NAME_S} ALIAS ${TARGET_NAME_S})
 
-if(UNIX)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GTK REQUIRED gtk+-3.0)
-    pkg_check_modules(WEBKIT2GTK REQUIRED webkit2gtk-4.0)
-    target_include_directories(${TARGET_NAME} INTERFACE include ${WEBKIT2GTK_INCLUDE_DIRS})
-    target_link_libraries(${TARGET_NAME} INTERFACE ${WEBKIT2GTK_LIBRARIES} pthread)
-endif()
-
 target_compile_features(${TARGET_NAME} INTERFACE cxx_std_11)
 
 target_include_directories(${TARGET_NAME} INTERFACE
@@ -27,6 +19,7 @@ target_include_directories(${TARGET_NAME_S} PUBLIC
     $<INSTALL_INTERFACE:generated>
 )
 
+target_link_libraries(${TARGET_NAME} INTERFACE webview_deps)
 target_link_libraries(${TARGET_NAME_S} PUBLIC ${TARGET_NAME})
 
 set_target_properties(${TARGET_NAME_S} PROPERTIES
