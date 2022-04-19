@@ -2,25 +2,27 @@ name: CI Pipeline
 on: [push, pull_request]
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: 'ubuntu-20.04', run-cmd: 'xvfb-run', install-deps-cmd: 'sudo apt-get install libwebkit2gtk-4.0-dev xvfb ninja-build -y' }
+          - { os: 'macos-10.15', run-cmd: '', install-deps-cmd: 'brew install ninja' }
+          - { os: 'windows-2019', run-cmd: '', install-deps-cmd: 'choco install ninja' }
+    runs-on: ${{ matrix.config.os }}
+    name: 'Build (${{ matrix.config.os }})'
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
+        if: matrix.config.install-deps-cmd != ''
+        run: ${{ matrix.config.install-deps-cmd }}
+      - name: Fetch WebView2
+        if: runner.os == 'Windows'
+        run: scripts\windows\fetch_webview2.bat
+        shell: cmd
       - name: Build and run tests
-        run: xvfb-run ./script/build.sh
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Build and run tests
-        run: ./script/build.sh
-
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Build and run tests
-        run: ./script/build.bat
+        run: |
+          cmake -G Ninja -B build -S .
+          cmake --build build --config Release
+          ${{ matrix.config.run-cmd }} ctest --test-dir build/test --output-on-failure --config Release
