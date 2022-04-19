@@ -1292,4 +1292,14 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 
 #endif /* __cplusplus */
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#define WEBVIEW_MAIN() int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
+#else
+#define WEBVIEW_MAIN() int main(int argc, char** argv)
+#endif
+
 #endif /* WEBVIEW_H */

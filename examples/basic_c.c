@@ -7,12 +7,7 @@ void myFunc(const char *seq, const char *req, void *arg) {
 	printf("Params: %s\n", req);
 }
 
-#ifdef WIN32
-int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine,
-                   int nCmdShow) {
-#else
-int main() {
-#endif
+WEBVIEW_MAIN() {
 	webview_t w = webview_create(0, NULL);
 	webview_set_title(w, "Webview Example");
 	webview_set_size(w, 480, 320, WEBVIEW_HINT_NONE);
@@ -22,4 +17,3 @@ int main() {
 	webview_destroy(w);
 	return 0;
 }
-

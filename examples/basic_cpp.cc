@@ -2,13 +2,7 @@
 
 #include <iostream>
 
-#ifdef _WIN32
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                     LPSTR lpCmdLine, int nCmdShow)
-#else
-int main()
-#endif
-{
+WEBVIEW_MAIN() {
   webview::webview w(true, nullptr);
   w.set_title("Example");
   w.set_size(480, 320, WEBVIEW_HINT_NONE);
