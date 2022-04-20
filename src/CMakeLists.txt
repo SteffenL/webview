@@ -20,7 +20,7 @@ target_include_directories(${TARGET_NAME_S} PUBLIC
 )
 
 target_link_libraries(${TARGET_NAME} INTERFACE webview_deps)
-target_link_libraries(${TARGET_NAME_S} PUBLIC ${TARGET_NAME})
+target_link_libraries(${TARGET_NAME_S} PUBLIC ${TARGET_NAME} PRIVATE webview_warnings)
 
 set_target_properties(${TARGET_NAME_S} PROPERTIES
     OUTPUT_NAME ${TARGET_NAME}
