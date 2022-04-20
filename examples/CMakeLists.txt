@@ -1,0 +1,7 @@
+file(GLOB_RECURSE EXAMPLE_SOURCES CONFIGURE_DEPENDS *.c *.cc)
+
+foreach(EXAMPLE_SOURCE ${EXAMPLE_SOURCES})
+    cmake_path(GET EXAMPLE_SOURCE STEM TARGET_NAME)
+    add_executable(${TARGET_NAME} WIN32 MACOSX_BUNDLE ${EXAMPLE_SOURCE})
+    target_link_libraries(${TARGET_NAME} PRIVATE webview_s)
+endforeach()

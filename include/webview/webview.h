@@ -25,8 +25,18 @@
 #ifndef WEBVIEW_H
 #define WEBVIEW_H
 
+#ifdef __has_include
+#if __has_include("webview/exports.h")
+#include "webview/exports.h"
+#endif
+#endif
+
 #ifndef WEBVIEW_API
-#define WEBVIEW_API extern
+#ifdef __cplusplus
+#define WEBVIEW_API inline
+#else
+#define WEBVIEW_API
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -116,9 +126,6 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 
 #ifdef __cplusplus
 }
-#endif
-
-#ifndef WEBVIEW_HEADER
 
 #if !defined(WEBVIEW_GTK) && !defined(WEBVIEW_COCOA) && !defined(WEBVIEW_EDGE)
 #if defined(__APPLE__)
@@ -1283,6 +1290,18 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
   static_cast<webview::webview *>(w)->resolve(seq, status, result);
 }
 
-#endif /* WEBVIEW_HEADER */
+#endif /* __cplusplus */
+
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#define WEBVIEW_MAIN()                                                         \
+  int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,          \
+                        PWSTR pCmdLine, int nCmdShow)
+#else
+#define WEBVIEW_MAIN() int main(int argc, char **argv)
+#endif
 
 #endif /* WEBVIEW_H */

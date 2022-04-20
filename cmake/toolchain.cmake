@@ -1,0 +1,5 @@
+if(WIN32)
+    if(NOT DEFINED CMAKE_SYSTEM_VERSION)
+        set(CMAKE_SYSTEM_VERSION "10.0.17763.0" CACHE STRING "Windows SDK version")
+    endif()
+endif()
