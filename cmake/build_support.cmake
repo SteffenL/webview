@@ -1,13 +1,13 @@
 if(MSVC)
     set(COMPILE_OPTIONS
         /utf-8
-        # TODO: /WX
+        /WX
         /W4
         /wd4100 # unused parameters
     )
 else()
     set(COMPILE_OPTIONS
-        # TODO: -Werror
+        -Werror
         -Wall -Wextra -Wconversion -Wsign-conversion -pedantic
         -Wno-unused-parameter
     )
