@@ -502,6 +502,7 @@ public:
 
     gtk_widget_show_all(m_window);
   }
+  virtual ~gtk_webkit_engine() = default;
   void *window() { return (void *)m_window; }
   void run() { gtk_main(); }
   void terminate() { gtk_main_quit(); }
@@ -730,7 +731,7 @@ public:
     ((void (*)(id, SEL, id))objc_msgSend)(m_window, "makeKeyAndOrderFront:"_sel,
                                           nullptr);
   }
-  ~cocoa_wkwebview_engine() { close(); }
+  virtual ~cocoa_wkwebview_engine() { close(); }
   void *window() { return (void *)m_window; }
   void terminate() {
     close();
@@ -929,6 +930,8 @@ public:
     embed(m_window, debug, cb);
     resize(m_window);
   }
+
+  virtual ~win32_edge_engine() = default;
 
   void run() {
     MSG msg;
