@@ -1,5 +1,6 @@
 if(MSVC)
     set(COMPILE_OPTIONS
+        /utf-8
         # TODO: /WX
         /W4
         /wd4100 # unused parameters
