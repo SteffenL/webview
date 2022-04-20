@@ -142,6 +142,7 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #include <atomic>
 #include <functional>
 #include <future>
+#include <limits>
 #include <map>
 #include <string>
 #include <utility>
@@ -226,7 +227,10 @@ inline int json_parse_c(const char *s, size_t sz, const char *key, size_t keysz,
   int utf8_bytes = 0;
 
   if (key == NULL) {
-    index = keysz;
+    if (keysz > std::numeric_limits<decltype(index)>::max()) {
+      return -1;
+    }
+    index = static_cast<decltype(index)>(keysz);
     keysz = 0;
   }
 
@@ -241,7 +245,7 @@ inline int json_parse_c(const char *s, size_t sz, const char *key, size_t keysz,
       JSON_ACTION_START_STRUCT,
       JSON_ACTION_END_STRUCT
     } action = JSON_ACTION_NONE;
-    unsigned char c = *s;
+    auto c = static_cast<unsigned char>(*s);
     switch (state) {
     case JSON_STATE_VALUE:
       if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == ',' ||
@@ -415,7 +419,11 @@ inline std::string json_parse(const std::string &s, const std::string &key,
   const char *value;
   size_t value_sz;
   if (key == "") {
-    json_parse_c(s.c_str(), s.length(), nullptr, index, &value, &value_sz);
+    if (index < 0) {
+      return "";
+    }
+    json_parse_c(s.c_str(), s.length(), nullptr,
+                 static_cast<unsigned int>(index), &value, &value_sz);
   } else {
     json_parse_c(s.c_str(), s.length(), key.c_str(), key.length(), &value,
                  &value_sz);
@@ -428,7 +436,7 @@ inline std::string json_parse(const std::string &s, const std::string &key,
     if (n > 0) {
       char *decoded = new char[n + 1];
       json_unescape(value, value_sz, decoded);
-      std::string result(decoded, n);
+      std::string result(decoded, static_cast<unsigned int>(n));
       delete[] decoded;
       return result;
     }
