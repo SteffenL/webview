@@ -153,9 +153,7 @@ namespace webview {
 using dispatch_fn_t = std::function<void()>;
 
 // Convert ASCII hex digit to a nibble (four bits, 0 - 15).
-//
-// Use unsigned to avoid signed overflow UB.
-static inline unsigned char hex2nibble(unsigned char c) {
+static inline char hex2nibble(char c) {
   if (c >= '0' && c <= '9') {
     return c - '0';
   } else if (c >= 'a' && c <= 'f') {
@@ -170,7 +168,8 @@ static inline unsigned char hex2nibble(unsigned char c) {
 //
 // E.g., "0B" => 0x0B, "af" => 0xAF.
 static inline char hex2char(const char *p) {
-  return hex2nibble(p[0]) * 16 + hex2nibble(p[1]);
+  return static_cast<char>((hex2nibble(p[0] & 0x7f) << 4) |
+                           hex2nibble(p[1] & 0x7f));
 }
 
 inline std::string url_encode(const std::string &s) {
