@@ -7,20 +7,40 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: 'ubuntu-20.04', run-cmd: 'xvfb-run', install-deps-cmd: 'sudo apt-get install libwebkit2gtk-4.0-dev xvfb ninja-build -y' }
-          - { os: 'macos-10.15', run-cmd: '', install-deps-cmd: 'brew install ninja' }
-          - { os: 'windows-2019', run-cmd: '', install-deps-cmd: 'choco install ninja' }
+          - { os: 'ubuntu-20.04', run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '10', cc: '/usr/bin/gcc-10', cxx: '/usr/bin/g++-10' }
+          - { os: 'ubuntu-20.04', run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '12', cc: '/usr/bin/clang-12', cxx: '/usr/bin/clang++-12' }
+          - { os: 'macos-10.15', run-cmd: '', compiler-id: 'appleclang', compiler-version: '' }
+          - { os: 'windows-2019', run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64' }
     runs-on: ${{ matrix.config.os }}
-    name: 'Build (${{ matrix.config.os }})'
+    name: ${{ matrix.config.os }}, ${{ matrix.config.compiler-id }}${{ matrix.config.compiler-version }}
     steps:
       - uses: actions/checkout@v3
-      - name: Install dependencies
-        if: matrix.config.install-deps-cmd != ''
-        run: ${{ matrix.config.install-deps-cmd }}
-      - name: Fetch WebView2
+      - name: Linux preparation
+        if: runner.os == 'Linux'
+        run: sudo apt-get install libwebkit2gtk-4.0-dev xvfb ninja-build -y
+      - name: macOS preparation
+        if: runner.os == 'macOS'
+        run: brew install ninja
+      - name: Windows preparation
         if: runner.os == 'Windows'
-        run: scripts\windows\fetch_webview2.bat
+        run: |
+          echo Setting up tool paths
+          echo PATH=C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\IDE\CommonExtensions\Microsoft\CMake\Ninja;%PATH%>> %GITHUB_ENV%
+          echo Configuring MSVC toolset
+          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ^
+            ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
+          for /F "usebackq tokens=1,2 delims==" %%a in (`set`) do echo %%a=%%b>> %GITHUB_ENV%
+          echo Installing WebView2 Runtime
+          curl -sSLo "%TEMP%\MicrosoftEdgeWebview2Setup.exe" https://go.microsoft.com/fwlink/p/?LinkId=2124703
+          "%TEMP%\MicrosoftEdgeWebview2Setup.exe" /silent /install
+          echo Fetching WebView2 library
+          scripts\windows\fetch_webview2.bat
         shell: cmd
+      - name: Set compiler environment variables
+        if: runner.os != 'Windows'
+        run: |
+          echo "CC=${{ matrix.config.cc }}" >> ${GITHUB_ENV}
+          echo "CXX=${{ matrix.config.cxx }}" >> ${GITHUB_ENV}
       - name: Build and run tests
         run: |
           cmake -G Ninja -B build -S .
