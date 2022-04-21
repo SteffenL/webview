@@ -8,6 +8,12 @@ The library supports two-way JavaScript bindings (to call JavaScript from C/C++ 
 
 [Why create a fork?](#why-create-a-fork)
 
+## Usage
+
+Please refer to examples in `./examples/` for ideas on using the library. You can also look through the source code in `webview.h` and particularly the commented C API.
+
+If you use CMake then you can use `FetchContent` to pull in this library.
+
 ## Development
 
 This project uses CMake and Ninja. See instructions on building below.
