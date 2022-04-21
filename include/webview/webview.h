@@ -1305,17 +1305,67 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 }
 
 #endif /* __cplusplus */
+#ifdef WEBVIEW_DEFINE_MAIN
+
+int webview_app_main(int argc, char *argv[]);
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+
+// Windows header must be included first
+// clang-format off
 #include <windows.h>
-#define WEBVIEW_MAIN()                                                         \
-  int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,          \
-                        PWSTR pCmdLine, int nCmdShow)
+#include <shellapi.h>
+// clang-format on
+
+#pragma comment(lib, "shell32.lib")
+
+int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                      PWSTR pCmdLine, int nCmdShow) {
+  char argvStorage[32768] = {0};
+  const int sizeOfArgvStorage = sizeof(argvStorage) / sizeof(argvStorage[0]);
+  char *argvStorageEnd = argvStorage + sizeOfArgvStorage;
+  char *argv[1024] = {0};
+  const int sizeOfArgv = sizeof(argv) / sizeof(argv[0]);
+  int wargc = 0;
+  int argc = 0;
+  int argvStorageOffset = 0;
+  LPWSTR wCmdLine = GetCommandLineW();
+  LPWSTR *wargv = CommandLineToArgvW(wCmdLine, &wargc);
+  if (wargv && wargc > 0) {
+    UINT cp = CP_UTF8;
+    DWORD flags = WC_ERR_INVALID_CHARS;
+    for (int i = 0; i < wargc && i < sizeOfArgv; i++) {
+      int requiredLength =
+          WideCharToMultiByte(cp, flags, wargv[i], -1, NULL, 0, NULL, NULL);
+      if (requiredLength == 0) {
+        argv[i] = "";
+        continue;
+      }
+      char *argvEntryBegin = &argvStorage[argvStorageOffset];
+      char *argvEntryEnd = argvEntryBegin + requiredLength;
+      if (argvEntryEnd >= argvStorageEnd) {
+        break;
+      }
+      if (WideCharToMultiByte(cp, flags, wargv[i], -1, argvEntryBegin,
+                              requiredLength, NULL, NULL) <= 0) {
+        break;
+      }
+      *argvEntryEnd = 0;
+      argv[argc++] = argvEntryBegin;
+      argvStorageOffset += requiredLength;
+    }
+    argvStorage[argvStorageOffset] = 0;
+    webview_app_main(argc, argv);
+  }
+  LocalFree(wargv);
+}
+
 #else
-#define WEBVIEW_MAIN() int main(int argc, char **argv)
+int main(int argc, char *argv[]) { return webview_app_main(argc, argv); }
 #endif
 
+#endif /* WEBVIEW_DEFINE_MAIN */
 #endif /* WEBVIEW_H */
