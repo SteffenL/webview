@@ -1,4 +1,4 @@
-# webview
+# SteffenL's webview
 
 A fork of [webview](https://github.com/webview/webview), a tiny cross-platform webview library for C/C++ to build modern cross-platform GUIs.
 
@@ -6,26 +6,7 @@ This project aims to provide a simple C/C++ library/framework that allows users 
 
 The library supports two-way JavaScript bindings (to call JavaScript from C/C++ and to call C/C++ from JavaScript).
 
-Why create a fork? Here are my main reasons for going my own way with [webview](https://github.com/webview/webview) as of April 20, 2022:
-
-* I wanted to clean up the project structure.
-* [Different views on implementing build systems](https://github.com/webview/webview/pull/699) such as Meson and CMake.
-* Less optimal coding practices and bugs:
-  * [Use reference to const string](https://github.com/webview/webview/pull/712)
-  * [Do not display "Hello" when URL is empty](https://github.com/webview/webview/pull/713)
-  * [Use reference to const auto](https://github.com/webview/webview/pull/715)
-  * [Fix usage of hstring after its destruction on Windows](https://github.com/webview/webview/pull/716)
-  * [Fix encoding of data URL in C example](https://github.com/webview/webview/pull/718)
-* When using the library as a header-only library then by default C API function definitions caused multiple definition errors when compiling in C++ mode.
-* Lack of engagement around issues and pull requests.
-
-All I really wanted to do was move forward with creating my own applications, but when I realized that I had invested more time and effort on submitting pull requests for [webview](https://github.com/webview/webview) than to actually build my application, that was when I decided to branch off.
-
-Major differences between this library and [webview](https://github.com/webview/webview) as of April 20, 2022:
-
-* *This project* uses the CMake build system while the *other project* uses none. Maybe the *other project* [will use Meson in the future](https://github.com/webview/webview/pull/699) if their views on build systems change.
-* *This project* aims to improve platform integration and behaviors while the *other project* is more minimalist.
-* *This project* mainly focuses on C/C++ while the *other project* also has a lot of room for [Go](https://go.dev/).
+[Why create a fork?](#why-create-a-fork)
 
 ## Development
 
@@ -59,3 +40,26 @@ The options below can be specified during CMake configuration.
 #### `USE_WEBVIEW2_SHARED_LIBRARY`
 
 Set to `ON` to use the Microsoft Edge WebView2 loader as a shared library on Windows; otherwise `OFF` (default: `OFF`).
+
+## Why create a fork?
+
+Here are my main reasons for going my own way with [webview](https://github.com/webview/webview) as of April 20, 2022:
+
+* I wanted to clean up the project structure.
+* [Different views on implementing build systems](https://github.com/webview/webview/pull/699) such as Meson and CMake.
+* Less optimal coding practices and bugs:
+  * [Use reference to const string](https://github.com/webview/webview/pull/712)
+  * [Do not display "Hello" when URL is empty](https://github.com/webview/webview/pull/713)
+  * [Use reference to const auto](https://github.com/webview/webview/pull/715)
+  * [Fix usage of hstring after its destruction on Windows](https://github.com/webview/webview/pull/716)
+  * [Fix encoding of data URL in C example](https://github.com/webview/webview/pull/718)
+* When using the library as a header-only library then by default C API function definitions caused multiple definition errors when compiling in C++ mode.
+* Lack of engagement around issues and pull requests.
+
+All I really wanted to do was move forward with creating my own applications, but when I realized that I had invested more time and effort on submitting pull requests for [webview](https://github.com/webview/webview) than to actually build my application, that was when I decided to branch off.
+
+Major differences between this library and [webview](https://github.com/webview/webview) as of April 20, 2022:
+
+* *This project* uses the CMake build system while the *other project* uses none. Maybe the *other project* [will use Meson in the future](https://github.com/webview/webview/pull/699) if their views on build systems change.
+* *This project* aims to improve platform integration and behaviors while the *other project* is more minimalist.
+* *This project* mainly focuses on C/C++ while the *other project* also has a lot of room for [Go](https://go.dev/).
