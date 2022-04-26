@@ -20,10 +20,10 @@ This project uses CMake and Ninja. See instructions on building below.
 
 ### Prerequisites
 
-#### Linux (Ubuntu 20.04)
+#### Linux (Ubuntu 18.04—22.04)
 
-Development packages: `libwebkit2gtk-4.0-dev`
-Production packages: `libwebkit2gtk-4.0`
+Development packages: `libgtk-3-dev`, `libwebkit2gtk-4.0-dev`
+Production packages: `libgtk-3-0`, `libwebkit2gtk-4.0-37`
 
 #### Windows
 
