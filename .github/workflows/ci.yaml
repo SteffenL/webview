@@ -22,7 +22,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install libwebkit2gtk-4.0-dev xvfb ninja-build -y
+          sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev xvfb ninja-build -y
       - name: macOS preparation
         if: runner.os == 'macOS'
         run: brew install ninja
