@@ -7,10 +7,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: 'ubuntu-20.04', run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '10', cc: '/usr/bin/gcc-10', cxx: '/usr/bin/g++-10' }
-          - { os: 'ubuntu-20.04', run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '12', cc: '/usr/bin/clang-12', cxx: '/usr/bin/clang++-12' }
-          - { os: 'macos-10.15', run-cmd: '', compiler-id: 'appleclang', compiler-version: '' }
-          - { os: 'windows-2019', run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64' }
+          - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '10', cc: '/usr/bin/gcc-10', cxx: '/usr/bin/g++-10' }
+          - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '12', cc: '/usr/bin/clang-12', cxx: '/usr/bin/clang++-12' }
+          - { os: 'macos-10.15', visual-run-cmd: '', compiler-id: 'appleclang', compiler-version: '' }
+          - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64' }
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.config.os }}, ${{ matrix.config.compiler-id }}${{ matrix.config.compiler-version }}
     steps:
@@ -47,4 +47,5 @@ jobs:
         run: |
           cmake -G Ninja -B build -S .
           cmake --build build --config Release
-          ${{ matrix.config.run-cmd }} ctest --test-dir build/test --output-on-failure --config Release
+          ctest --test-dir build/test --output-on-failure --config Release -R unit_
+          ${{ matrix.config.visual-run-cmd }} ctest --test-dir build/test --output-on-failure --config Release -R functional_
