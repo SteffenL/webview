@@ -37,8 +37,10 @@ jobs:
           echo Installing Ninja
           choco install ninja --version=1.10.2
           echo Configuring MSVC toolset
-          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ^
-            ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
+          set "vcvarsall_path_x64=C:\Program Files\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+          set "vcvarsall_path_x86=C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+          if exist "%vcvarsall_path_x64%" (set "vcvarsall_path=%vcvarsall_path_x64%") else (set "vcvarsall_path=%vcvarsall_path_x86%")
+          call "%vcvarsall_path%" ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
           for /F "usebackq tokens=1,2 delims==" %%a in (`set`) do echo %%a=%%b>> %GITHUB_ENV%
           echo Installing WebView2 Runtime
           curl -sSLo "%TEMP%\MicrosoftEdgeWebview2Setup.exe" https://go.microsoft.com/fwlink/p/?LinkId=2124703
