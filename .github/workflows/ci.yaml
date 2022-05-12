@@ -7,9 +7,12 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - { os: 'ubuntu-22.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '12', cc: '/usr/bin/gcc-12', cxx: '/usr/bin/g++-12' }
+          - { os: 'ubuntu-22.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '14', cc: '/usr/bin/clang-14', cxx: '/usr/bin/clang++-14' }
           - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '10', cc: '/usr/bin/gcc-10', cxx: '/usr/bin/g++-10' }
           - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '12', cc: '/usr/bin/clang-12', cxx: '/usr/bin/clang++-12' }
           - { os: 'macos-10.15', visual-run-cmd: '', compiler-id: 'appleclang', compiler-version: '' }
+          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.3', vs-version-name: '2022', vcvars-arch: 'x64' }
           - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64' }
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.config.os }}, ${{ matrix.config.compiler-id }}${{ matrix.config.compiler-version }}
