@@ -34,8 +34,8 @@ jobs:
       - name: Windows preparation
         if: runner.os == 'Windows'
         run: |
-          echo Setting up tool paths
-          echo PATH=C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\IDE\CommonExtensions\Microsoft\CMake\Ninja;%PATH%>> %GITHUB_ENV%
+          echo Installing Ninja
+          choco install ninja --version=1.10.2
           echo Configuring MSVC toolset
           call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ^
             ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
