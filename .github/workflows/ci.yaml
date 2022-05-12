@@ -23,6 +23,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev xvfb ninja-build -y
+          if [ "${{ matrix.config.compiler-id }}" = "gnu" ]; then
+            sudo apt-get install "gcc-${{ matrix.config.compiler-version }}" "g++-${{ matrix.config.compiler-version }}" -y
+          elif [ "${{ matrix.config.compiler-id }}" = "clang" ]; then
+            sudo apt-get install "clang-${{ matrix.config.compiler-version }}" "clang++-${{ matrix.config.compiler-version }}" -y
+          fi
       - name: macOS preparation
         if: runner.os == 'macOS'
         run: brew install ninja
