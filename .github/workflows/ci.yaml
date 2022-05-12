@@ -45,8 +45,6 @@ jobs:
           echo Installing WebView2 Runtime
           curl -sSLo "%TEMP%\MicrosoftEdgeWebview2Setup.exe" https://go.microsoft.com/fwlink/p/?LinkId=2124703
           "%TEMP%\MicrosoftEdgeWebview2Setup.exe" /silent /install
-          echo Fetching WebView2 library
-          scripts\windows\fetch_webview2.bat
         shell: cmd
       - name: Set compiler environment variables
         if: runner.os != 'Windows'
