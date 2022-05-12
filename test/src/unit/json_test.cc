@@ -2,7 +2,7 @@
 // TEST: ensure that JSON parsing works.
 // =================================================================
 
-#include "test.h"
+#include "webview/test.h"
 #include "webview/webview.h"
 
 int main() {

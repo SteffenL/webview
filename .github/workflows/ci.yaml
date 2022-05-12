@@ -7,10 +7,13 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: 'ubuntu-20.04', run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '10', cc: '/usr/bin/gcc-10', cxx: '/usr/bin/g++-10' }
-          - { os: 'ubuntu-20.04', run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '12', cc: '/usr/bin/clang-12', cxx: '/usr/bin/clang++-12' }
-          - { os: 'macos-10.15', run-cmd: '', compiler-id: 'appleclang', compiler-version: '' }
-          - { os: 'windows-2019', run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64' }
+          - { os: 'ubuntu-22.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '12', cc: '/usr/bin/gcc-12', cxx: '/usr/bin/g++-12' }
+          - { os: 'ubuntu-22.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '14', cc: '/usr/bin/clang-14', cxx: '/usr/bin/clang++-14' }
+          - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '10', cc: '/usr/bin/gcc-10', cxx: '/usr/bin/g++-10' }
+          - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '12', cc: '/usr/bin/clang-12', cxx: '/usr/bin/clang++-12' }
+          - { os: 'macos-10.15', visual-run-cmd: '', compiler-id: 'appleclang', compiler-version: '' }
+          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.3', vs-version-name: '2022', vcvars-arch: 'x64' }
+          - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64' }
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.config.os }}, ${{ matrix.config.compiler-id }}${{ matrix.config.compiler-version }}
     steps:
@@ -19,18 +22,25 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install libwebkit2gtk-4.0-dev xvfb ninja-build -y
+          sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev xvfb ninja-build -y
+          if [ "${{ matrix.config.compiler-id }}" = "gnu" ]; then
+            sudo apt-get install "gcc-${{ matrix.config.compiler-version }}" "g++-${{ matrix.config.compiler-version }}" -y
+          elif [ "${{ matrix.config.compiler-id }}" = "clang" ]; then
+            sudo apt-get install "clang-${{ matrix.config.compiler-version }}" "clang++-${{ matrix.config.compiler-version }}" -y
+          fi
       - name: macOS preparation
         if: runner.os == 'macOS'
         run: brew install ninja
       - name: Windows preparation
         if: runner.os == 'Windows'
         run: |
-          echo Setting up tool paths
-          echo PATH=C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\IDE\CommonExtensions\Microsoft\CMake\Ninja;%PATH%>> %GITHUB_ENV%
+          echo Installing Ninja
+          choco install ninja --version=1.10.2
           echo Configuring MSVC toolset
-          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ^
-            ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
+          set "vcvarsall_path_x64=C:\Program Files\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+          set "vcvarsall_path_x86=C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+          if exist "%vcvarsall_path_x64%" (set "vcvarsall_path=%vcvarsall_path_x64%") else (set "vcvarsall_path=%vcvarsall_path_x86%")
+          call "%vcvarsall_path%" ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
           for /F "usebackq tokens=1,2 delims==" %%a in (`set`) do echo %%a=%%b>> %GITHUB_ENV%
           echo Installing WebView2 Runtime
           curl -sSLo "%TEMP%\MicrosoftEdgeWebview2Setup.exe" https://go.microsoft.com/fwlink/p/?LinkId=2124703
@@ -47,4 +57,5 @@ jobs:
         run: |
           cmake -G Ninja -B build -S .
           cmake --build build --config Release
-          ${{ matrix.config.run-cmd }} ctest --test-dir build/test --output-on-failure --config Release
+          ctest --test-dir build/test --output-on-failure --config Release -R unit_
+          ${{ matrix.config.visual-run-cmd }} ctest --test-dir build/test --output-on-failure --config Release -R functional_
