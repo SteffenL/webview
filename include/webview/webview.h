@@ -936,6 +936,7 @@ public:
 
     embed(m_window, debug, cb);
     resize(m_window);
+    m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
   }
 
   virtual ~win32_edge_engine() = default;
@@ -1191,6 +1192,7 @@ public:
       }
     })())";
     init(js);
+    eval(js);
     bindings[name] = new binding_ctx_t(new binding_t(f), arg);
   }
 
