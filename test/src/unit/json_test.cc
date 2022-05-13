@@ -15,8 +15,8 @@ int main() {
   REQUIRE(J(R"(["foo", "bar", "baz"])", "", 0) == "foo");
   REQUIRE(J(R"(["foo", "bar", "baz"])", "", 2) == "baz");
   // Valid UTF-8 with expected output
-  REQUIRE(J(u8R"({"フー":"バー"})", "フー", -1) == u8"バー");
-  REQUIRE(J(u8R"(["フー", "バー", "バズ"])", "", 2) == u8"バズ");
+  REQUIRE(J(R"({"フー":"バー"})", "フー", -1) == "バー");
+  REQUIRE(J(R"(["フー", "バー", "バズ"])", "", 2) == "バズ");
   // Invalid input with valid output - should probably fail
   REQUIRE(J(R"({"foo":"bar")", "foo", -1) == "bar");
   // Valid input with other invalid parameters - should fail
