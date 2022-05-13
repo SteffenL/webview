@@ -3,7 +3,6 @@ include(cmake/toolchain.cmake)
 project(webview C CXX)
 
 include(cmake/build_support.cmake)
-include(cmake/options.cmake)
 include(cmake/deps.cmake)
 
 add_subdirectory(src)
