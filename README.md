@@ -52,15 +52,10 @@ Set to `ON` to use the Microsoft Edge WebView2 loader as a shared library on Win
 Here are my main reasons for going my own way with [webview](https://github.com/webview/webview) as of April 20, 2022:
 
 * I wanted to clean up the project structure.
-* [Different views on implementing build systems](https://github.com/webview/webview/pull/699) such as Meson and CMake.
-* Less optimal coding practices and bugs:
-  * [Use reference to const string](https://github.com/webview/webview/pull/712)
-  * [Do not display "Hello" when URL is empty](https://github.com/webview/webview/pull/713)
-  * [Use reference to const auto](https://github.com/webview/webview/pull/715)
-  * [Fix usage of hstring after its destruction on Windows](https://github.com/webview/webview/pull/716)
-  * [Fix encoding of data URL in C example](https://github.com/webview/webview/pull/718)
-* When using the library as a header-only library then by default C API function definitions caused multiple definition errors when compiling in C++ mode.
-* Lack of engagement around issues and pull requests.
+* I wanted to use a build system (CMake) and improve maintainability across platforms.
+* I wanted to improve coding practices and fix bugs.
+* When using the library as a header-only library then by default C API function definitions caused multiple definition errors when compiling in C++ mode. I wanted a better default or an easy way to start using the library.
+* It is more practical for me to start using my own changes immediately while before submitting PRs upstream.
 
 All I really wanted to do was move forward with creating my own applications, but when I realized that I had invested more time and effort on submitting pull requests for [webview](https://github.com/webview/webview) than to actually build my application, that was when I decided to branch off.
 
