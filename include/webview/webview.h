@@ -143,6 +143,7 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #endif
 
 #include <atomic>
+#include <cstdint>
 #include <functional>
 #include <future>
 #include <limits>
@@ -952,7 +953,7 @@ public:
       if (*wc_atom == 0) {
         return;
       }
-      auto wc_atom_string = static_cast<LPCWSTR>(*wc_atom);
+      auto wc_atom_string = reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(*wc_atom));
       m_window = CreateWindowW(wc_atom_string, L"", WS_OVERLAPPEDWINDOW,
                                CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, nullptr,
                                nullptr, hInstance, nullptr);
