@@ -907,12 +907,10 @@ public:
   win32_edge_engine(bool debug, void *window) {
     if (window == nullptr) {
       HINSTANCE hInstance = GetModuleHandle(nullptr);
-      auto icon = detail::wrap_resource(
-          static_cast<HICON>(LoadImage(hInstance, IDI_APPLICATION, IMAGE_ICON,
+      auto icon = static_cast<HICON>(LoadImage(hInstance, IDI_APPLICATION, IMAGE_ICON,
                                        GetSystemMetrics(SM_CXSMICON),
                                        GetSystemMetrics(SM_CYSMICON),
-                                       LR_DEFAULTCOLOR)),
-          [](auto handle) { DestroyIcon(handle); });
+                                       LR_DEFAULTCOLOR));
 
       WNDCLASSEXW wc;
       ZeroMemory(&wc, sizeof(WNDCLASSEX));
@@ -952,23 +950,18 @@ public:
             }
             return 0;
           });
-      auto wc_atom = detail::wrap_resource(
-          RegisterClassExW(&wc), [=](auto atom) {
-            UnregisterClassW(reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(atom)), hInstance);
-          });
-      if (wc_atom.get() == 0) {
+      auto wc = RegisterClassExW(&wc);
+      if (wc == 0) {
         return;
       }
-      auto wc_atom_string = reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(*wc_atom));
-      m_window = CreateWindowW(wc_atom_string, L"", WS_OVERLAPPEDWINDOW,
+      auto wc_as_string = reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(*wc_atom));
+      m_window = CreateWindowW(wc_as_string, L"", WS_OVERLAPPEDWINDOW,
                                CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, nullptr,
                                nullptr, hInstance, nullptr);
       if (!m_window) {
         return;
       }
       SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR)this);
-      wc_atom.detach();
-      icon.detach();
     } else {
       m_window = *(static_cast<HWND *>(window));
     }
