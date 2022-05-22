@@ -156,72 +156,6 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #include <cstring>
 
 namespace webview {
-namespace detail {
-
-template <typename T, typename Deleter> class managed_resource {
-public:
-  struct value_container {
-    explicit value_container(T &&value) : m_value(std::move(value)) {}
-
-    void clear() {
-      m_value = T();
-      m_empty = true;
-    }
-
-    T &value() {
-      if (m_empty) {
-        throw std::logic_error("value is empty");
-      }
-      return m_value;
-    }
-
-    bool has_value() const { return !m_empty; }
-
-  private:
-    bool m_empty = false;
-    T m_value;
-  };
-
-  explicit managed_resource(T &&value, Deleter deleter)
-      : m_value(std::move(value)), m_deleter(deleter) {}
-
-  ~managed_resource() {
-    if (m_value.has_value()) {
-      m_deleter(get());
-    }
-  }
-
-  managed_resource(managed_resource &&other) = default;
-  managed_resource &operator=(managed_resource &&other) = default;
-  managed_resource(const managed_resource &other) = delete;
-  managed_resource &operator=(const managed_resource &other) = delete;
-
-  explicit operator bool() { return m_value.has_value(); }
-  T &operator->() { return get(); }
-  T &operator*() { return get(); }
-
-  T &get() { return m_value.value(); }
-  void detach() { m_value.clear(); }
-
-private:
-  value_container m_value;
-  Deleter m_deleter;
-};
-
-template <typename T, typename Deleter>
-managed_resource<T, Deleter> wrap_resource(T &&value, Deleter deleter) {
-  return managed_resource<T, Deleter>(std::forward<T>(value), deleter);
-}
-
-} // namespace detail
-
-class webview_error : public std::runtime_error {
-public:
-  webview_error() noexcept : runtime_error("webview error") {}
-
-  explicit webview_error(const std::string &reason) noexcept
-      : runtime_error(("webview error: " + reason).c_str()) {}
-};
 
 using dispatch_fn_t = std::function<void()>;
 
@@ -496,7 +430,7 @@ public:
   gtk_webkit_engine(bool debug, void *window)
       : m_window(static_cast<GtkWidget *>(window)) {
     if (!gtk_init_check(0, NULL)) {
-      throw webview_error("gtk_init_check failed");
+      return;
     }
     m_window = static_cast<GtkWidget *>(window);
     if (m_window == nullptr) {
@@ -1273,8 +1207,9 @@ private:
 
 WEBVIEW_API webview_t webview_create(int debug, void *wnd) {
   auto w = new webview::webview(debug, wnd);
-  if (w->window() == NULL) {
-    return NULL;
+  if (!w->window()) {
+    delete w;
+    return nullptr;
   }
   return w;
 }
