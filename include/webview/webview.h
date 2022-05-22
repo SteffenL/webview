@@ -162,9 +162,6 @@ template <typename T, typename Deleter> class managed_resource {
 public:
   struct value_container {
     explicit value_container(T &&value) : m_value(std::move(value)) {}
-    explicit operator bool() { return !m_empty; }
-    T &operator->() { return value(); }
-    T &operator*() { return value(); }
 
     void clear() {
       m_value = T();
@@ -178,6 +175,10 @@ public:
       return m_value;
     }
 
+    bool has_value() const {
+      return !m_empty;
+    }
+
   private:
     bool m_empty = false;
     T m_value;
@@ -187,8 +188,8 @@ public:
       : m_value(std::move(value)), m_deleter(deleter) {}
 
   ~managed_resource() {
-    if (m_value) {
-      m_deleter(*m_value);
+    if (m_value.has_value()) {
+      m_deleter(get());
     }
   }
 
@@ -197,9 +198,12 @@ public:
   managed_resource(const managed_resource &other) = delete;
   managed_resource &operator=(const managed_resource &other) = delete;
 
-  void detach() { m_value.clear(); }
+  explicit operator bool() { return m_value.has_value(); }
+  T &operator->() { return get(); }
+  T &operator*() { return get(); }
 
-  T &get() { return *m_value; }
+  T &get() { return m_value.value(); }
+  void detach() { m_value.clear(); }
 
 private:
   value_container m_value;
@@ -908,15 +912,15 @@ public:
                                        GetSystemMetrics(SM_CXSMICON),
                                        GetSystemMetrics(SM_CYSMICON),
                                        LR_DEFAULTCOLOR)),
-          [](auto handle) { DestroyObject(handle); });
+          [](auto handle) { DestroyIcon(handle); });
 
       WNDCLASSEXW wc;
       ZeroMemory(&wc, sizeof(WNDCLASSEX));
       wc.cbSize = sizeof(WNDCLASSEX);
       wc.hInstance = hInstance;
       wc.lpszClassName = L"webview";
-      wc.hIcon = *icon;
-      wc.hIconSm = *icon;
+      wc.hIcon = icon.get();
+      wc.hIconSm = icon.get();
       wc.lpfnWndProc =
           (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
             auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -949,8 +953,10 @@ public:
             return 0;
           });
       auto wc_atom = detail::wrap_resource(
-          RegisterClassExW(&wc), [](auto value) { UnregisterClassW(value); });
-      if (*wc_atom == 0) {
+          RegisterClassExW(&wc), [=](auto atom) {
+            UnregisterClassW(reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(atom)), hInstance);
+          });
+      if (wc_atom.get() == 0) {
         return;
       }
       auto wc_atom_string = reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(*wc_atom));
