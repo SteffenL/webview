@@ -862,7 +862,7 @@ public:
               w->terminate();
               break;
             case WM_GETMINMAXINFO: {
-              auto lpmmi = (LPMINMAXINFO)lp;
+              auto lpmmi = reinterpret_cast<LPMINMAXINFO>(lp);
               if (w == nullptr) {
                 return 0;
               }
