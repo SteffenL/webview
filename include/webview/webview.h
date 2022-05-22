@@ -902,11 +902,12 @@ public:
   win32_edge_engine(bool debug, void *window) {
     if (window == nullptr) {
       HINSTANCE hInstance = GetModuleHandle(nullptr);
-      auto icon = detail::wrap_resource(static_cast<HICON>(
-          LoadImage(hInstance, IDI_APPLICATION, IMAGE_ICON,
-                    GetSystemMetrics(SM_CXSMICON),
-                    GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR),
-          [](auto handle) { DestroyObject(handle); }));
+      auto icon = detail::wrap_resource(
+          static_cast<HICON>(LoadImage(hInstance, IDI_APPLICATION, IMAGE_ICON,
+                                       GetSystemMetrics(SM_CXSMICON),
+                                       GetSystemMetrics(SM_CYSMICON),
+                                       LR_DEFAULTCOLOR)),
+          [](auto handle) { DestroyObject(handle); });
 
       WNDCLASSEXW wc;
       ZeroMemory(&wc, sizeof(WNDCLASSEX));
