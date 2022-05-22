@@ -147,6 +147,7 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #include <future>
 #include <limits>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -154,6 +155,71 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #include <cstring>
 
 namespace webview {
+namespace detail {
+
+template <typename T, typename Deleter> class managed_resource {
+public:
+  struct value_container {
+    explicit value_container(T &&value) : m_value(std::move(value)) {}
+    explicit operator bool() { return !m_empty; }
+    T &operator->() { return value(); }
+    T &operator*() { return value(); }
+
+    void clear() {
+      m_value = T();
+      m_empty = true;
+    }
+
+    T &value() {
+      if (m_empty) {
+        throw std::logic_error("value is empty");
+      }
+      return m_value;
+    }
+
+  private:
+    bool m_empty = false;
+    T m_value;
+  };
+
+  explicit managed_resource(T &&value, Deleter deleter)
+      : m_value(std::move(value)), m_deleter(deleter) {}
+
+  ~managed_resource() {
+    if (m_value) {
+      m_deleter(*m_value);
+    }
+  }
+
+  managed_resource(managed_resource &&other) = default;
+  managed_resource &operator=(managed_resource &&other) = default;
+  managed_resource(const managed_resource &other) = delete;
+  managed_resource &operator=(const managed_resource &other) = delete;
+
+  void detach() { m_value.clear(); }
+
+  T &get() { return *m_value; }
+
+private:
+  value_container m_value;
+  Deleter m_deleter;
+};
+
+template <typename T, typename Deleter>
+managed_resource<T, Deleter> wrap_resource(T &&value, Deleter deleter) {
+  return managed_resource<T, Deleter>(std::forward<T>(value), deleter);
+}
+
+} // namespace detail
+
+class webview_error : public std::runtime_error {
+public:
+  webview_error() noexcept : runtime_error("webview error") {}
+
+  explicit webview_error(const std::string &reason) noexcept
+      : runtime_error(("webview error: " + reason).c_str()) {}
+};
+
 using dispatch_fn_t = std::function<void()>;
 
 inline std::string url_encode(const std::string &s) {
@@ -426,8 +492,8 @@ class gtk_webkit_engine {
 public:
   gtk_webkit_engine(bool debug, void *window)
       : m_window(static_cast<GtkWidget *>(window)) {
-    if (gtk_init_check(0, NULL) == FALSE) {
-      return;
+    if (!gtk_init_check(0, NULL)) {
+      throw webview_error("gtk_init_check failed");
     }
     m_window = static_cast<GtkWidget *>(window);
     if (m_window == nullptr) {
@@ -836,20 +902,19 @@ public:
   win32_edge_engine(bool debug, void *window) {
     if (window == nullptr) {
       HINSTANCE hInstance = GetModuleHandle(nullptr);
-      if (hInstance == nullptr) {
-        return;
-      }
-      HICON icon = (HICON)LoadImage(
-          hInstance, IDI_APPLICATION, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
-          GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
+      auto icon = detail::wrap_resource(static_cast<HICON>(
+          LoadImage(hInstance, IDI_APPLICATION, IMAGE_ICON,
+                    GetSystemMetrics(SM_CXSMICON),
+                    GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR),
+          [](auto handle) { DestroyObject(handle); }));
 
       WNDCLASSEXW wc;
       ZeroMemory(&wc, sizeof(WNDCLASSEX));
       wc.cbSize = sizeof(WNDCLASSEX);
       wc.hInstance = hInstance;
       wc.lpszClassName = L"webview";
-      wc.hIcon = icon;
-      wc.hIconSm = icon;
+      wc.hIcon = *icon;
+      wc.hIconSm = *icon;
       wc.lpfnWndProc =
           (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
             auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -881,14 +946,21 @@ public:
             }
             return 0;
           });
-      RegisterClassExW(&wc);
-      m_window = CreateWindowW(L"webview", L"", WS_OVERLAPPEDWINDOW,
+      auto wc_atom = detail::wrap_resource(
+          RegisterClassExW(&wc), [](auto value) { UnregisterClassW(value); });
+      if (*wc_atom == 0) {
+        return;
+      }
+      auto wc_atom_string = static_cast<LPCWSTR>(*wc_atom);
+      m_window = CreateWindowW(wc_atom_string, L"", WS_OVERLAPPEDWINDOW,
                                CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, nullptr,
-                               nullptr, GetModuleHandle(nullptr), nullptr);
-      if (m_window == nullptr) {
+                               nullptr, hInstance, nullptr);
+      if (!m_window) {
         return;
       }
       SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR)this);
+      wc_atom.detach();
+      icon.detach();
     } else {
       m_window = *(static_cast<HWND *>(window));
     }
