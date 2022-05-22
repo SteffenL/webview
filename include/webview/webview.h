@@ -888,13 +888,14 @@ public:
         return;
       }
       auto wc_str = reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(wc_atom));
-      m_window = CreateWindowW(wc_str, L"", WS_OVERLAPPEDWINDOW,
-                               CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, nullptr,
-                               nullptr, hInstance, nullptr);
+      m_window = CreateWindowW(wc_str, L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+                               CW_USEDEFAULT, 640, 480, nullptr, nullptr,
+                               hInstance, nullptr);
       if (!m_window) {
         return;
       }
-      SetWindowLongPtr(m_window, GWLP_USERDATA, static_cast<LONG_PTR>(this));
+      SetWindowLongPtr(m_window, GWLP_USERDATA,
+                       reinterpret_cast<LONG_PTR>(this));
     }
 
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
