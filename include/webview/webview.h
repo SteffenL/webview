@@ -951,9 +951,8 @@ public:
       if (wc == 0) {
         return;
       }
-      auto wc_as_string =
-          reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(*wc_atom));
-      m_window = CreateWindowW(wc_as_string, L"", WS_OVERLAPPEDWINDOW,
+      auto wc_str = reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(wc));
+      m_window = CreateWindowW(wc_str, L"", WS_OVERLAPPEDWINDOW,
                                CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, nullptr,
                                nullptr, hInstance, nullptr);
       if (!m_window) {
