@@ -894,8 +894,8 @@ public:
       if (!m_window) {
         return;
       }
-      SetWindowLongPtr(m_window, GWLP_USERDATA,
-                       reinterpret_cast<LONG_PTR>(this));
+      SetWindowLongPtrW(m_window, GWLP_USERDATA,
+                        reinterpret_cast<LONG_PTR>(this));
     }
 
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
