@@ -91,13 +91,9 @@ Download [webview.h](https://raw.githubusercontent.com/webview/webview/master/we
 
 ```c++
 // main.cc
+#define WEBVIEW_DEFINE_MAIN
 #include "webview.h"
-#ifdef WIN32
-int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine,
-                   int nCmdShow) {
-#else
-int main() {
-#endif
+int webview_app_main(int argc, char *argv[]) {
   webview::webview w(true, nullptr);
   w.set_title("Minimal example");
   w.set_size(480, 320, WEBVIEW_HINT_NONE);
@@ -123,15 +119,11 @@ $ script/build.bat
 ```c
 // main.c
 #define WEBVIEW_HEADER
+#define WEBVIEW_DEFINE_MAIN
 #include "webview.h"
 #include <stddef.h>
 
-#ifdef WIN32
-int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine,
-                   int nCmdShow) {
-#else
-int main() {
-#endif
+int webview_app_main(int argc, char *argv[]) {
 	webview_t w = webview_create(0, NULL);
 	webview_set_title(w, "Webview Example");
 	webview_set_size(w, 480, 320, WEBVIEW_HINT_NONE);
@@ -141,6 +133,8 @@ int main() {
 	return 0;
 }
 ```
+
+If `WEBVIEW_DEFINE_MAIN` is defined then the library implements the application's main function and provides UTF-8-encoded arguments on Windows; otherwise, you must implement your own main function.
 
 Define C++ flags for the platform:
 

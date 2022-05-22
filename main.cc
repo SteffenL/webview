@@ -1,17 +1,12 @@
 //bin/echo; [ $(uname) = "Darwin" ] && FLAGS="-framework Webkit" || FLAGS="$(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0)" ; c++ "$0" $FLAGS -std=c++11 -g -o webview && ./webview ; exit
 // +build ignore
 
+#define WEBVIEW_DEFINE_MAIN
 #include "webview.h"
 
 #include <iostream>
 
-#ifdef _WIN32
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                     LPSTR lpCmdLine, int nCmdShow)
-#else
-int main()
-#endif
-{
+int webview_app_main(int argc, char *argv[]) {
   webview::webview w(true, nullptr);
   w.set_title("Example");
   w.set_size(480, 320, WEBVIEW_HINT_NONE);
