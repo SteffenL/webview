@@ -143,12 +143,10 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #endif
 
 #include <atomic>
-#include <cstdint>
 #include <functional>
 #include <future>
 #include <limits>
 #include <map>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
