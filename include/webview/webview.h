@@ -883,12 +883,8 @@ public:
             }
             return 0;
           });
-      auto wc_atom = RegisterClassExW(&wc);
-      if (wc_atom == 0) {
-        return;
-      }
-      auto wc_str = reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(wc_atom));
-      m_window = CreateWindowW(wc_str, L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+      RegisterClassExW(&wc);
+      m_window = CreateWindowW(wc.lpszClassName, L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
                                CW_USEDEFAULT, 640, 480, nullptr, nullptr,
                                hInstance, nullptr);
       if (!m_window) {
