@@ -835,9 +835,7 @@ using namespace winrt;
 class win32_edge_engine {
 public:
   win32_edge_engine(bool debug, void *window) {
-    if (window) {
-      m_window = *(static_cast<HWND *>(window));
-    } else {
+    if (!window) {
       auto hInstance = GetModuleHandle(nullptr);
       auto icon = static_cast<HICON>(LoadImage(
           hInstance, IDI_APPLICATION, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
@@ -890,6 +888,8 @@ public:
       }
       SetWindowLongPtrW(m_window, GWLP_USERDATA,
                         reinterpret_cast<LONG_PTR>(this));
+    } else {
+      m_window = *(static_cast<HWND *>(window));
     }
 
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
