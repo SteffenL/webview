@@ -880,9 +880,9 @@ public:
             return 0;
           });
       RegisterClassExW(&wc);
-      m_window = CreateWindowW(wc.lpszClassName, L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-                               CW_USEDEFAULT, 640, 480, nullptr, nullptr,
-                               hInstance, nullptr);
+      m_window = CreateWindowW(wc.lpszClassName, L"", WS_OVERLAPPEDWINDOW,
+                               CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, nullptr,
+                               nullptr, hInstance, nullptr);
       if (!m_window) {
         return;
       }
