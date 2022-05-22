@@ -914,8 +914,8 @@ public:
       wc.cbSize = sizeof(WNDCLASSEX);
       wc.hInstance = hInstance;
       wc.lpszClassName = L"webview";
-      wc.hIcon = icon.get();
-      wc.hIconSm = icon.get();
+      wc.hIcon = icon;
+      wc.hIconSm = icon;
       wc.lpfnWndProc =
           (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
             auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
