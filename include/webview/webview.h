@@ -175,9 +175,7 @@ public:
       return m_value;
     }
 
-    bool has_value() const {
-      return !m_empty;
-    }
+    bool has_value() const { return !m_empty; }
 
   private:
     bool m_empty = false;
@@ -907,10 +905,9 @@ public:
   win32_edge_engine(bool debug, void *window) {
     if (window == nullptr) {
       HINSTANCE hInstance = GetModuleHandle(nullptr);
-      auto icon = static_cast<HICON>(LoadImage(hInstance, IDI_APPLICATION, IMAGE_ICON,
-                                       GetSystemMetrics(SM_CXSMICON),
-                                       GetSystemMetrics(SM_CYSMICON),
-                                       LR_DEFAULTCOLOR));
+      auto icon = static_cast<HICON>(LoadImage(
+          hInstance, IDI_APPLICATION, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+          GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR));
 
       WNDCLASSEXW wc;
       ZeroMemory(&wc, sizeof(WNDCLASSEX));
@@ -954,7 +951,8 @@ public:
       if (wc == 0) {
         return;
       }
-      auto wc_as_string = reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(*wc_atom));
+      auto wc_as_string =
+          reinterpret_cast<LPCWSTR>(static_cast<uintptr_t>(*wc_atom));
       m_window = CreateWindowW(wc_as_string, L"", WS_OVERLAPPEDWINDOW,
                                CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, nullptr,
                                nullptr, hInstance, nullptr);
