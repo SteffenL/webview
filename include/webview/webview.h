@@ -1269,20 +1269,8 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 
 // A cross-platform main function (entry point) for the application.
 // Command line arguments are available as UTF-8-encoded strings on
-// supported platforms. Define WEBVIEW_ARGV_SIZE and WEBVIEW_MAX_ARGC
-// to change the limits for the memory on platforms that do not
-// natively support UTF-8.
+// Windows and other platforms that natively support UTF-8.
 int webview_app_main(int argc, char *argv[]);
-
-#ifndef WEBVIEW_ARGV_SIZE
-// Fixed size in bytes for storing zero-terminated UTF-8-encoded strings.
-#define WEBVIEW_ARGV_SIZE 32768
-#endif
-
-#ifndef WEBVIEW_MAX_ARGC
-// Fixed number of pointers to strings described by WEBVIEW_ARGV_SIZE.
-#define WEBVIEW_MAX_ARGC 128
-#endif
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -1299,10 +1287,6 @@ int webview_app_main(int argc, char *argv[]);
 
 // The application's entry point on Windows. Converts all the command line
 // arguments into UTF-8-encoded strings and then calls webview_app_main.
-// Allocates fixed-size chunks of memory on the stack upfront where one 32 KiB
-// chunk is for storing zero-terminated UTF-8-encoded strings and the other is
-// for storing up to 128 pointers to those strings.
-// If limits are exceeded then any remaining arguments are ignored.
 int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                       PWSTR pCmdLine, int nCmdShow) {
   UINT cp = CP_UTF8;
@@ -1357,7 +1341,7 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   }
   LocalFree(lengths);
   LocalFree(wargv);
-  auto exit_code = webview_app_main(argc, argv);
+  int exit_code = webview_app_main(argc, argv);
   LocalFree(argvStorage);
   LocalFree(argv);
   return exit_code;
@@ -1365,7 +1349,7 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 #else
 // The application's entry point on platforms other than Windows.
-// Simply calls webview_app_main.
+// Calls webview_app_main with arguments passed through as-is.
 int main(int argc, char *argv[]) { return webview_app_main(argc, argv); }
 #endif
 
