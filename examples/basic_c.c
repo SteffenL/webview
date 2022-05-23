@@ -1,4 +1,4 @@
-#define WEBVIEW_DEFINE_MAIN
+#define WEBVIEW_DEFINE_GUI_MAIN
 #include "webview/webview.h"
 
 #include <stdio.h>

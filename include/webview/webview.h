@@ -129,7 +129,26 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 
 #ifdef __cplusplus
 }
+#endif
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+// clang-format off
+#include <windows.h>
+#include <shellapi.h> // Windows header must be included before this one
+// clang-format on
+
+#pragma comment(lib, "shell32.lib")
+#endif // _WIN32
+
+#ifdef __cplusplus
 #if !defined(WEBVIEW_GTK) && !defined(WEBVIEW_COCOA) && !defined(WEBVIEW_EDGE)
 #if defined(__APPLE__)
 #define WEBVIEW_COCOA
@@ -154,6 +173,7 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #include <cstring>
 
 namespace webview {
+
 using dispatch_fn_t = std::function<void()>;
 
 inline std::string url_encode(const std::string &s) {
@@ -810,11 +830,8 @@ using browser_engine = cocoa_wkwebview_engine;
 // ====================================================================
 //
 
-#define WIN32_LEAN_AND_MEAN
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <stdlib.h>
-#include <windows.h>
 #include <winrt/Windows.Foundation.h>
 
 #include "webview2.h"
@@ -822,7 +839,6 @@ using browser_engine = cocoa_wkwebview_engine;
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "windowsapp")
-#pragma comment(lib, "shell32.lib")
 
 namespace webview {
 
@@ -1265,30 +1281,12 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 }
 
 #endif /* __cplusplus */
-#ifdef WEBVIEW_DEFINE_MAIN
+#if defined(WEBVIEW_DEFINE_GUI_MAIN) || defined(WEBVIEW_DEFINE_CONSOLE_MAIN)
 
-// A cross-platform main function (entry point) for the application.
-// Command line arguments are available as UTF-8-encoded strings on
-// Windows and other platforms that natively support UTF-8.
-int webview_app_main(int argc, char *argv[]);
+#include <stdlib.h>
 
 #ifdef _WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-
-// Windows header must be included first
-// clang-format off
-#include <windows.h>
-#include <shellapi.h>
-// clang-format on
-
-#pragma comment(lib, "shell32.lib")
-
-// The application's entry point on Windows. Converts all the command line
-// arguments into UTF-8-encoded strings and then calls webview_app_main.
-int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                      PWSTR pCmdLine, int nCmdShow) {
+static inline int webview_internal_win32_invoke_with_cmd_line(int (*callback)(int, char **)) {
   UINT cp = CP_UTF8;
   DWORD flags = WC_ERR_INVALID_CHARS;
   int argc = 0;
@@ -1296,10 +1294,10 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   LPWSTR wCmdLine = GetCommandLineW();
   LPWSTR *wargv = CommandLineToArgvW(wCmdLine, &argc);
   if (!wargv || argc == 0) {
-    return webview_app_main(0, nullptr);
+    return callback(0, 0);
   }
-  char **argv =  (char **)LocalAlloc(alloc_flags, sizeof(char *) * argc);
-  int *lengths =  (int *)LocalAlloc(alloc_flags, sizeof(int) * argc);
+  char **argv = (char **)LocalAlloc(alloc_flags, sizeof(char *) * argc);
+  int *lengths = (int *)LocalAlloc(alloc_flags, sizeof(int) * argc);
   if (!argv || !lengths) {
     abort();
   }
@@ -1341,16 +1339,38 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   }
   LocalFree(lengths);
   LocalFree(wargv);
-  int exit_code = webview_app_main(argc, argv);
+  int return_code = callback(argc, argv);
   LocalFree(argvStorage);
   LocalFree(argv);
-  return exit_code;
+  return return_code;
 }
+#endif // _WIN32
 
-#else
-// The application's entry point on platforms other than Windows.
+// A cross-platform main function (entry point) for graphical applications.
+// UTF-8-encoded command line arguments are available on Windows and other
+// platforms that natively support UTF-8.
+int webview_app_main(int argc, char *argv[]);
+
+#if defined(_WIN32) && defined(WEBVIEW_DEFINE_GUI_MAIN)
+// The application's entry point on Windows. Converts all the command line
+// arguments into UTF-8-encoded strings and then calls webview_app_main.
+int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                      PWSTR pCmdLine, int nCmdShow) {
+  return webview_internal_win32_invoke_with_cmd_line(webview_app_main);
+
+}
+#elif defined(_WIN32) && defined(WEBVIEW_DEFINE_CONSOLE_MAIN)
+// Console applications' entry point on Windows.
 // Calls webview_app_main with arguments passed through as-is.
-int main(int argc, char *argv[]) { return webview_app_main(argc, argv); }
+int main(int argc, char *argv[]) {
+  return webview_internal_win32_invoke_with_cmd_line(webview_app_main);
+}
+#elif defined(WEBVIEW_DEFINE_GUI_MAIN) || defined(WEBVIEW_DEFINE_CONSOLE_MAIN)
+// The application's fallback entry point.
+// Calls webview_app_main with arguments passed through as-is.
+int main(int argc, char *argv[]) {
+  return webview_app_main(argc, argv);
+}
 #endif
 
 #endif /* WEBVIEW_DEFINE_MAIN */

@@ -2,6 +2,7 @@
 // TEST: use C API to create a window, run app and terminate it.
 // =================================================================
 
+#define WEBVIEW_DEFINE_CONSOLE_MAIN
 #include "webview/webview.h"
 #include "webview/test.h"
 
@@ -17,7 +18,7 @@ void cb_terminate(webview_t w, void *arg) {
   webview_terminate(w);
 }
 
-int main() {
+int webview_app_main(int argc, char *argv[]) {
   webview_t w;
   w = webview_create(false, nullptr);
   webview_set_size(w, 480, 320, 0);

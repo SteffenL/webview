@@ -2,6 +2,7 @@
 // TEST: ensure that JS code can call native code and vice versa.
 // =================================================================
 
+#define WEBVIEW_DEFINE_CONSOLE_MAIN
 #include "webview/webview.h"
 #include "webview/test.h"
 
@@ -16,7 +17,7 @@ struct test_webview : webview::browser_engine {
   cb_t m_cb;
 };
 
-int main() {
+int webview_app_main(int argc, char *argv[]) {
   test_webview browser([](test_webview *w, int i, const std::string &msg) {
     std::cout << msg << std::endl;
     switch (i) {
