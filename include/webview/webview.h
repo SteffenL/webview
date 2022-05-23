@@ -1267,7 +1267,22 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #endif /* __cplusplus */
 #ifdef WEBVIEW_DEFINE_MAIN
 
+// A cross-platform main function (entry point) for the application.
+// Command line arguments are available as UTF-8-encoded strings on
+// supported platforms. Define WEBVIEW_ARGV_SIZE and WEBVIEW_MAX_ARGC
+// to change the limits for the memory on platforms that do not
+// natively support UTF-8.
 int webview_app_main(int argc, char *argv[]);
+
+#ifndef WEBVIEW_ARGV_SIZE
+// Fixed size in bytes for storing zero-terminated UTF-8-encoded strings.
+#define WEBVIEW_ARGV_SIZE 32768
+#endif
+
+#ifndef WEBVIEW_MAX_ARGC
+// Fixed number of pointers to strings described by WEBVIEW_ARGV_SIZE.
+#define WEBVIEW_MAX_ARGC 128
+#endif
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -1282,12 +1297,18 @@ int webview_app_main(int argc, char *argv[]);
 
 #pragma comment(lib, "shell32.lib")
 
+// The application's entry point on Windows. Converts all the command line
+// arguments into UTF-8-encoded strings and then calls webview_app_main.
+// Allocates fixed-size chunks of memory on the stack upfront where one 32 KiB
+// chunk is for storing zero-terminated UTF-8-encoded strings and the other is
+// for storing up to 128 pointers to those strings.
+// If limits are exceeded then any remaining arguments are ignored.
 int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                       PWSTR pCmdLine, int nCmdShow) {
-  char argvStorage[32768] = {0};
+  char argvStorage[WEBVIEW_ARGV_SIZE] = {0};
   const int sizeOfArgvStorage = sizeof(argvStorage) / sizeof(argvStorage[0]);
   char *argvStorageEnd = argvStorage + sizeOfArgvStorage;
-  char *argv[1024] = {0};
+  char *argv[WEBVIEW_MAX_ARGC] = {0};
   const int sizeOfArgv = sizeof(argv) / sizeof(argv[0]);
   int wargc = 0;
   int argc = 0;
@@ -1318,12 +1339,16 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       argvStorageOffset += requiredLength;
     }
     argvStorage[argvStorageOffset] = 0;
-    webview_app_main(argc, argv);
   }
-  LocalFree(wargv);
+  if (wargv) {
+    LocalFree(wargv);
+  }
+  webview_app_main(argc, argv);
 }
 
 #else
+// The application's entry point on platforms other than Windows.
+// Simply calls webview_app_main.
 int main(int argc, char *argv[]) { return webview_app_main(argc, argv); }
 #endif
 
