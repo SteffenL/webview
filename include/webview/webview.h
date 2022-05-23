@@ -1305,45 +1305,62 @@ int webview_app_main(int argc, char *argv[]);
 // If limits are exceeded then any remaining arguments are ignored.
 int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                       PWSTR pCmdLine, int nCmdShow) {
-  char argvStorage[WEBVIEW_ARGV_SIZE] = {0};
-  const int sizeOfArgvStorage = sizeof(argvStorage) / sizeof(argvStorage[0]);
-  char *argvStorageEnd = argvStorage + sizeOfArgvStorage;
-  char *argv[WEBVIEW_MAX_ARGC] = {0};
-  const int sizeOfArgv = sizeof(argv) / sizeof(argv[0]);
-  int wargc = 0;
+  UINT cp = CP_UTF8;
+  DWORD flags = WC_ERR_INVALID_CHARS;
   int argc = 0;
-  int argvStorageOffset = 0;
+  UINT alloc_flags = LMEM_FIXED;
   LPWSTR wCmdLine = GetCommandLineW();
-  LPWSTR *wargv = CommandLineToArgvW(wCmdLine, &wargc);
-  if (wargv && wargc > 0) {
-    UINT cp = CP_UTF8;
-    DWORD flags = WC_ERR_INVALID_CHARS;
-    for (int i = 0; i < wargc && i < sizeOfArgv; i++) {
-      int requiredLength =
-          WideCharToMultiByte(cp, flags, wargv[i], -1, NULL, 0, NULL, NULL);
-      if (requiredLength == 0) {
-        argv[i] = "";
-        continue;
-      }
-      char *argvEntryBegin = &argvStorage[argvStorageOffset];
-      char *argvEntryEnd = argvEntryBegin + requiredLength;
-      if (argvEntryEnd >= argvStorageEnd) {
-        break;
-      }
-      if (WideCharToMultiByte(cp, flags, wargv[i], -1, argvEntryBegin,
-                              requiredLength, NULL, NULL) <= 0) {
-        break;
-      }
-      *argvEntryEnd = 0;
-      argv[argc++] = argvEntryBegin;
-      argvStorageOffset += requiredLength;
+  LPWSTR *wargv = CommandLineToArgvW(wCmdLine, &argc);
+  if (!wargv || argc == 0) {
+    return webview_app_main(0, nullptr);
+  }
+  char **argv =  (char **)LocalAlloc(alloc_flags, sizeof(char *) * argc);
+  int *lengths =  (int *)LocalAlloc(alloc_flags, sizeof(int) * argc);
+  if (!argv || !lengths) {
+    abort();
+  }
+  int argvSize = 0;
+  for (int i = 0; i < argc; ++i) {
+    int length = WideCharToMultiByte(
+      cp, flags, wargv[i], -1, NULL, 0, NULL, NULL);
+    if (length > 0) {
+      lengths[i] = length;
+      // need space for the string and terminating character
+      argvSize += length + 1;
+      argv[i] = 0;
+    } else if (GetLastError() == ERROR_SUCCESS) {
+      lengths[i] = 0;
+      argv[i] = "";
+    } else {
+      abort();
     }
-    argvStorage[argvStorageOffset] = 0;
   }
-  if (wargv) {
-    LocalFree(wargv);
+  char *argvStorage = (char *)LocalAlloc(alloc_flags, argvSize);
+  if (!argvStorage) {
+    abort();
   }
-  webview_app_main(argc, argv);
+  char *arg = argvStorage;
+  for (int i = 0; i < argc; ++i) {
+    int length = lengths[i];
+    if (length == 0) {
+      continue;
+    }
+    if (WideCharToMultiByte(cp, flags, wargv[i], -1, arg,
+                            length, NULL, NULL) <= 0) {
+      abort();
+    }
+    // add terminating character
+    arg[length] = 0;
+    argv[i] = arg;
+    // move to next string (current string + terminating character)
+    arg += length + 1;
+  }
+  LocalFree(lengths);
+  LocalFree(wargv);
+  auto exit_code = webview_app_main(argc, argv);
+  LocalFree(argvStorage);
+  LocalFree(argv);
+  return exit_code;
 }
 
 #else
