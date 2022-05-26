@@ -865,7 +865,44 @@ namespace webview {
 namespace detail {
 
 using msg_cb_t = std::function<void(const std::string)>;
-using namespace winrt;
+
+std::wstring widen_string(const std::string& narrow_string) {
+    if (narrow_string.empty()) {
+        return std::wstring();
+    }
+    auto cp = CP_UTF8;
+    auto flags = MB_ERR_INVALID_CHARS;
+    auto narrow_string_c = narrow_string.c_str();
+    auto narrow_string_length = narrow_string.size();
+    auto required_length = ::MultiByteToWideChar(cp, flags, narrow_string_c, narrow_string_length, nullptr, 0);
+    if (required_length > 0) {
+        std::wstring wide_string(required_length, '\0');
+        if (::MultiByteToWideChar(cp, flags, narrow_string_c, narrow_string_length, wide_string.data(), wide_string.size()) > 0) {
+            return wide_string;
+        }
+    }
+    // Failed to convert string from UTF-8 to UTF-16
+    return std::wstring();
+}
+
+std::string narrow_string(const std::wstring& wide_string) {
+    if (wide_string.empty()) {
+        return std::string();
+    }
+    auto cp = CP_UTF8;
+    auto flags = WC_ERR_INVALID_CHARS;
+    auto wide_string_c = wide_string.c_str();
+    auto wide_string_length = wide_string.size();
+    auto required_length{::WideCharToMultiByte(cp, flags, wide_string_c, wide_string_length, nullptr, 0, nullptr, nullptr)};
+    if (required_length > 0) {
+        std::string narrow_string(required_length, '\0');
+        if (::WideCharToMultiByte(cp, flags, wide_string_c, wide_string_length, narrow_string.data(), narrow_string.size(), nullptr, nullptr) > 0) {
+            return narrow_string;
+        }
+    }
+    // Failed to convert string from UTF-16 to UTF-8
+    return std::string();
+}
 
 class win32_edge_engine {
 public:
@@ -966,7 +1003,7 @@ public:
   }
 
   void set_title(const std::string &title) {
-    SetWindowTextW(m_window, winrt::to_hstring(title).c_str());
+    SetWindowTextW(m_window, widen_string(title).c_str());
   }
 
   void set_size(int width, int height, int hints) {
@@ -998,23 +1035,23 @@ public:
   }
 
   void navigate(const std::string &url) {
-    auto wurl = winrt::to_hstring(url);
+    auto wurl = widen_string(url);
     m_webview->Navigate(wurl.c_str());
   }
 
   void init(const std::string &js) {
-    auto wjs = winrt::to_hstring(js);
+    auto wjs = widen_string(js);
     m_webview->AddScriptToExecuteOnDocumentCreated(wjs.c_str(), nullptr);
   }
 
   void eval(const std::string &js) {
-    auto wjs = winrt::to_hstring(js);
+    auto wjs = widen_string(js);
     m_webview->ExecuteScript(wjs.c_str(), nullptr);
   }
 
   void set_html(const std::string &html) {
     auto html2 =
-        winrt::to_hstring("data:text/html," + detail::percent_encode(html));
+        widen_string("data:text/html," + detail::percent_encode(html));
     m_webview->Navigate(html2.c_str());
   }
 
@@ -1132,7 +1169,7 @@ private:
         ICoreWebView2 *sender, ICoreWebView2WebMessageReceivedEventArgs *args) {
       LPWSTR message;
       args->TryGetWebMessageAsString(&message);
-      m_msgCb(winrt::to_string(message));
+      m_msgCb(narrow_string(message));
       sender->PostWebMessageAsString(message);
 
       CoTaskMemFree(message);
