@@ -904,6 +904,43 @@ std::string narrow_string(const std::wstring& wide_string) {
     return std::string();
 }
 
+class native_library {
+public:
+  explicit native_library(const std::wstring& name) : m_handle(LoadLibraryW(name.c_str())) {}
+  explicit native_library(const std::string& name) : native_library(widen_string(name)) {}
+
+  virtual ~native_library() {
+    if (m_handle) {
+      FreeLibrary(m_handle);
+      m_handle = nullptr;
+    }
+  }
+
+  native_library(const native_library& other) = delete;
+  native_library& operator=(const native_library& other) = delete;
+  native_library(native_library&& other) = default;
+  native_library& operator=(native_library&& other) = default;
+
+  operator bool() const {
+    return is_loaded();
+  }
+
+  template<typename T>
+  T get(const std::string& name) const {
+    if (is_loaded()) {
+      return reinterpret_cast<T>(GetProcAddress(m_handle, name.c_str()));
+    }
+    return nullptr;
+  }
+
+  bool is_loaded() const {
+    return !!m_handle;
+  }
+
+private:
+  HMODULE m_handle = nullptr;
+};
+
 class win32_edge_engine {
 public:
   win32_edge_engine(bool debug, void *window) {
@@ -1102,20 +1139,20 @@ private:
   }
 
   bool set_dpi_aware() {
-    auto user32 = user32_library();
-    if (auto fn = user32.SetProcessDpiAwarenessContext) {
+    auto user32 = native_library("user32.dll");
+    if (auto fn = user32.get<decltype(&SetProcessDpiAwarenessContext)>("SetProcessDpiAwarenessContext")) {
       if (fn(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE)) {
         return true;
       }
       return GetLastError() == ERROR_ACCESS_DENIED;
     }
-    if (auto shcore = shcore_library()) {
-      if (auto fn = shcore.SetProcessDpiAwareness) {
+    if (auto shcore = native_library("shcore.dll")) {
+      if (auto fn = shcore.get<decltype(&SetProcessDpiAwareness)>("SetProcessDpiAwareness")) {
         auto result = fn(PROCESS_PER_MONITOR_DPI_AWARE);
         return result == S_OK || result == E_ACCESSDENIED;
       }
     }
-    if (auto fn = user32.SetProcessDPIAware) {
+    if (auto fn = user32.get<decltype(&SetProcessDPIAware)>("SetProcessDPIAware")) {
       return !!fn();
     }
     return true;
@@ -1190,65 +1227,6 @@ private:
     HWND m_window;
     msg_cb_t m_msgCb;
     webview2_com_handler_cb_t m_cb;
-  };
-
-  class native_library {
-  public:
-    explicit native_library(const std::string& name) : m_handle(LoadLibraryA(name.c_str())) {}
-
-    virtual ~native_library() {
-      if (m_handle) {
-        FreeLibrary(m_handle);
-        m_handle = nullptr;
-      }
-    }
-
-    native_library(const native_library& other) = delete;
-    native_library& operator=(const native_library& other) = delete;
-    native_library(native_library&& other) = default;
-    native_library& operator=(native_library&& other) = default;
-
-    operator bool() const {
-      return is_loaded();
-    }
-
-    template<typename T>
-    T get(const std::string& name) const {
-      if (is_loaded()) {
-        return reinterpret_cast<T>(GetProcAddress(m_handle, name.c_str()));
-      }
-      return nullptr;
-    }
-
-    bool is_loaded() const {
-      return !!m_handle;
-    }
-
-  private:
-    HMODULE m_handle = nullptr;
-  };
-
-  struct shcore_library : public native_library {
-    using SetProcessDpiAwareness_t = HRESULT (WINAPI*)(PROCESS_DPI_AWARENESS);
-
-    shcore_library() : native_library("shcore.dll") {
-      this->SetProcessDpiAwareness = get<SetProcessDpiAwareness_t>("SetProcessDpiAwareness");
-    }
-
-    SetProcessDpiAwareness_t SetProcessDpiAwareness;
-  };
-
-  struct user32_library : public native_library {
-    using SetProcessDpiAwarenessContext_t = DPI_AWARENESS_CONTEXT (WINAPI*)(DPI_AWARENESS_CONTEXT);
-    using SetProcessDPIAware_t = BOOL (WINAPI*)();
-
-    user32_library() : native_library("user32.dll") {
-      this->SetProcessDpiAwarenessContext = get<SetProcessDpiAwarenessContext_t>("SetProcessDpiAwarenessContext");
-      this->SetProcessDPIAware = get<SetProcessDPIAware_t>("SetProcessDPIAware");
-    }
-
-    SetProcessDpiAwarenessContext_t SetProcessDpiAwarenessContext;
-    SetProcessDPIAware_t SetProcessDPIAware;
   };
 };
 
