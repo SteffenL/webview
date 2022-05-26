@@ -870,14 +870,14 @@ std::wstring widen_string(const std::string& narrow_string) {
     if (narrow_string.empty()) {
         return std::wstring();
     }
-    auto cp = CP_UTF8;
-    auto flags = MB_ERR_INVALID_CHARS;
+    UINT cp = CP_UTF8;
+    DWORD flags = MB_ERR_INVALID_CHARS;
     auto narrow_string_c = narrow_string.c_str();
-    auto narrow_string_length = narrow_string.size();
-    auto required_length = ::MultiByteToWideChar(cp, flags, narrow_string_c, narrow_string_length, nullptr, 0);
+    auto narrow_string_length = static_cast<int>(narrow_string.size());
+    auto required_length = MultiByteToWideChar(cp, flags, narrow_string_c, narrow_string_length, nullptr, 0);
     if (required_length > 0) {
-        std::wstring wide_string(required_length, '\0');
-        if (::MultiByteToWideChar(cp, flags, narrow_string_c, narrow_string_length, wide_string.data(), wide_string.size()) > 0) {
+        std::wstring wide_string(static_cast<std::size_t>(required_length), '\0');
+        if (MultiByteToWideChar(cp, flags, narrow_string_c, narrow_string_length, wide_string.data(), required_length) > 0) {
             return wide_string;
         }
     }
@@ -889,14 +889,14 @@ std::string narrow_string(const std::wstring& wide_string) {
     if (wide_string.empty()) {
         return std::string();
     }
-    auto cp = CP_UTF8;
-    auto flags = WC_ERR_INVALID_CHARS;
+    UINT cp = CP_UTF8;
+    DWORD flags = WC_ERR_INVALID_CHARS;
     auto wide_string_c = wide_string.c_str();
-    auto wide_string_length = wide_string.size();
-    auto required_length{::WideCharToMultiByte(cp, flags, wide_string_c, wide_string_length, nullptr, 0, nullptr, nullptr)};
+    auto wide_string_length = static_cast<int>(wide_string.size());
+    auto required_length = WideCharToMultiByte(cp, flags, wide_string_c, wide_string_length, nullptr, 0, nullptr, nullptr);
     if (required_length > 0) {
-        std::string narrow_string(required_length, '\0');
-        if (::WideCharToMultiByte(cp, flags, wide_string_c, wide_string_length, narrow_string.data(), narrow_string.size(), nullptr, nullptr) > 0) {
+        std::string narrow_string(static_cast<std::size_t>(required_length), '\0');
+        if (WideCharToMultiByte(cp, flags, wide_string_c, wide_string_length, narrow_string.data(), required_length, nullptr, nullptr) > 0) {
             return narrow_string;
         }
     }
