@@ -1080,6 +1080,14 @@ private:
     MSG msg = {};
     std::cout << "entering while loop" << std::endl;
     while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0)) {
+      std::cout
+        << "  still there. msg:\n"
+        << "    hwnd: " << msg.hwnd << "\n"
+        << "    message: " << msg.message << "\n"
+        << "    wParam: " << msg.wParam << "\n"
+        << "    lParam: " << msg.lParam << "\n"
+        << "    time: " << msg.time << "\n"
+        << std::endl;
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
