@@ -963,12 +963,21 @@ public:
     MSG msg;
     BOOL res;
     while ((res = GetMessage(&msg, nullptr, 0, 0)) != -1) {
+      std::cout
+        << "  run() message loop. msg:\n"
+        << "    hwnd: " << msg.hwnd << "\n"
+        << "    message: " << msg.message << "\n"
+        << "    wParam: " << msg.wParam << "\n"
+        << "    lParam: " << msg.lParam << "\n"
+        << "    time: " << msg.time << "\n"
+        << std::endl;
       if (msg.hwnd) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
         continue;
       }
       if (msg.message == WM_APP) {
+        std::cout << "run() message loop got WM_APP" << std::endl;
         auto f = (dispatch_fn_t *)(msg.lParam);
         (*f)();
         delete f;
@@ -1068,6 +1077,7 @@ private:
         nullptr, userDataFolder, nullptr,
         new webview2_com_handler(wnd, cb,
                                  [&](ICoreWebView2Controller *controller) {
+                                   std::cout << "in webview2_com_handler callback" << std::endl;
                                    m_controller = controller;
                                    m_controller->get_CoreWebView2(&m_webview);
                                    m_webview->AddRef();
@@ -1081,7 +1091,7 @@ private:
     std::cout << "entering while loop" << std::endl;
     while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0)) {
       std::cout
-        << "  still there. msg:\n"
+        << "  still in embed loop. msg:\n"
         << "    hwnd: " << msg.hwnd << "\n"
         << "    message: " << msg.message << "\n"
         << "    wParam: " << msg.wParam << "\n"
@@ -1135,11 +1145,13 @@ private:
     }
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
                                      ICoreWebView2Environment *env) {
+      std::cout << "webview2_com_handler::Invoke with env" << std::endl;
       env->CreateCoreWebView2Controller(m_window, this);
       return S_OK;
     }
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
                                      ICoreWebView2Controller *controller) {
+      std::cout << "webview2_com_handler::Invoke with controller" << std::endl;
       controller->AddRef();
 
       ICoreWebView2 *webview;
@@ -1164,6 +1176,7 @@ private:
     HRESULT STDMETHODCALLTYPE
     Invoke(ICoreWebView2 *sender,
            ICoreWebView2PermissionRequestedEventArgs *args) {
+      std::cout << "webview2_com_handler::Invoke with args" << std::endl;
       COREWEBVIEW2_PERMISSION_KIND kind;
       args->get_PermissionKind(&kind);
       if (kind == COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ) {
