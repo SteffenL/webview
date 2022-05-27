@@ -916,6 +916,13 @@ public:
                 lpmmi->ptMinTrackSize = w->m_minsz;
               }
             } break;
+            case WM_USER + 1000: {
+              if (w->m_controller) {
+                w->m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+                w->init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+              }
+
+            } break;
             default:
               return DefWindowProcW(hwnd, msg, wp, lp);
             }
@@ -938,6 +945,7 @@ public:
     std::cout << "going to set up window" << std::endl;
     std::cout << "  dpi" << std::endl;
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+
     std::cout << "  show" << std::endl;
     ShowWindow(m_window, SW_SHOW);
     std::cout << "  update" << std::endl;
@@ -952,8 +960,6 @@ public:
     embed(m_window, debug, cb);
     std::cout << "  resize" << std::endl;
     resize(m_window);
-    std::cout << "  move focus (webview2)" << std::endl;
-    m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
   }
 
   virtual ~win32_edge_engine() = default;
@@ -962,7 +968,7 @@ public:
     std::cout << "in run()" << std::endl;
     MSG msg;
     BOOL res;
-    while ((res = GetMessage(&msg, nullptr, 0, 0)) != -1) {
+    while ((res = GetMessage(&msg, nullptr, 0, 0)) != 0) {
       std::cout
         << "  run() message loop. msg:\n"
         << "    hwnd: " << msg.hwnd << "\n"
@@ -971,19 +977,20 @@ public:
         << "    lParam: " << msg.lParam << "\n"
         << "    time: " << msg.time << "\n"
         << std::endl;
-      if (msg.hwnd) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-        continue;
+      if (res == -1) {
+        // TODO: handle error
+        std::cout << "run(): GetMessage returned -1" << std::endl;
+        return;
       }
       if (msg.message == WM_APP) {
         std::cout << "run() message loop got WM_APP" << std::endl;
         auto f = (dispatch_fn_t *)(msg.lParam);
         (*f)();
         delete f;
-      } else if (msg.message == WM_QUIT) {
         return;
       }
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
     }
   }
   void *window() { return (void *)m_window; }
@@ -1058,8 +1065,6 @@ public:
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
     std::cout << "in embed()" << std::endl;
-    std::atomic_flag flag = ATOMIC_FLAG_INIT;
-    flag.test_and_set();
 
     wchar_t currentExePath[MAX_PATH];
     GetModuleFileNameW(NULL, currentExePath, MAX_PATH);
@@ -1081,28 +1086,12 @@ private:
                                    m_controller = controller;
                                    m_controller->get_CoreWebView2(&m_webview);
                                    m_webview->AddRef();
-                                   flag.clear();
+                                   PostMessage(wnd, WM_USER + 1000, 0, 0);
                                  }));
     if (res != S_OK) {
       std::cout << "CreateCoreWebView2EnvironmentWithOptions failed" << std::endl;
       return false;
     }
-    MSG msg = {};
-    std::cout << "entering while loop" << std::endl;
-    while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0)) {
-      std::cout
-        << "  still in embed loop. msg:\n"
-        << "    hwnd: " << msg.hwnd << "\n"
-        << "    message: " << msg.message << "\n"
-        << "    wParam: " << msg.wParam << "\n"
-        << "    lParam: " << msg.lParam << "\n"
-        << "    time: " << msg.time << "\n"
-        << std::endl;
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    }
-    std::cout << "got out of while loop" << std::endl;
-    init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
     return true;
   }
 
@@ -1146,7 +1135,9 @@ private:
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
                                      ICoreWebView2Environment *env) {
       std::cout << "webview2_com_handler::Invoke with res and env" << std::endl;
-      env->CreateCoreWebView2Controller(m_window, this);
+      if (env->CreateCoreWebView2Controller(m_window, this) != S_OK) {
+        std::cout << "env->CreateCoreWebView2Controller failed" << std::endl;
+      }
       return S_OK;
     }
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
