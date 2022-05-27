@@ -1145,13 +1145,13 @@ private:
     }
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
                                      ICoreWebView2Environment *env) {
-      std::cout << "webview2_com_handler::Invoke with env" << std::endl;
+      std::cout << "webview2_com_handler::Invoke with res and env" << std::endl;
       env->CreateCoreWebView2Controller(m_window, this);
       return S_OK;
     }
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
                                      ICoreWebView2Controller *controller) {
-      std::cout << "webview2_com_handler::Invoke with controller" << std::endl;
+      std::cout << "webview2_com_handler::Invoke with res and controller" << std::endl;
       controller->AddRef();
 
       ICoreWebView2 *webview;
@@ -1165,6 +1165,7 @@ private:
     }
     HRESULT STDMETHODCALLTYPE Invoke(
         ICoreWebView2 *sender, ICoreWebView2WebMessageReceivedEventArgs *args) {
+      std::cout << "webview2_com_handler::Invoke with sender and args" << std::endl;
       LPWSTR message;
       args->TryGetWebMessageAsString(&message);
       m_msgCb(winrt::to_string(message));
