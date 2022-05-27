@@ -166,13 +166,42 @@ static void test_percent_encode() {
   assert(percent_encode("æøå") == "%C3%A6%C3%B8%C3%A5");
 }
 
+#if _WIN32
+// =================================================================
+// TEST: ensure that narrow/wide string conversion works on Windows.
+// =================================================================
+static void test_win32_narrow_wide_string_conversion() {
+  using namespace webview::detail;
+  assert(widen_string("") == L"");
+  assert(narrow_string(L"") == "");
+  // ASCII characters
+  assert(widen_string("foo") == L"foo");
+  assert(narrow_string(L"foo") == "foo");
+  // Unicode
+  assert(widen_string("フー") == L"フー");
+  assert(narrow_string(L"フー") == "フー");
+  assert(widen_string("æøå") == L"æøå");
+  assert(narrow_string(L"æøå") == "æøå");
+  assert(widen_string("☺") == L"☺");
+  assert(narrow_string(L"☺") == "☺");
+  // Null-characters must also be converted
+  assert(widen_string(std::string(2, '\0')) == std::wstring(2, L'\0'));
+  assert(narrow_string(std::wstring(2, L'\0')) == std::string(2, '\0'));
+}
+#endif
+
 int main(int argc, char *argv[]) {
   std::unordered_map<std::string, std::function<void()>> all_tests = {
-      {"terminate", test_terminate},
-      {"c_api", test_c_api},
-      {"bidir_comms", test_bidir_comms},
-      {"json", test_json},
-      {"percent_encode", test_percent_encode}};
+    {"terminate", test_terminate},
+    {"c_api", test_c_api},
+    {"bidir_comms", test_bidir_comms},
+    {"json", test_json},
+    {"percent_encode", test_percent_encode},
+#if _WIN32
+    {"win32_narrow_wide_string_conversion",
+     test_win32_narrow_wide_string_conversion},
+#endif
+  };
   // Without arguments run all tests, one-by-one by forking itself.
   // With a single argument - run the requested test
   if (argc == 1) {
