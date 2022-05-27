@@ -916,13 +916,6 @@ public:
                 lpmmi->ptMinTrackSize = w->m_minsz;
               }
             } break;
-            case WM_USER + 1000: {
-              if (w->m_controller) {
-                w->m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
-                w->init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
-              }
-
-            } break;
             default:
               return DefWindowProcW(hwnd, msg, wp, lp);
             }
@@ -1091,6 +1084,34 @@ private:
     if (res != S_OK) {
       std::cout << "CreateCoreWebView2EnvironmentWithOptions failed" << std::endl;
       return false;
+    }
+    MSG msg;
+    BOOL hres;
+    while ((hres = GetMessage(&msg, nullptr, 0, 0)) != 0) {
+      std::cout
+        << "  run() message loop. msg:\n"
+        << "    hwnd: " << msg.hwnd << "\n"
+        << "    message: " << msg.message << "\n"
+        << "    wParam: " << msg.wParam << "\n"
+        << "    lParam: " << msg.lParam << "\n"
+        << "    time: " << msg.time << "\n"
+        << std::endl;
+      if (res == -1) {
+        // TODO: handle error
+        std::cout << "run(): GetMessage returned -1" << std::endl;
+        return false;
+      }
+      if (msg.message == WM_USER + 1000) {
+        std::cout << "run() message loop got WM_USER + 1000" << std::endl;
+        if (!m_controller) {
+          return false;
+        }
+        m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+        init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+        return true;
+      }
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
     }
     return true;
   }
