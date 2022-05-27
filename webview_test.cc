@@ -184,6 +184,21 @@ static void test_win32_narrow_wide_string_conversion() {
   assert(narrow_string(L"æøå") == "æøå");
   assert(widen_string("☺") == L"☺");
   assert(narrow_string(L"☺") == "☺");
+  // Ensure that elements of wide string are correct
+  {
+    auto s = widen_string("😀");
+    assert(s.size() == 1);
+    assert(static_cast<unsigned wchar_t>(s[0]) == 0xF61);
+  }
+  // Ensure that elements of narrow string are correct
+  {
+    auto s = narrow_string(L"😀");
+    assert(s.size() == 4);
+    assert(static_cast<unsigned char>(s[0]) == 0xf0);
+    assert(static_cast<unsigned char>(s[1]) == 0x9f);
+    assert(static_cast<unsigned char>(s[2]) == 0x98);
+    assert(static_cast<unsigned char>(s[3]) == 0x80);
+  }
   // Null-characters must also be converted
   assert(widen_string(std::string(2, '\0')) == std::wstring(2, L'\0'));
   assert(narrow_string(std::wstring(2, L'\0')) == std::string(2, '\0'));
