@@ -1112,6 +1112,10 @@ private:
         init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
         return true;
       }
+      if (msg.message == WM_APP) {
+        std::cout << "embed(): got WM_APP" << std::endl;
+        return true;
+      }
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
