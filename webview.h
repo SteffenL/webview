@@ -1164,8 +1164,10 @@ private:
                                      ICoreWebView2Environment *env) {
       std::cout << "webview2_com_handler::Invoke with res and env" << std::endl;
       env->AddRef();
-      if (env->CreateCoreWebView2Controller(m_window, this) != S_OK) {
+      HRESULT res = env->CreateCoreWebView2Controller(m_window, this);
+      if (res != S_OK) {
         std::cout << "env->CreateCoreWebView2Controller failed" << std::endl;
+        return res;
       }
       return S_OK;
     }
