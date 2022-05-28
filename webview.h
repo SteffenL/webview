@@ -1054,6 +1054,14 @@ private:
     MSG msg;
     BOOL hres;
     while ((hres = GetMessage(&msg, nullptr, 0, 0)) != 0) {
+      std::cout
+        << "  embed(): msg:\n"
+        << "    hwnd: " << msg.hwnd << "\n"
+        << "    message: " << msg.message << "\n"
+        << "    wParam: " << msg.wParam << "\n"
+        << "    lParam: " << msg.lParam << "\n"
+        << "    time: " << msg.time << "\n"
+        << std::endl;
       if (res == -1) {
         // TODO: handle error
         return false;
