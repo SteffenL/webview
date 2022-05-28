@@ -74,11 +74,3 @@ cl %warning_params% ^
 	"%src_dir%\webview_test.cc" /link "/OUT:%build_dir%\webview_test.exe" || exit \b
 
 "%build_dir%\webview_test.exe" || exit \b
-
-where go && (
-	echo Running Go tests
-	cd /D %src_dir%
-	set CGO_ENABLED=1
-	set "PATH=%PATH%;%src_dir%\dll\x64;%src_dir%\dll\x86"
-	go test || exit \b
-)
