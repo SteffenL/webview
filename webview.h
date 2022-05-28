@@ -1162,9 +1162,13 @@ private:
     }
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
                                      ICoreWebView2Environment *env) {
-      std::cout << "webview2_com_handler::Invoke with res and env" << std::endl;
+      std::cout << "webview2_com_handler::Invoke with res and env = " << res << std::endl;
+      if (res != S_OK) {
+      std::cout << "webview2_com_handler::Invoke with res and env failed" << std::endl;
+        return res;
+      }
       env->AddRef();
-      HRESULT res = env->CreateCoreWebView2Controller(m_window, this);
+      res = env->CreateCoreWebView2Controller(m_window, this);
       if (res != S_OK) {
         std::cout << "env->CreateCoreWebView2Controller failed" << std::endl;
         return res;
