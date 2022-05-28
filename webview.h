@@ -949,7 +949,7 @@ public:
         // TODO: handle error
         return;
       }
-      if (msg.message == WM_APP) {
+      if (msg.message == app_window_message::dispatch) {
         auto f = (dispatch_fn_t *)(msg.lParam);
         (*f)();
         delete f;
@@ -964,7 +964,7 @@ public:
     PostQuitMessage(0);
   }
   void dispatch(dispatch_fn_t f) {
-    PostThreadMessage(m_main_thread, WM_APP, 0, (LPARAM) new dispatch_fn_t(f));
+    PostThreadMessage(m_main_thread, app_window_message::dispatch, 0, (LPARAM) new dispatch_fn_t(f));
   }
 
   void set_title(const std::string &title) {
@@ -1021,6 +1021,13 @@ public:
   }
 
 private:
+  struct app_window_message {
+    enum type : UINT {
+      dispatch = WM_APP,
+      webview_ready = WM_APP + 1
+    };
+  };
+
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
     using clock = std::chrono::high_resolution_clock;
 
@@ -1035,7 +1042,6 @@ private:
     wchar_t userDataFolder[MAX_PATH];
     PathCombineW(userDataFolder, dataPath, currentExeName);
 
-    UINT ready_message = WM_USER + 1000;
     auto start = clock::now();
 
     HRESULT res = CreateCoreWebView2EnvironmentWithOptions(
@@ -1047,7 +1053,7 @@ private:
                                    m_controller = controller;
                                    m_controller->get_CoreWebView2(&m_webview);
                                    m_webview->AddRef();
-                                   PostMessage(wnd, ready_message, 0, 0);
+                                   PostMessage(wnd, app_window_message::webview_ready, 0, 0);
                                  }));
     if (res != S_OK) {
       return false;
@@ -1059,7 +1065,7 @@ private:
         // TODO: handle error
         return false;
       }
-      if (msg.message == ready_message) {
+      if (msg.message == app_window_message::webview_ready) {
         if (!m_controller) {
           return false;
         }
