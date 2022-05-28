@@ -985,6 +985,7 @@ public:
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
+    std::cout << "exiting run()" << std::endl;
   }
   void *window() { return (void *)m_window; }
   void terminate() {
@@ -1085,11 +1086,12 @@ private:
       std::cout << "CreateCoreWebView2EnvironmentWithOptions failed" << std::endl;
       return false;
     }
+    std::cout << "embed(): entering message loop" << std::endl;
     MSG msg;
     BOOL hres;
     while ((hres = GetMessage(&msg, nullptr, 0, 0)) != 0) {
       std::cout
-        << "  run() message loop. msg:\n"
+        << "  embed(): msg:\n"
         << "    hwnd: " << msg.hwnd << "\n"
         << "    message: " << msg.message << "\n"
         << "    wParam: " << msg.wParam << "\n"
@@ -1098,11 +1100,11 @@ private:
         << std::endl;
       if (res == -1) {
         // TODO: handle error
-        std::cout << "run(): GetMessage returned -1" << std::endl;
+        std::cout << "embed(): GetMessage returned -1" << std::endl;
         return false;
       }
       if (msg.message == WM_USER + 1000) {
-        std::cout << "run() message loop got WM_USER + 1000" << std::endl;
+        std::cout << "embed(): message loop got WM_USER + 1000" << std::endl;
         if (!m_controller) {
           return false;
         }
@@ -1113,6 +1115,7 @@ private:
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
+    std::cout << "embed(): exited message loop" << std::endl;
     return true;
   }
 
