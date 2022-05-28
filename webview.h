@@ -873,9 +873,7 @@ using namespace winrt;
 class win32_edge_engine {
 public:
   win32_edge_engine(bool debug, void *window) {
-    std::cout << "win32_edge_engine()" << std::endl;
     if (window == nullptr) {
-      std::cout << "window is null" << std::endl;
       HINSTANCE hInstance = GetModuleHandle(nullptr);
       HICON icon = (HICON)LoadImage(
           hInstance, IDI_APPLICATION, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
@@ -893,15 +891,12 @@ public:
             auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
             switch (msg) {
             case WM_SIZE:
-              std::cout << "wndproc got WM_SIZE" << std::endl;
               w->resize(hwnd);
               break;
             case WM_CLOSE:
-              std::cout << "wndproc got WM_CLOSE" << std::endl;
               DestroyWindow(hwnd);
               break;
             case WM_DESTROY:
-              std::cout << "wndproc got WM_DESTROY" << std::endl;
               w->terminate();
               break;
             case WM_GETMINMAXINFO: {
@@ -927,57 +922,34 @@ public:
                                CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, nullptr,
                                nullptr, hInstance, nullptr);
       if (m_window == nullptr) {
-        std::cout << "unable to create window" << std::endl;
         return;
       }
       SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR)this);
     } else {
-      std::cout << "window was passed in" << std::endl;
       m_window = *(static_cast<HWND *>(window));
     }
-
-    std::cout << "going to set up window" << std::endl;
-    std::cout << "  dpi" << std::endl;
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
-
-    std::cout << "  show" << std::endl;
     ShowWindow(m_window, SW_SHOW);
-    std::cout << "  update" << std::endl;
     UpdateWindow(m_window);
-    std::cout << "  focus" << std::endl;
     SetFocus(m_window);
 
     auto cb =
         std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1);
-
-    std::cout << "  embed" << std::endl;
     embed(m_window, debug, cb);
-    std::cout << "  resize" << std::endl;
     resize(m_window);
   }
 
   virtual ~win32_edge_engine() = default;
 
   void run() {
-    std::cout << "in run()" << std::endl;
     MSG msg;
     BOOL res;
     while ((res = GetMessage(&msg, nullptr, 0, 0)) != 0) {
-      std::cout
-        << "  run() message loop. msg:\n"
-        << "    hwnd: " << msg.hwnd << "\n"
-        << "    message: " << msg.message << "\n"
-        << "    wParam: " << msg.wParam << "\n"
-        << "    lParam: " << msg.lParam << "\n"
-        << "    time: " << msg.time << "\n"
-        << std::endl;
       if (res == -1) {
         // TODO: handle error
-        std::cout << "run(): GetMessage returned -1" << std::endl;
         return;
       }
       if (msg.message == WM_APP) {
-        std::cout << "run() message loop got WM_APP" << std::endl;
         auto f = (dispatch_fn_t *)(msg.lParam);
         (*f)();
         delete f;
@@ -986,25 +958,20 @@ public:
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
-    std::cout << "exiting run()" << std::endl;
   }
   void *window() { return (void *)m_window; }
   void terminate() {
-    std::cout << "in terminate()" << std::endl;
     PostQuitMessage(0);
   }
   void dispatch(dispatch_fn_t f) {
-    std::cout << "in dispatch()" << std::endl;
     PostThreadMessage(m_main_thread, WM_APP, 0, (LPARAM) new dispatch_fn_t(f));
   }
 
   void set_title(const std::string &title) {
-    std::cout << "in set_title()" << std::endl;
     SetWindowTextW(m_window, winrt::to_hstring(title).c_str());
   }
 
   void set_size(int width, int height, int hints) {
-    std::cout << "in set_size()" << std::endl;
     auto style = GetWindowLong(m_window, GWL_STYLE);
     if (hints == WEBVIEW_HINT_FIXED) {
       style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
@@ -1033,25 +1000,21 @@ public:
   }
 
   void navigate(const std::string &url) {
-    std::cout << "in navigate()" << std::endl;
     auto wurl = winrt::to_hstring(url);
     m_webview->Navigate(wurl.c_str());
   }
 
   void init(const std::string &js) {
-    std::cout << "in init()" << std::endl;
     auto wjs = winrt::to_hstring(js);
     m_webview->AddScriptToExecuteOnDocumentCreated(wjs.c_str(), nullptr);
   }
 
   void eval(const std::string &js) {
-    std::cout << "in eval()" << std::endl;
     auto wjs = winrt::to_hstring(js);
     m_webview->ExecuteScript(wjs.c_str(), nullptr);
   }
 
   void set_html(const std::string &html) {
-    std::cout << "in set_html()" << std::endl;
     auto html2 =
         winrt::to_hstring("data:text/html," + detail::percent_encode(html));
     m_webview->Navigate(html2.c_str());
@@ -1060,7 +1023,6 @@ public:
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
     using clock = std::chrono::high_resolution_clock;
-    std::cout << "in embed()" << std::endl;
 
     wchar_t currentExePath[MAX_PATH];
     GetModuleFileNameW(NULL, currentExePath, MAX_PATH);
@@ -1068,7 +1030,6 @@ private:
 
     wchar_t dataPath[MAX_PATH];
     if (!SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, dataPath))) {
-      std::cout << "SHGetFolderPathW failed" << std::endl;
       return false;
     }
     wchar_t userDataFolder[MAX_PATH];
@@ -1088,28 +1049,16 @@ private:
                                    PostMessage(wnd, WM_USER + 1000, 0, 0);
                                  }));
     if (res != S_OK) {
-      std::cout << "CreateCoreWebView2EnvironmentWithOptions failed" << std::endl;
       return false;
     }
-    std::cout << "embed(): entering message loop" << std::endl;
     MSG msg;
     BOOL hres;
     while ((hres = GetMessage(&msg, nullptr, 0, 0)) != 0) {
-      std::cout
-        << "  embed(): msg:\n"
-        << "    hwnd: " << msg.hwnd << "\n"
-        << "    message: " << msg.message << "\n"
-        << "    wParam: " << msg.wParam << "\n"
-        << "    lParam: " << msg.lParam << "\n"
-        << "    time: " << msg.time << "\n"
-        << std::endl;
       if (res == -1) {
         // TODO: handle error
-        std::cout << "embed(): GetMessage returned -1" << std::endl;
         return false;
       }
       if (msg.message == WM_USER + 1000) {
-        std::cout << "embed(): message loop got WM_USER + 1000" << std::endl;
         if (!m_controller) {
           return false;
         }
@@ -1118,20 +1067,16 @@ private:
         return true;
       }
       if (msg.message == WM_APP) {
-        std::cout << "embed(): got WM_APP" << std::endl;
         return true;
       }
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
-    std::cout << "embed(): exited message loop" << std::endl;
     return true;
   }
 
   void resize(HWND wnd) {
-    std::cout << "in resize()" << std::endl;
     if (m_controller == nullptr) {
-      std::cout << "m_controller is nullptr" << std::endl;
       return;
     }
     RECT bounds;
@@ -1167,24 +1112,19 @@ private:
     }
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
                                      ICoreWebView2Environment *env) {
-      std::cout << "webview2_com_handler::Invoke with res and env; res = " << res << std::endl;
       if (res != S_OK) {
-        std::cout << "webview2_com_handler::Invoke with res and env failed" << std::endl;
         return res;
       }
       env->AddRef();
       res = env->CreateCoreWebView2Controller(m_window, this);
       if (res != S_OK) {
-        std::cout << "env->CreateCoreWebView2Controller failed" << std::endl;
         return res;
       }
       return S_OK;
     }
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
                                      ICoreWebView2Controller *controller) {
-      std::cout << "webview2_com_handler::Invoke with res and controller; res = " << res << std::endl;
       if (res != S_OK) {
-        std::cout << "webview2_com_handler::Invoke with res and controller failed" << std::endl;
         return res;
       }
       controller->AddRef();
@@ -1200,7 +1140,6 @@ private:
     }
     HRESULT STDMETHODCALLTYPE Invoke(
         ICoreWebView2 *sender, ICoreWebView2WebMessageReceivedEventArgs *args) {
-      std::cout << "webview2_com_handler::Invoke with sender and args" << std::endl;
       LPWSTR message;
       args->TryGetWebMessageAsString(&message);
       m_msgCb(winrt::to_string(message));
@@ -1212,7 +1151,6 @@ private:
     HRESULT STDMETHODCALLTYPE
     Invoke(ICoreWebView2 *sender,
            ICoreWebView2PermissionRequestedEventArgs *args) {
-      std::cout << "webview2_com_handler::Invoke with args" << std::endl;
       COREWEBVIEW2_PERMISSION_KIND kind;
       args->get_PermissionKind(&kind);
       if (kind == COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ) {
@@ -1261,7 +1199,6 @@ public:
     bind(
         name,
         [](const std::string &seq, const std::string &req, void *arg) {
-          std::cout << "in bind() callback lambda" << std::endl;
           auto pair = static_cast<sync_binding_ctx_t *>(arg);
           pair->first->resolve(seq, 0, pair->second(req));
         },
@@ -1306,7 +1243,6 @@ public:
 
   void resolve(const std::string &seq, int status, const std::string &result) {
     dispatch([seq, status, result, this]() {
-      std::cout << "in resolve() dispatch callback" << std::endl;
       if (status == 0) {
         eval("window._rpc[" + seq + "].resolve(" + result +
              "); delete window._rpc[" + seq + "]");
@@ -1319,12 +1255,10 @@ public:
 
 private:
   void on_message(const std::string &msg) {
-    std::cout << "in on_message()" << std::endl;
     auto seq = detail::json_parse(msg, "id", 0);
     auto name = detail::json_parse(msg, "method", 0);
     auto args = detail::json_parse(msg, "params", 0);
     if (bindings.find(name) == bindings.end()) {
-      std::cout << "bindings.find(name) != bindings.end()" << std::endl;
       return;
     }
     auto fn = bindings[name];
