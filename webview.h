@@ -856,6 +856,7 @@ using browser_engine = detail::cocoa_wkwebview_engine;
 
 #include "webview2.h"
 
+#include <chrono>
 #include <iostream>
 
 #pragma comment(lib, "user32.lib")
@@ -1058,6 +1059,7 @@ public:
 
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
+    using clock = std::chrono::high_resolution_clock;
     std::cout << "in embed()" << std::endl;
 
     wchar_t currentExePath[MAX_PATH];
@@ -1072,11 +1074,14 @@ private:
     wchar_t userDataFolder[MAX_PATH];
     PathCombineW(userDataFolder, dataPath, currentExeName);
 
+    auto start = clock::now();
+
     HRESULT res = CreateCoreWebView2EnvironmentWithOptions(
         nullptr, userDataFolder, nullptr,
         new webview2_com_handler(wnd, cb,
                                  [&](ICoreWebView2Controller *controller) {
-                                   std::cout << "in webview2_com_handler callback" << std::endl;
+                                   std::chrono::duration<double> duration = clock::now() - start;
+                                   std::cout << "in webview2_com_handler callback after " << duration.count() << " seconds"  << std::endl;
                                    m_controller = controller;
                                    m_controller->get_CoreWebView2(&m_webview);
                                    m_webview->AddRef();
