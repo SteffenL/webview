@@ -1035,6 +1035,7 @@ private:
     wchar_t userDataFolder[MAX_PATH];
     PathCombineW(userDataFolder, dataPath, currentExeName);
 
+    UINT ready_message = WM_USER + 1000;
     auto start = clock::now();
 
     HRESULT res = CreateCoreWebView2EnvironmentWithOptions(
@@ -1046,7 +1047,7 @@ private:
                                    m_controller = controller;
                                    m_controller->get_CoreWebView2(&m_webview);
                                    m_webview->AddRef();
-                                   PostMessage(wnd, WM_USER + 1000, 0, 0);
+                                   PostMessage(wnd, ready_message, 0, 0);
                                  }));
     if (res != S_OK) {
       return false;
@@ -1058,7 +1059,7 @@ private:
         // TODO: handle error
         return false;
       }
-      if (msg.message == WM_USER + 1000) {
+      if (msg.message == ready_message) {
         if (!m_controller) {
           return false;
         }
