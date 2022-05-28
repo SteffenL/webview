@@ -10,7 +10,7 @@ echo Webview directory: %src_dir%
 echo Build directory: %build_dir%
 
 :: If you update the nuget package, change its version here
-set nuget_version=1.0.1150.38
+set nuget_version=1.0.1210.39
 echo Using Nuget Package microsoft.web.webview2.%nuget_version%
 if not exist "%script_dir%\microsoft.web.webview2.%nuget_version%" (
 	curl -sSLO https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
