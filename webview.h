@@ -1067,9 +1067,6 @@ private:
         init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
         return true;
       }
-      if (msg.message == WM_APP) {
-        return true;
-      }
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
