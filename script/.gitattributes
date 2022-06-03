@@ -1,0 +1,2 @@
+# Needed for the build script to work properly
+*.bat text eol=crlf
