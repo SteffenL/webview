@@ -57,8 +57,8 @@ Start with creating a new directory structure for your project because you will 
 ```sh
 mkdir my-project && cd my-project
 mkdir build libs "libs/webview"
-curl -sSLo "libs/webview/webview.h" "https://raw.githubusercontent.com/webview/webview/master/webview.h"
-curl -sSLo "libs/webview/webview.cc" "https://raw.githubusercontent.com/webview/webview/master/webview.cc"
+curl -sSLo "libs/webview/webview.h" "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/webview.h"
+curl -sSLo "libs/webview/webview.cc" "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/webview.cc"
 ```
 
 ### Windows Preperation
@@ -80,7 +80,7 @@ copy /Y libs\webview2\build\native\x64\WebView2Loader.dll build
 Save the basic C++ example into your project directory:
 
 ```sh
-curl -sSLo basic.cc "https://raw.githubusercontent.com/webview/webview/master/examples/cpp/basic.cc"
+curl -sSLo basic.cc "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/examples/cpp/basic.cc"
 ```
 
 Build and run the example:
@@ -121,7 +121,7 @@ cl basic.cc /std:c++17 /EHsc /Fobuild\ ^
 Save the basic C example into your project directory:
 
 ```sh
-curl -sSLo basic.c "https://raw.githubusercontent.com/webview/webview/master/examples/c/basic.c"
+curl -sSLo basic.c "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/examples/c/basic.c"
 ```
 
 Build the library and example, then run it:
@@ -149,7 +149,7 @@ Install the package:
 
 ```sh
 $ go mod init example.com/m
-$ go get github.com/webview/webview
+$ go get github.com/SteffenL/webview@v0.snapshot.1
 ```
 
 On Windows you'll need to make the WebView2 loader discoverable by cgo (see [Windows Preperation](#windows-preperation)).
@@ -162,7 +162,7 @@ set CGO_LDFLAGS="-L%cd%\libs\webview2\build\native\x64"
 Save the basic Go example into your project directory:
 
 ```sh
-curl -sSLo basic.go "https://raw.githubusercontent.com/webview/webview/master/examples/go/basic.go"
+curl -sSLo basic.go "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/examples/go/basic.go"
 ```
 
 Build and run the example:
