@@ -155,7 +155,7 @@ Install the package:
 
 ```sh
 go mod init example.com/m
-go get github.com/SteffenL/webview@v0.snapshot.2
+go get github.com/SteffenL/webview@v0.snapshot.3
 ```
 
 On Windows you'll need to make the WebView2 loader discoverable by cgo (see [Windows Preperation](#windows-preperation)).
