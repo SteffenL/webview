@@ -148,8 +148,8 @@ See [Go package documentation][go-docs] for the Go API documentation, or simply 
 Install the package:
 
 ```sh
-$ go mod init example.com/m
-$ go get github.com/SteffenL/webview@v0.snapshot.1
+go mod init example.com/m
+go get github.com/SteffenL/webview@v0.snapshot.1
 ```
 
 On Windows you'll need to make the WebView2 loader discoverable by cgo (see [Windows Preperation](#windows-preperation)).
