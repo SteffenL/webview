@@ -268,7 +268,7 @@ Code is distributed under MIT license, feel free to use it in your proprietary p
 
 [macos-app-bundle]:  https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
 [docs-repo]:         https://github.com/webview/docs
-[examples]:          https://github.com/webview/webview/tree/master/examples
+[examples]:          https://github.com/SteffenL/webview/tree/testing/simplify-getting-started/examples
 [go-docs]:           https://pkg.go.dev/github.com/webview/webview
 [gtk]:               https://docs.gtk.org/gtk3/
 [issues]:            https://github.com/webview/docs/issues
