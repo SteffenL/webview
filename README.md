@@ -27,9 +27,9 @@ We have started working on publishing documentation at [webview.dev] but you can
 
 Your compiler must support minimum C++11 except for platforms that require a more modern version.
 
-### Unix-like Systems
+### Linux and BSD
 
-The [GTK][gtk] and [WebKit2GTK][webkitgtk] libraries are required for development and distribution. You need to check your system distribution regarding how to install those those.
+The [GTK][gtk] and [WebKit2GTK][webkitgtk] libraries are required for development and distribution. You need to check your package repositories regarding how to install those those.
 
 Debian-based systems:
 
@@ -54,11 +54,11 @@ Developers and end-users must have the [WebView2 runtime][ms-webview2-rt] instal
 
 If you are a developer of this project then please go to the [development section](#development).
 
-To keep this section simple, instructions here are written for GCC when compiling C/C++ code using Unix-style command lines, and assumes that you run multiple commands in the same shell. See the [MinGW-w64 requirements](#mingw-w64-requirements) when building on Windows.
+Instructions here are written for GCC when compiling C/C++ code using Unix-style command lines, and assumes that you run multiple commands in the same shell. See the [MinGW-w64 requirements](#mingw-w64-requirements) when building on Windows.
 
-Onward we are going to show you just enough to get a working app but you are encouraged to explore the [available examples](examples) and try the ones that go beyond the mere basics.
+You will have a working app but you are encouraged to explore the [available examples][examples] and try the ones that go beyond the mere basics.
 
-Start with creating a new directory structure for your project because you will need it to follow along.
+Start with creating a new directory structure for your project:
 
 ```sh
 mkdir my-project && cd my-project
@@ -158,7 +158,7 @@ go mod init example.com/m
 go get github.com/SteffenL/webview@v0.snapshot.7
 ```
 
-On Windows you'll need to make the WebView2 loader discoverable by cgo (see [Windows Preperation](#windows-preperation)).
+On Windows you will need to make the WebView2 loader discoverable by cgo (see [Windows Preperation](#windows-preperation)).
 
 ```bat
 set CGO_CPPFLAGS="-I%cd%\libs\webview2\build\native\include"
