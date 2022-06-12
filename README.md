@@ -27,7 +27,7 @@ We have started working on publishing documentation at [webview.dev] but you can
 
 Your compiler must support minimum C++11 except for platforms that require a more modern version.
 
-### Linux
+### Unix-like Systems
 
 The [GTK][gtk] and [WebKit2GTK][webkitgtk] libraries are required for development and distribution. You need to check your Linux distribution regarding how to install those those.
 
@@ -86,7 +86,7 @@ copy /Y libs\webview2\build\native\x64\WebView2Loader.dll build
 Save the basic C++ example into your project directory:
 
 ```sh
-curl -sSLo basic.cc "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/examples/cpp/basic.cc"
+curl -sSLo basic.cc "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/examples/basic.cc"
 ```
 
 Build and run the example:
@@ -127,7 +127,7 @@ cl basic.cc /std:c++17 /EHsc /Fobuild\ ^
 Save the basic C example into your project directory:
 
 ```sh
-curl -sSLo basic.c "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/examples/c/basic.c"
+curl -sSLo basic.c "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/examples/basic.c"
 ```
 
 Build the library and example, then run it:
@@ -168,7 +168,7 @@ set CGO_LDFLAGS="-L%cd%\libs\webview2\build\native\x64"
 Save the basic Go example into your project directory:
 
 ```sh
-curl -sSLo basic.go "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/examples/go/basic.go"
+curl -sSLo basic.go "https://raw.githubusercontent.com/SteffenL/webview/testing/simplify-getting-started/examples/basic.go"
 ```
 
 Build and run the example:
