@@ -29,7 +29,7 @@ Your compiler must support minimum C++11 except for platforms that require a mor
 
 ### Unix-like Systems
 
-The [GTK][gtk] and [WebKit2GTK][webkitgtk] libraries are required for development and distribution. You need to check your distribution regarding how to install those those.
+The [GTK][gtk] and [WebKit2GTK][webkitgtk] libraries are required for development and distribution. You need to check your system distribution regarding how to install those those.
 
 Debian-based systems:
 
