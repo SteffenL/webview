@@ -152,7 +152,7 @@ g++ build/basic.o build/webview.o -Llibs/webview2/build/native/x64 -lWebView2Loa
 
 See [Go package documentation][go-docs] for the Go API documentation, or simply read the source code.
 
-Install the package:
+Create a new module and install the package:
 
 ```sh
 go mod init example.com/m
