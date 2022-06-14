@@ -143,12 +143,12 @@ rem Make sure to allow the user to override options that are being set here.
         )
     )
 
-    rem Running Go tests requires building library.
+    rem Running Go tests requires fetching dependencies.
     call :is_true_string "!option_go_test!"
     if "!__result__!" == "true" (
-        call :is_option_set_explicitly build
+        call :is_option_set_explicitly fetch_deps
         if not "!__result__!" == "true" (
-            set option_build=true
+            set option_fetch_deps=true
         )
     )
 
