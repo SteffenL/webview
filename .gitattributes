@@ -1,1 +1,3 @@
+# Build script for Windows needs CRLF to work properly
+*.bat text eol=crlf
 *.h linguist-language=c

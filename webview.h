@@ -24,8 +24,41 @@
 #ifndef WEBVIEW_H
 #define WEBVIEW_H
 
+// Determine whether to build the implementation.
+#ifndef WEBVIEW_BUILD_IMPLEMENTATION
+#ifdef __cplusplus
+#if defined(WEBVIEW_HEADER)
+#define WEBVIEW_BUILD_IMPLEMENTATION 0
+#elif defined(WEBVIEW_BUILDING)
+#define WEBVIEW_BUILD_IMPLEMENTATION 1
+#elif defined(WEBVIEW_STATIC) || defined(WEBVIEW_SHARED)
+#define WEBVIEW_BUILD_IMPLEMENTATION 0
+#else
+// Header-only
+#define WEBVIEW_BUILD_IMPLEMENTATION 1
+#endif
+#else
+#define WEBVIEW_BUILD_IMPLEMENTATION 0
+#endif
+#endif
+
 #ifndef WEBVIEW_API
-#define WEBVIEW_API extern
+#if defined(WEBVIEW_SHARED)
+#if defined(WIN32)
+#if WEBVIEW_BUILD_IMPLEMENTATION == 1
+#define WEBVIEW_API __declspec(dllexport)
+#else
+#define WEBVIEW_API __declspec(dllimport)
+#endif
+#else
+#define WEBVIEW_API __attribute__((visibility("default")))
+#endif
+#elif !defined(WEBVIEW_STATIC) && defined(__cplusplus)
+// Header-only
+#define WEBVIEW_API inline
+#else
+#define WEBVIEW_API
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -119,7 +152,20 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #ifdef __cplusplus
 }
 
-#ifndef WEBVIEW_HEADER
+// Determine whether to build the implementation.
+#ifndef WEBVIEW_BUILD_IMPLEMENTATION
+#if defined(WEBVIEW_HEADER)
+#define WEBVIEW_BUILD_IMPLEMENTATION 0
+#elif defined(WEBVIEW_BUILDING)
+#define WEBVIEW_BUILD_IMPLEMENTATION 1
+#elif defined(WEBVIEW_STATIC) || defined(WEBVIEW_SHARED)
+#define WEBVIEW_BUILD_IMPLEMENTATION 0
+#else
+#define WEBVIEW_BUILD_IMPLEMENTATION 1
+#endif
+#endif
+
+#if WEBVIEW_BUILD_IMPLEMENTATION == 1
 
 #if !defined(WEBVIEW_GTK) && !defined(WEBVIEW_COCOA) && !defined(WEBVIEW_EDGE)
 #if defined(__APPLE__)
@@ -598,9 +644,13 @@ namespace webview {
 namespace detail {
 
 // Helpers to avoid too much typing
-id operator"" _cls(const char *s, std::size_t) { return (id)objc_getClass(s); }
-SEL operator"" _sel(const char *s, std::size_t) { return sel_registerName(s); }
-id operator"" _str(const char *s, std::size_t) {
+inline id operator"" _cls(const char *s, std::size_t) {
+  return (id)objc_getClass(s);
+}
+inline SEL operator"" _sel(const char *s, std::size_t) {
+  return sel_registerName(s);
+}
+inline id operator"" _str(const char *s, std::size_t) {
   return ((id(*)(id, SEL, const char *))objc_msgSend)(
       "NSString"_cls, "stringWithUTF8String:"_sel, s);
 }
@@ -851,7 +901,7 @@ namespace detail {
 using msg_cb_t = std::function<void(const std::string)>;
 
 // Converts a narrow (UTF-8-encoded) string into a wide (UTF-16-encoded) string.
-std::wstring widen_string(const std::string &input) {
+inline std::wstring widen_string(const std::string &input) {
   if (input.empty()) {
     return std::wstring();
   }
@@ -873,7 +923,7 @@ std::wstring widen_string(const std::string &input) {
 }
 
 // Converts a wide (UTF-16-encoded) string into a narrow (UTF-8-encoded) string.
-std::string narrow_string(const std::wstring &input) {
+inline std::string narrow_string(const std::wstring &input) {
   if (input.empty()) {
     return std::string();
   }
@@ -963,7 +1013,7 @@ struct shcore_symbols {
       library_symbol<SetProcessDpiAwareness_t>("SetProcessDpiAwareness");
 };
 
-bool enable_dpi_awareness() {
+inline bool enable_dpi_awareness() {
   auto user32 = native_library(L"user32.dll");
   if (auto fn = user32.get(user32_symbols::SetProcessDpiAwarenessContext)) {
     if (fn(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE)) {

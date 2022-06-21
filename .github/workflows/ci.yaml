@@ -2,33 +2,36 @@ name: CI Pipeline
 on: [push, pull_request]
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
+  build:
+    name: build-${{ matrix.config.os-family }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+          - os: ubuntu-latest
+            os-family: linux
+            run-cmd: xvfb-run
+            deps-cmd: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
+          #- os: macos-latest
+          #  os-family: macos
+          #  run-cmd: ''
+          #  deps-cmd: ''
+          - os: windows-latest
+            os-family: windows
+            run-cmd: ''
+            deps-cmd: ''
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
-      - name: Build and run tests
-        run: xvfb-run ./script/build.sh
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Build and run tests
-        run: ./script/build.sh
-
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Build and run tests
-        run: ./script/build.bat
+        if: matrix.config.deps-cmd != ''
+        run: ${{ matrix.config.deps-cmd }}
+      - name: Build and test
+        run: ${{ matrix.config.run-cmd }} python3 script/dev.py clean configure --examples --tests build test go:build go:test
 
   clang-format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Run clang-format
         uses: DoozyX/clang-format-lint-action@v0.6
         with:

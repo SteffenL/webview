@@ -54,7 +54,7 @@ Developers and end-users must have the [WebView2 runtime][ms-webview2-rt] instal
 
 If you are a developer of this project then please go to the [development section](#development).
 
-Instructions here are written for GCC when compiling C/C++ code using Unix-style command lines, and assumes that you run multiple commands in the same shell. See the [MinGW-w64 requirements](#mingw-w64-requirements) when building on Windows.
+Instructions here are written for GCC when compiling C/C++ code using Unix-style command lines, and assumes that you run multiple commands in the same shell. Use the Command shell on Windows with these instructions rather than PowerShell. See the [MinGW-w64 requirements](#mingw-w64-requirements) when building on Windows.
 
 You will have a working app but you are encouraged to explore the [available examples][examples] and try the ones that go beyond the mere basics.
 
@@ -63,8 +63,6 @@ Start with creating a new directory structure for your project:
 ```sh
 mkdir my-project && cd my-project
 mkdir build libs "libs/webview"
-curl -sSLo "libs/webview/webview.h" "https://raw.githubusercontent.com/webview/webview/master/webview.h"
-curl -sSLo "libs/webview/webview.cc" "https://raw.githubusercontent.com/webview/webview/master/webview.cc"
 ```
 
 ### Windows Preperation
@@ -80,6 +78,21 @@ copy /Y libs\webview2\build\native\x64\WebView2Loader.dll build
 > **Note:** `WebView2Loader.dll` must be distributed along with your app unless you link it statically, in which case you must use Visual C++ for compilation.
 
 > **Note:** All of the examples here assume that you are targeting `x64` so make sure to specify the correct path for WebView2 depending on what you are targeting.
+
+### Type of Library
+
+The library is by default a header-only library when used in C++ projects, and is by default a static library when used in C projects. To select the type of library to use, define `WEBVIEW_SHARED` or `WEBVIEW_STATIC`. `WEBVIEW_BUILDING` must be defined when building a shared or static library but not when consuming it.
+
+> **Note:** Only the C API is currently supported when using a shared or static library.
+
+### C/C++ Preparation
+
+Fetch the webview library:
+
+```sh
+curl -sSLo "libs/webview/webview.h" "https://raw.githubusercontent.com/webview/webview/master/webview.h"
+curl -sSLo "libs/webview/webview.cc" "https://raw.githubusercontent.com/webview/webview/master/webview.cc"
+```
 
 ### Getting Started with C++
 
@@ -162,7 +175,7 @@ go get github.com/webview/webview
 On Windows you will need to make the WebView2 loader discoverable by cgo (see [Windows Preperation](#windows-preperation)):
 
 ```bat
-set CGO_CPPFLAGS="-I%cd%\libs\webview2\build\native\include"
+set CGO_CXXFLAGS="-I%cd%\libs\webview2\build\native\include"
 set CGO_LDFLAGS="-L%cd%\libs\webview2\build\native\x64"
 ```
 
@@ -190,6 +203,14 @@ The examples shown here are mere pieces of a bigger picture so we encourage you 
 ## Development
 
 To build the library, examples and run tests, run `script/build.sh` on Unix-based systems and `script/build.bat` on Windows.
+
+### CMake
+
+```sh
+cmake -G Ninja -B build -S . -DBUILD_EXAMPLES=ON -DENABLE_TESTS=ON
+cmake --build build
+ctest --test-dir build
+```
 
 > **Note:** These scripts are not in the best condition but a rewrite is being planned. Please bear with us and manually edit the scripts to your liking.
 
