@@ -12,21 +12,24 @@ jobs:
             os-family: linux
             run-cmd: xvfb-run
             deps-cmd: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
+            test-timeout: 10
           - os: macos-latest
             os-family: macos
             run-cmd: ''
             deps-cmd: ''
+            test-timeout: 10
           - os: windows-latest
             os-family: windows
             run-cmd: ''
             deps-cmd: ''
+            test-timeout: 60
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
         if: matrix.config.deps-cmd != ''
         run: ${{ matrix.config.deps-cmd }}
       - name: Build and test
-        run: ${{ matrix.config.run-cmd }} python3 script/dev.py clean configure --examples --tests build test --timeout=60 go:build go:test
+        run: ${{ matrix.config.run-cmd }} python3 script/dev.py clean configure --examples --tests build test --timeout=${{ matrix.config.test-timeout }} go:build go:test
 
   clang-format:
     runs-on: ubuntu-latest
