@@ -26,7 +26,7 @@ jobs:
         if: matrix.config.deps-cmd != ''
         run: ${{ matrix.config.deps-cmd }}
       - name: Build and test
-        run: ${{ matrix.config.run-cmd }} python3 script/dev.py clean configure --examples --tests build test go:build go:test
+        run: ${{ matrix.config.run-cmd }} python3 script/dev.py clean configure --examples --tests build test --timeout=60 go:build go:test
 
   clang-format:
     runs-on: ubuntu-latest
