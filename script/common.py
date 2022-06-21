@@ -291,7 +291,7 @@ def detect_current_shell() -> ShellId:
         if not ok:
             raise Exception("Failed to get exe path from parent process")
         exe_path_str = exe_path.value[0:exe_path_length.value]
-        exe_name = os.path.basename(exe_path_str)
+        exe_name = os.path.basename(exe_path_str).lower()
         if exe_name in ("powershell.exe", "pwsh.exe"):
             return ShellId.PWSH
         if exe_name == "cmd.exe":
