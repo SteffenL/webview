@@ -27,14 +27,14 @@ jobs:
           - os: windows-latest
             os-family: windows
             run-cmd: ''
-            deps-cmd: 'choco install mingw'
+            deps-cmd: 'choco install mingw -y'
             test-timeout: 60
             cc: 'gcc'
             cxx: 'g++'
           - os: windows-latest
             os-family: windows
             run-cmd: ''
-            deps-cmd: 'choco install mingw'
+            deps-cmd: 'choco install mingw -y'
             test-timeout: 60
             cc: 'cl'
             cxx: 'cl'
