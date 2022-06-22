@@ -34,7 +34,7 @@ jobs:
           - os: windows-latest
             os-family: windows
             run-cmd: ''
-            deps-cmd: 'choco upgrade mingw -y'
+            deps-cmd: ''
             test-timeout: 60
             cc: 'cl'
             cxx: 'cl'
