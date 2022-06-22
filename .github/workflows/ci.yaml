@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: build-${{ matrix.config.os-family }}
+    name: build-${{ matrix.config.os-family }}-${{ matrix.config.compiler-id }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
@@ -16,14 +16,23 @@ jobs:
             test-timeout: 10
             cc: 'gcc'
             cxx: 'g++'
+            compiler-id: 'gcc'
+          - os: ubuntu-latest
+            os-family: linux
+            run-cmd: xvfb-run
+            deps-cmd: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
+            test-timeout: 10
+            cc: 'clang'
+            cxx: 'clang++'
+            compiler-id: 'clang'
           - os: macos-latest
             os-family: macos
             run-cmd: ''
             deps-cmd: ''
             test-timeout: 10
-            compiler: 'clang'
             cc: 'clang'
             cxx: 'clang++'
+            compiler-id: 'clang'
           - os: windows-latest
             os-family: windows
             run-cmd: ''
@@ -31,6 +40,15 @@ jobs:
             test-timeout: 60
             cc: 'gcc'
             cxx: 'g++'
+            compiler-id: 'gcc'
+          - os: windows-latest
+            os-family: windows
+            run-cmd: ''
+            deps-cmd: 'choco upgrade mingw -y'
+            test-timeout: 60
+            cc: 'clang'
+            cxx: 'clang++'
+            compiler-id: 'clang'
           - os: windows-latest
             os-family: windows
             run-cmd: ''
@@ -38,6 +56,7 @@ jobs:
             test-timeout: 60
             cc: 'cl'
             cxx: 'cl'
+            compiler-id: 'msvc'
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
