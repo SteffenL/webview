@@ -62,6 +62,9 @@ jobs:
       - name: Install dependencies
         if: matrix.config.deps-cmd != ''
         run: ${{ matrix.config.deps-cmd }}
+      - name: Activate MSVC environment
+        if: matrix.config.compiler-id == 'msvc'
+        run: python3 script/dev.py devenv | Invoke-Expression
       - name: Build and test
         env:
           CC: ${{ matrix.config.cc }}
