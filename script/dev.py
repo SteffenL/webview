@@ -63,6 +63,11 @@ class BuildType(Enum):
     DEBUG = "Debug"
     RELEASE = "Release"
 
+class CompilerId(Enum):
+    GCC = "gcc"
+    CLANG = "clang"
+    MSVC = "msvc"
+
 def cmd_build():
     """Builds the library using CMake, and if configured, examples and tests."""
     check_build_configured(build_dir)
@@ -108,12 +113,14 @@ def cmd_configure(build_type: BuildType = BuildType.RELEASE, examples: bool = Fa
         cmd += (f"-DCMAKE_BUILD_TYPE={build_type.value}",)
     subprocess.check_call(cmd)
 
-def cmd_devenv(arch: str = "x64", shell: ShellId = None):
+def cmd_devenv(compiler_id: CompilerId = None, arch: str = "x64", shell: ShellId = None):
     """
     Prints command lines that can be used to aid development for the specified shell.
 
     Arguments:
-      - shell -- Output format of commands.
+      - compiler_id -- Compiler ID.
+      - arch        -- Target architecture.
+      - shell       -- Output format of commands.
     """
     check_build_configured(build_dir)
     cmake_cache = load_cmake_cache_from_dir(build_dir)
