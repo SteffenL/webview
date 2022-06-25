@@ -154,13 +154,13 @@ Create a new module and install the package:
 
 ```sh
 go mod init example.com/m
-go get github.com/webview/webview
+go get github.com/SteffenL/webview@custom-webview2-loader-impl-snapshot-v1
 ```
 
 Save the basic Go example into your project directory:
 
 ```sh
-curl -sSLo basic.go "https://raw.githubusercontent.com/webview/webview/master/examples/basic.go"
+curl -sSLo basic.go "https://raw.githubusercontent.com/SteffenL/webview/testing/custom-webview2-loader-impl/examples/basic.go"
 ```
 
 Build and run the example:
