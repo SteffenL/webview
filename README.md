@@ -255,35 +255,22 @@ These configuration files allow you to build and debug the project using MinGW-w
         {
             "label": "Create build directory",
             "type": "shell",
+            "command": "if [ ! -d '${workspaceFolder}/build' ]; then mkdir '${workspaceFolder}/build'; fi",
             "windows": {
                 "command": "if not exist \"${workspaceFolder}\\build\" mkdir \"${workspaceFolder}\\build\""
             }
         },
         {
             "label": "Build",
-            "type": "process",
+            "type": "shell",
             "group": "build",
             "dependsOn": "Create build directory",
+            "problemMatcher": "$gcc",
+            "linux": {
+                "command": "g++ \"${workspaceFolder}/examples/basic.cc\" -g -std=c++11 -Wall -Wextra -pedantic $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) \"-I${workspaceFolder}\" -DWEBVIEW_GTK -o \"${workspaceFolder}/build/basic\"",
+            },
             "windows": {
-                "command": "g++.exe",
-                "args": [
-                    "${workspaceFolder}/examples/basic.cc",
-                    "-g",
-                    "-std=c++17",
-                    "-mwindows",
-                    "-L${workspaceFolder}/script/Microsoft.Web.WebView2.1.0.1150.38/build/native/x64",
-                    "-lWebView2Loader.dll",
-                    "-ladvapi32",
-                    "-lole32",
-                    "-lshell32",
-                    "-lshlwapi",
-                    "-luser32",
-                    "-o",
-                    "${workspaceFolder}/build/basic.exe",
-                    "-I${workspaceFolder}",
-                    "-I${workspaceFolder}/script/Microsoft.Web.WebView2.1.0.1150.38/build/native/include"
-                ],
-                "problemMatcher": "$gcc"
+                "command": "g++ \"${workspaceFolder}/examples/basic.cc\" -g -std=c++17 -Wall -Wextra -pedantic -mwindows \"-L${workspaceFolder}/script/Microsoft.Web.WebView2.1.0.1150.38/build/native/x64\" -lWebView2Loader.dll -ladvapi32 -lole32 -lshell32 -lshlwapi -luser32 \"-I${workspaceFolder}\" \"-I${workspaceFolder}/script/Microsoft.Web.WebView2.1.0.1150.38/build/native/include\" -DWEBVIEW_EDGE -o \"${workspaceFolder}/build/basic.exe\"",
             }
         }
     ]
