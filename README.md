@@ -200,6 +200,96 @@ To build the library, examples and run tests, run `script/build.sh` on Unix-base
 
 > **Note:** These scripts are not in the best condition but a rewrite is being planned. Please bear with us and manually edit the scripts to your liking.
 
+### Visual Studio Code
+
+These configuration files allow you to build and debug the project using MinGW-w64/GCC on Windows.
+
+`.vscode/launch.json`:
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "windows": {
+                "program": "${workspaceFolder}\\build\\basic.exe",
+                "environment": [
+                    {
+                        "name": "PATH",
+                        "value": "${workspaceFolder}\\script\\Microsoft.Web.WebView2.1.0.1150.38\\build\\native\\x64;${env:PATH}"
+                    }
+                ],
+            },
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description":  "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build"
+        }
+    ]
+}
+```
+
+`.vscode/tasks.json`:
+
+```json
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Create build directory",
+            "type": "shell",
+            "windows": {
+                "command": "if not exist \"${workspaceFolder}\\build\" mkdir \"${workspaceFolder}\\build\""
+            }
+        },
+        {
+            "label": "Build",
+            "type": "process",
+            "group": "build",
+            "dependsOn": "Create build directory",
+            "windows": {
+                "command": "g++.exe",
+                "args": [
+                    "${workspaceFolder}/examples/basic.cc",
+                    "-g",
+                    "-std=c++17",
+                    "-mwindows",
+                    "-L${workspaceFolder}/script/Microsoft.Web.WebView2.1.0.1150.38/build/native/x64",
+                    "-lWebView2Loader.dll",
+                    "-ladvapi32",
+                    "-lole32",
+                    "-lshell32",
+                    "-lshlwapi",
+                    "-luser32",
+                    "-o",
+                    "${workspaceFolder}/build/basic.exe",
+                    "-I${workspaceFolder}",
+                    "-I${workspaceFolder}/script/Microsoft.Web.WebView2.1.0.1150.38/build/native/include"
+                ],
+                "problemMatcher": "$gcc"
+            }
+        }
+    ]
+}
+```
+
 ## MinGW-w64 Requirements
 
 In order to build this library using MinGW-w64 on Windows then it must support C++17 and have an up-to-date Windows SDK. This applies both when explicitly building the C/C++ library as well as when doing so implicitly through Go/cgo.
