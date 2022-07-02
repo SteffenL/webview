@@ -117,6 +117,8 @@ WEBVIEW_API void webview_unbind(webview_t w, const char *name);
 WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
                                 const char *result);
 
+WEBVIEW_API void webview_set_user_agent(webview_t w, const char *agent);
+
 #ifdef __cplusplus
 }
 
@@ -539,6 +541,10 @@ public:
                                    NULL, NULL);
   }
 
+  void set_user_agent(const std::string &agent) {
+    // Not yet implemented
+  }
+
 private:
   virtual void on_message(const std::string &msg) = 0;
 
@@ -804,6 +810,9 @@ public:
         ((id(*)(id, SEL, const char *))objc_msgSend)(
             "NSString"_cls, "stringWithUTF8String:"_sel, js.c_str()),
         nullptr);
+  }
+  void set_user_agent(const std::string &agent) {
+    // Not yet implemented
   }
 
 private:
@@ -1147,6 +1156,16 @@ public:
     m_webview->NavigateToString(widen_string(html).c_str());
   }
 
+  void set_user_agent(const std::string &agent) {
+    ICoreWebView2Settings *settings = nullptr;
+    m_webview->get_Settings(&settings);
+    ICoreWebView2Settings2 *settings2 = nullptr;
+    settings->QueryInterface(IID_ICoreWebView2Settings2,
+                             reinterpret_cast<void **>(&settings2));
+    settings2->put_UserAgent(widen_string(agent).c_str());
+    settings2->Release();
+  }
+
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
@@ -1455,6 +1474,10 @@ WEBVIEW_API void webview_unbind(webview_t w, const char *name) {
 WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
                                 const char *result) {
   static_cast<webview::webview *>(w)->resolve(seq, status, result);
+}
+
+WEBVIEW_API void webview_set_user_agent(webview_t w, const char *agent) {
+  static_cast<webview::webview *>(w)->set_user_agent(agent);
 }
 
 #endif /* WEBVIEW_HEADER */
