@@ -1,38 +1,124 @@
 # Changelog
 
-### Migrating from v0.1.1 to v0.10.0
+Notable changes are added to this file.
 
-#### Go
+## 0.10.0 [unreleased]
 
-1. `Webview.Open()` has been removed. Use other webview APIs to create a window, open a link and run main UI loop.
-2. `Webview.Debug()` and `webview.Debugf()` have been removed. Use your favorite logging library to debug webview apps.
-3. `Webview.Settings` struct has been removed. Title, URL and size are controlled via other API setters and can be updated at any time, not only when webview is created.
-4. `Webview.Loop()` has been removed. Use `Run()` instead.
-5. `WebView.Run()`, `WebView.Terminate()`, `WebView.SetTitle()`, `WebView.Dispatch()` stayed the same.
-6. `WebView.Exit()` has been renamed to `WebView.Destroy()`
-7. `WebView.SetColor()` and `WebView.SetFullScreen()` have been removed. Use `Window()` to get native window handle and probably write some Cgo code to adjust native window to your taste.
-8. `Webview.Dialog` has been removed. But it is likely to be brought back as a standalone module.
-9. `WebView.Eval()` remained the same.
-10. `WebView.InjectCSS()` has been removed. Use eval to inject style tag with CSS inside.
-11. `WebView.Bind()` kept the name, but changed the semantics. Only functions can be bound. Not the structs, like in Lorca.
+This release has breaking changes. See instructions on how to migrate in [`MIGRATING.md`](./MIGRATING.md).
 
-#### C/C++
+Contributions:
 
-1. Use opaque `webview_t` type instead of `struct webview`. Size, title and URL are controlled via API setter functions. Invoke callback has been replaced with `webview_bind()` and `webview_return()` to make native function bindings inter-operate with JS.
-2. If you have been using simplified `webview()` API to only open a single URL
-   in a webview window - this function has been removed. You now have to create
-   a new webview instance, configure and run it explicitly.
-3. `webview_init()` is replaced by `webview_create()` which creates a new webview instance.
-4. `webview_exit()` has been replaced with more meaningful `webview_destroy()`.
-5. Main UI loop with `webview_loop()` inside has been replaced with `webview_run()` runs infinitely until the webview window is closed.
-6. `webview_terminate()` remains the same.
-7. `webview_dispatch()` remains the same.
-8. `webview_set_title()` remains the same.
-9. `webview_set_color()` has been removed. Use `webview_get_window` and native
-   window APIs to control colors, transparency and other native window
-   properties. At some point these APIs might be brought back.
-10. `webview_set_fullscreen()` has been removed, see above.
-11. `webview_dialog()` has been removed. But I'd like to see it added back as a separate independent module or library.
-12. `webview_eval()` remains the same.
-13. `webview_inject_css()` has been removed. Use `webview_eval()` to create style tag manually.
-14. `webview_debug()` has been removed. Use whatever fits best to your programming language and environment to debug your GUI apps.
+* #315
+* #321
+* cccd9636402df0c3e1b4d1c9c3627f36e5ac583b
+* #337
+* #338
+* 50e4bcc420abdc7be96a54b7c79934a000b76901
+* #363
+* #359
+* #364
+* #379
+* #356
+* #365
+* #393
+* #394
+* #395
+* #414
+* #418
+* #419
+* #416
+* #411
+* #420
+* #405
+* #429
+* #433
+* #430
+* #489
+* #452
+* #517
+* #432
+* #522
+* #526
+* #531
+* #535
+* #560
+* #614
+* #662
+* #622
+* #667
+* #664
+* #660
+* #665
+* #446
+* #648
+* #663
+* #441
+* #677
+* #679
+* #680
+* #681
+* #668
+* #684
+* #666
+* #583
+* #691
+* #692
+* #693
+* #685
+* #701
+* #700
+* #702
+* #708
+* #713
+* #715
+* #710
+* b0c1c5aab278464e00f9d29ca247f12413e47875
+* #727
+* #712
+* #732
+* #737
+* #740
+* #736
+* #741
+* #746
+* #747
+* #750
+* #744
+* #742
+* #734
+* #748
+* #751
+* #749
+* #754
+* #755
+* #753
+* #758
+* #760
+* #762
+* #764
+* #769
+* #772
+* #773
+* #778
+* #780
+* #782
+* #788
+* #789
+* #785
+* #784
+* #790
+* #793
+* #794
+* #795
+* #761
+* #798
+* #801
+* #802
+
+## 0.1.1 [2020-01-21]
+
+Final version before rewrite.
+
+## 0.1.0 [2018-05-09]
+
+Initial release.
