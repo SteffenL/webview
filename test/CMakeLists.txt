@@ -13,6 +13,10 @@ if(BUILD_TESTING)
             set(TEST_FULL_NAME ${PREFIX}${TEST_SHORT_NAME})
             add_test(NAME ${TEST_FULL_NAME} COMMAND ${TARGET_NAME})
             set_tests_properties(${TEST_FULL_NAME} PROPERTIES TIMEOUT ${TIMEOUT_SECONDS})
+            if(WIN32 AND USE_WEBVIEW2_SHARED_LIBRARY)
+                # Help tests find WebView2Loader.dll
+                set_tests_properties(${TEST_FULL_NAME} PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_append:$<TARGET_FILE_DIR:WebView2Loader>")
+            endif()
         endforeach()
     endfunction()
 
