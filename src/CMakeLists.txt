@@ -22,6 +22,12 @@ target_include_directories(${TARGET_NAME_S} PUBLIC
 target_link_libraries(${TARGET_NAME} INTERFACE webview_deps)
 target_link_libraries(${TARGET_NAME_S} PUBLIC ${TARGET_NAME} PRIVATE webview_build_support)
 
+if(WIN32 AND NOT MSVC)
+    # Specify Windows libraries to link when not using MSVC (possibly MinGW)
+    set(WINDOWS_LIBRARIES ole32 shell32 shlwapi user32)
+    target_link_libraries(${TARGET_NAME} INTERFACE ${WINDOWS_LIBRARIES})
+endif()
+
 set_target_properties(${TARGET_NAME_S} PROPERTIES
     OUTPUT_NAME ${TARGET_NAME}
     CXX_VISIBILITY_PRESET hidden
@@ -29,10 +35,12 @@ set_target_properties(${TARGET_NAME_S} PROPERTIES
 )
 
 include(GenerateExportHeader)
+# Use WEBVIEW_DEPRECATED defined in-source instead of WEBVIEW_DEPRECATED_.
 generate_export_header(
     ${TARGET_NAME_S}
     BASE_NAME WEBVIEW
     EXPORT_MACRO_NAME WEBVIEW_API
     EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/generated/webview/exports.h
+    DEPRECATED_MACRO_NAME WEBVIEW_DEPRECATED_
     STATIC_DEFINE WEBVIEW_STATIC
 )

@@ -7,15 +7,18 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: 'ubuntu-22.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '12', cc: '/usr/bin/gcc-12', cxx: '/usr/bin/g++-12' }
-          - { os: 'ubuntu-22.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '14', cc: '/usr/bin/clang-14', cxx: '/usr/bin/clang++-14' }
-          - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '10', cc: '/usr/bin/gcc-10', cxx: '/usr/bin/g++-10' }
-          - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '12', cc: '/usr/bin/clang-12', cxx: '/usr/bin/clang++-12' }
-          - { os: 'macos-10.15', visual-run-cmd: '', compiler-id: 'appleclang', compiler-version: '' }
-          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.3', vs-version-name: '2022', vcvars-arch: 'x64' }
-          - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64' }
+          - { os: 'ubuntu-22.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '12', cc: '/usr/bin/gcc-12', cxx: '/usr/bin/g++-12', job-name-suffix: '' }
+          - { os: 'ubuntu-22.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '14', cc: '/usr/bin/clang-14', cxx: '/usr/bin/clang++-14', job-name-suffix: '' }
+          - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '10', cc: '/usr/bin/gcc-10', cxx: '/usr/bin/g++-10', job-name-suffix: '' }
+          - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '12', cc: '/usr/bin/clang-12', cxx: '/usr/bin/clang++-12', job-name-suffix: '' }
+          - { os: 'macos-10.15', visual-run-cmd: '', compiler-id: 'appleclang', compiler-version: '', job-name-suffix: '' }
+          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.3', vs-version-name: '2022', vcvars-arch: 'x64', job-name-suffix: ', static webview2loader', cmake-option-use-webview2-shared-library: 'OFF' }
+          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.3', vs-version-name: '2022', vcvars-arch: 'x64', job-name-suffix: ', shared webview2loader', cmake-option-use-webview2-shared-library: 'ON' }
+          - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64', job-name-suffix: ', static webview2loader', cmake-option-use-webview2-shared-library: 'OFF' }
+          - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64', job-name-suffix: ', shared webview2loader', cmake-option-use-webview2-shared-library: 'ON' }
+          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'mingw', job-name-suffix: ', shared webview2loader', cmake-option-use-webview2-shared-library: 'ON' }
     runs-on: ${{ matrix.config.os }}
-    name: ${{ matrix.config.os }}, ${{ matrix.config.compiler-id }}${{ matrix.config.compiler-version }}
+    name: ${{ matrix.config.os }}, ${{ matrix.config.compiler-id }}${{ matrix.config.compiler-version }}${{ matrix.config.job-name-suffix }}
     steps:
       - uses: actions/checkout@v3
       - name: Linux preparation
@@ -36,24 +39,42 @@ jobs:
         run: |
           echo Installing Ninja
           choco install ninja --version=1.10.2
-          echo Configuring MSVC toolset
-          set "vcvarsall_path_x64=C:\Program Files\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
-          set "vcvarsall_path_x86=C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
-          if exist "%vcvarsall_path_x64%" (set "vcvarsall_path=%vcvarsall_path_x64%") else (set "vcvarsall_path=%vcvarsall_path_x86%")
-          call "%vcvarsall_path%" ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
-          for /F "usebackq tokens=1,2 delims==" %%a in (`set`) do echo %%a=%%b>> %GITHUB_ENV%
+          if "${{ matrix.config.compiler-id }}" == "mingw" (
+            call :configure_mingw
+          ) else if "${{ matrix.config.compiler-id }}" == "msvc" (
+            call :configure_msvc
+          )
           echo Installing WebView2 Runtime
           curl -sSLo "%TEMP%\MicrosoftEdgeWebview2Setup.exe" https://go.microsoft.com/fwlink/p/?LinkId=2124703
           "%TEMP%\MicrosoftEdgeWebview2Setup.exe" /silent /install
+          goto :eof
+          :configure_mingw
+            echo Adding MinGW-w64 to PATH
+            echo PATH=%ProgramData%\chocolatey\lib\mingw\tools\install\mingw64\bin;%PATH%>>%GITHUB_ENV%
+            goto :eof
+          :configure_msvc
+            echo Configuring MSVC toolset
+            set "vcvarsall_path_x64=C:\Program Files\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+            set "vcvarsall_path_x86=C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+            if exist "%vcvarsall_path_x64%" (set "vcvarsall_path=%vcvarsall_path_x64%") else (set "vcvarsall_path=%vcvarsall_path_x86%")
+            call "%vcvarsall_path%" ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
+            for /F "usebackq tokens=1,2 delims==" %%a in (`set`) do echo %%a=%%b>>%GITHUB_ENV%
+            goto :eof
         shell: cmd
       - name: Set compiler environment variables
         if: runner.os != 'Windows'
         run: |
           echo "CC=${{ matrix.config.cc }}" >> ${GITHUB_ENV}
           echo "CXX=${{ matrix.config.cxx }}" >> ${GITHUB_ENV}
-      - name: Build and run tests
-        run: |
-          cmake -G Ninja -B build -S .
-          cmake --build build --config Release
-          ctest --test-dir build/test --output-on-failure --config Release -R unit_
-          ${{ matrix.config.visual-run-cmd }} ctest --test-dir build/test --output-on-failure --config Release -R functional_
+      - name: Configure build
+        if: runner.os == 'Windows'
+        run: cmake -G Ninja -B build -S . "-DUSE_WEBVIEW2_SHARED_LIBRARY=${{ matrix.config.cmake-option-use-webview2-shared-library }}"
+      - name: Configure build
+        if: runner.os != 'Windows'
+        run: cmake -G Ninja -B build -S .
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Run unit tests
+        run: ctest --test-dir build/test --output-on-failure --config Release -R unit_
+      - name: Run functional tests
+        run: ${{ matrix.config.visual-run-cmd }} ctest --test-dir build/test --output-on-failure --config Release -R functional_
