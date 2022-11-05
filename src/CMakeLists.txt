@@ -29,10 +29,12 @@ set_target_properties(${TARGET_NAME_S} PROPERTIES
 )
 
 include(GenerateExportHeader)
+# Use WEBVIEW_DEPRECATED defined in-source instead of WEBVIEW_DEPRECATED_.
 generate_export_header(
     ${TARGET_NAME_S}
     BASE_NAME WEBVIEW
     EXPORT_MACRO_NAME WEBVIEW_API
     EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/generated/webview/exports.h
+    DEPRECATED_MACRO_NAME WEBVIEW_DEPRECATED_
     STATIC_DEFINE WEBVIEW_STATIC
 )
