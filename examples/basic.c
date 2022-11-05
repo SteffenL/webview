@@ -8,7 +8,7 @@ void myFunc(const char *seq, const char *req, void *arg) {
   printf("Params: %s\n", req);
 }
 
-int webview_app_main(int argc, char *argv[]) {
+int webview_app_main(int argc, const char *argv[]) {
   webview_t w = webview_create(0, NULL);
   webview_set_title(w, "Basic Example");
   webview_set_size(w, 480, 320, WEBVIEW_HINT_NONE);

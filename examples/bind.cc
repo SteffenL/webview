@@ -16,7 +16,7 @@ constexpr const auto html =
   });
 </script>)html";
 
-int webview_app_main(int argc, char *argv[]) {
+int webview_app_main(int argc, const char *argv[]) {
   unsigned int count = 0;
   webview::webview w(false, nullptr);
   w.set_title("Bind Example");

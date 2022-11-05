@@ -35,7 +35,7 @@ void increment(const char *seq, const char *req, void *arg) {
   webview_return(context->w, seq, 0, result);
 }
 
-int webview_app_main(int argc, char *argv[]) {
+int webview_app_main(int argc, const char *argv[]) {
   webview_t w = webview_create(0, NULL);
   context_t context = {.w = w, .count = 0};
   webview_set_title(w, "Bind Example");

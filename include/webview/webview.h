@@ -1680,7 +1680,7 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 #endif /* __cplusplus */
 #ifdef WEBVIEW_DEFINE_MAIN
 
-int webview_app_main(int argc, char *argv[]);
+int webview_app_main(int argc, const char *argv[]);
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -1741,7 +1741,7 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 }
 
 #else
-int main(int argc, char *argv[]) { return webview_app_main(argc, argv); }
+int main(int argc, const char *argv[]) { return webview_app_main(argc, argv); }
 #endif
 
 #endif /* WEBVIEW_DEFINE_MAIN */
