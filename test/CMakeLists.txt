@@ -34,7 +34,7 @@ if(BUILD_TESTING)
     endfunction()
 
     function(add_tests)
-        set(TIMEOUT_SECONDS 5)
+        set(TIMEOUT_SECONDS 10)
         set(OS ${CMAKE_SYSTEM_NAME})
         string(TOLOWER ${OS} OS)
 
