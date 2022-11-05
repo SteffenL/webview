@@ -1693,7 +1693,9 @@ int webview_app_main(int argc, char *argv[]);
 #include <shellapi.h>
 // clang-format on
 
+#ifdef _MSC_VER
 #pragma comment(lib, "shell32.lib")
+#endif
 
 int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                       PWSTR pCmdLine, int nCmdShow) {
