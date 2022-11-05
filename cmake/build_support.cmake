@@ -11,6 +11,12 @@ else()
         -Wall -Wextra -Wconversion -Wsign-conversion -pedantic
         -Wno-unused-parameter
     )
+    # Likely MinGW
+    if(WIN32)
+        list(APPEND COMPILE_OPTIONS
+            -Wno-cast-function-type # cast between incompatible function types [...] - required for GetProcAddress
+        )
+    endif()
 endif()
 set(TARGET_NAME webview_build_support)
 add_library(${TARGET_NAME} INTERFACE)
