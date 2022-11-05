@@ -29,15 +29,16 @@ constexpr const auto html = R"|||(
 )|||";
 
 int webview_app_main(int argc, char *argv[]) {
+  using namespace webview::detail;
   webview::webview w(true, nullptr);
   w.set_title("Basic example");
   w.set_size(480, 320, WEBVIEW_HINT_NONE);
   w.bind("ping", [](const std::string &s) -> std::string {
     std::cout << "Received ping: " << s << "\n";
-    auto req_object = webview::json_parse(s, "", 0);
-    auto req_array = webview::json_parse(s, "", 1);
-    auto message = webview::json_parse(req_object, "message", -1);
-    auto number = webview::json_parse(req_array, "", 0);
+    auto req_object = json_parse(s, "", 0);
+    auto req_array = json_parse(s, "", 1);
+    auto message = json_parse(req_object, "message", -1);
+    auto number = json_parse(req_array, "", 0);
     return R"({"message": "Pong )" + number + R"(!"})";
   });
   w.set_html(html);

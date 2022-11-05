@@ -85,13 +85,14 @@ constexpr const auto html = R"|||(
 )|||";
 
 int webview_app_main(int argc, char *argv[]) {
+  using namespace webview::detail;
   webview::webview w(true, nullptr);
   w.set_title("Calculation");
   w.set_size(480, 320, WEBVIEW_HINT_NONE);
   w.bind("add", [](const std::string &s) -> std::string {
     try {
-      auto lhs = std::stoi(webview::json_parse(s, "", 0));
-      auto rhs = std::stoi(webview::json_parse(s, "", 1));
+      auto lhs = std::stoi(json_parse(s, "", 0));
+      auto rhs = std::stoi(json_parse(s, "", 1));
       return R"({"result": ")" + std::to_string(lhs + rhs) + R"("})";
     } catch (const std::exception &) {
       return R"({"result": "error"})";
