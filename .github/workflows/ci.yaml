@@ -12,9 +12,11 @@ jobs:
           - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'gnu', compiler-version: '10', cc: '/usr/bin/gcc-10', cxx: '/usr/bin/g++-10' }
           - { os: 'ubuntu-20.04', visual-run-cmd: 'xvfb-run', compiler-id: 'clang', compiler-version: '12', cc: '/usr/bin/clang-12', cxx: '/usr/bin/clang++-12' }
           - { os: 'macos-10.15', visual-run-cmd: '', compiler-id: 'appleclang', compiler-version: '' }
-          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.3', vs-version-name: '2022', vcvars-arch: 'x64' }
-          - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64' }
-          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'mingw' }
+          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.3', vs-version-name: '2022', vcvars-arch: 'x64', cmake-option-use-webview2-shared-library: 'OFF' }
+          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.3', vs-version-name: '2022', vcvars-arch: 'x64', cmake-option-use-webview2-shared-library: 'ON' }
+          - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64', cmake-option-use-webview2-shared-library: 'OFF' }
+          - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64', cmake-option-use-webview2-shared-library: 'ON' }
+          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'mingw', cmake-option-use-webview2-shared-library: 'ON' }
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.config.os }}, ${{ matrix.config.compiler-id }}${{ matrix.config.compiler-version }}
     steps:
@@ -66,7 +68,7 @@ jobs:
           echo "CXX=${{ matrix.config.cxx }}" >> ${GITHUB_ENV}
       - name: Build and run tests
         run: |
-          cmake -G Ninja -B build -S .
+          cmake -G Ninja -B build -S . "-DUSE_WEBVIEW2_SHARED_LIBRARY=${{ matrix.config.cmake-option-use-webview2-shared-library }}"
           cmake --build build --config Release
           ctest --test-dir build/test --output-on-failure --config Release -R unit_
           ${{ matrix.config.visual-run-cmd }} ctest --test-dir build/test --output-on-failure --config Release -R functional_
