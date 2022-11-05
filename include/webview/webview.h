@@ -1707,6 +1707,7 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   int argvStorageOffset = 0;
   LPWSTR wCmdLine = GetCommandLineW();
   LPWSTR *wargv = CommandLineToArgvW(wCmdLine, &wargc);
+  int exitCode = 0;
   if (wargv && wargc > 0) {
     UINT cp = CP_UTF8;
     DWORD flags = WC_ERR_INVALID_CHARS;
@@ -1731,9 +1732,10 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       argvStorageOffset += requiredLength;
     }
     argvStorage[argvStorageOffset] = 0;
-    webview_app_main(argc, argv);
+    exitCode = webview_app_main(argc, argv);
   }
   LocalFree(wargv);
+  return exitCode;
 }
 
 #else
