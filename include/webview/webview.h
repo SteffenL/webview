@@ -1697,8 +1697,8 @@ int webview_app_main(int argc, const char *argv[]);
 #pragma comment(lib, "shell32.lib")
 #endif
 
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                     PSTR pCmdLine, int nCmdShow) {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                   PSTR pCmdLine, int nCmdShow) {
   char argvStorage[32768] = {0};
   const int sizeOfArgvStorage = sizeof(argvStorage) / sizeof(argvStorage[0]);
   char *argvStorageEnd = argvStorage + sizeOfArgvStorage;
