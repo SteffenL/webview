@@ -1702,7 +1702,7 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   char argvStorage[32768] = {0};
   const int sizeOfArgvStorage = sizeof(argvStorage) / sizeof(argvStorage[0]);
   char *argvStorageEnd = argvStorage + sizeOfArgvStorage;
-  char *argv[1024] = {0};
+  const char *argv[1024] = {0};
   const int sizeOfArgv = sizeof(argv) / sizeof(argv[0]);
   int wargc = 0;
   int argc = 0;
