@@ -14,6 +14,7 @@ jobs:
           - { os: 'macos-10.15', visual-run-cmd: '', compiler-id: 'appleclang', compiler-version: '' }
           - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.3', vs-version-name: '2022', vcvars-arch: 'x64' }
           - { os: 'windows-2019', visual-run-cmd: '', compiler-id: 'msvc', compiler-version: '14.2', vs-version-name: '2019', vcvars-arch: 'x64' }
+          - { os: 'windows-2022', visual-run-cmd: '', compiler-id: 'mingw' }
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.config.os }}, ${{ matrix.config.compiler-id }}${{ matrix.config.compiler-version }}
     steps:
@@ -36,15 +37,27 @@ jobs:
         run: |
           echo Installing Ninja
           choco install ninja --version=1.10.2
-          echo Configuring MSVC toolset
-          set "vcvarsall_path_x64=C:\Program Files\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
-          set "vcvarsall_path_x86=C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
-          if exist "%vcvarsall_path_x64%" (set "vcvarsall_path=%vcvarsall_path_x64%") else (set "vcvarsall_path=%vcvarsall_path_x86%")
-          call "%vcvarsall_path%" ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
-          for /F "usebackq tokens=1,2 delims==" %%a in (`set`) do echo %%a=%%b>> %GITHUB_ENV%
+          if "${{ matrix.config.compiler-id }}" == "mingw" (
+            call :configure_mingw
+          ) else if "${{ matrix.config.compiler-id }}" == "msvc" (
+            call :configure_msvc
+          )
           echo Installing WebView2 Runtime
           curl -sSLo "%TEMP%\MicrosoftEdgeWebview2Setup.exe" https://go.microsoft.com/fwlink/p/?LinkId=2124703
           "%TEMP%\MicrosoftEdgeWebview2Setup.exe" /silent /install
+          goto :eof
+          :configure_mingw
+            echo Adding MinGW-w64 to PATH
+            echo PATH=%ProgramData%\chocolatey\lib\mingw\tools\install\mingw64\bin;%PATH%>>%GITHUB_ENV%
+            goto :eof
+          :configure_msvc
+            echo Configuring MSVC toolset
+            set "vcvarsall_path_x64=C:\Program Files\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+            set "vcvarsall_path_x86=C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.config.vs-version-name }}\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+            if exist "%vcvarsall_path_x64%" (set "vcvarsall_path=%vcvarsall_path_x64%") else (set "vcvarsall_path=%vcvarsall_path_x86%")
+            call "%vcvarsall_path%" ${{ matrix.config.vcvars-arch }} -vcvars_ver=${{ matrix.config.compiler-version }}
+            for /F "usebackq tokens=1,2 delims==" %%a in (`set`) do echo %%a=%%b>>%GITHUB_ENV%
+            goto :eof
         shell: cmd
       - name: Set compiler environment variables
         if: runner.os != 'Windows'
