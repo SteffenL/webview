@@ -1598,7 +1598,7 @@ public:
   // Synchronous bind
   void bind(const std::string &name, sync_binding_t fn) {
     auto wrapper = [this, fn](const std::string &seq, const std::string &req,
-                              void *arg) { resolve(seq, 0, fn(req)); };
+                              void * /*arg*/) { resolve(seq, 0, fn(req)); };
     bind(name, wrapper, nullptr);
   }
 
