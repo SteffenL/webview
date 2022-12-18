@@ -3,6 +3,7 @@
 set -e
 
 DIR="$(cd "$(dirname "$0")/../" && pwd)"
+BUILD_DIR=$DIR/build
 FLAGS="-Wall -Wextra -pedantic -I$DIR"
 CFLAGS="-std=c99 $FLAGS"
 
@@ -32,28 +33,31 @@ else
 	echo "SKIP: Linting (clang-tidy not installed)"
 fi
 
-mkdir -p build/examples/c build/examples/cc build/examples/go || true
+mkdir -p "$BUILD_DIR/examples/c" "$BUILD_DIR/examples/cc" "$BUILD_DIR/examples/go" || true
 
 echo "Building C++ examples"
-c++ examples/basic.cc $CXXFLAGS -o build/examples/cc/basic
-c++ examples/bind.cc $CXXFLAGS -o build/examples/cc/bind
+c++ "$DIR/examples/basic.cc" $CXXFLAGS -o "$BUILD_DIR/examples/cc/basic"
+c++ "$DIR/examples/bind.cc" $CXXFLAGS -o "$BUILD_DIR/examples/cc/bind"
 
 echo "Building C examples"
-c++ -c $CXXFLAGS webview.cc -o build/webview.o
-cc -c examples/basic.c $CFLAGS -o build/examples/c/basic.o
-cc -c examples/bind.c $CFLAGS -o build/examples/c/bind.o
-c++ build/examples/c/basic.o build/webview.o $CXXFLAGS -o build/examples/c/basic
-c++ build/examples/c/bind.o build/webview.o $CXXFLAGS -o build/examples/c/bind
+c++ -c $CXXFLAGS "$DIR/webview.cc" -o "$BUILD_DIR/webview.o"
+cc -c "$DIR/examples/basic.c" $CFLAGS -o "$BUILD_DIR/examples/c/basic.o"
+cc -c "$DIR/examples/bind.c" $CFLAGS -o "$BUILD_DIR/examples/c/bind.o"
+c++ "$BUILD_DIR/examples/c/basic.o" "$BUILD_DIR/webview.o" $CXXFLAGS -o "$BUILD_DIR/examples/c/basic"
+c++ "$BUILD_DIR/examples/c/bind.o" "$BUILD_DIR/webview.o" $CXXFLAGS -o "$BUILD_DIR/examples/c/bind"
+
+# Go needs go.mod to be in the working directory.
+cd "$DIR"
 
 echo "Building Go examples"
-go build -o build/examples/go/basic examples/basic.go
-go build -o build/examples/go/bind examples/bind.go
+go build -o "$BUILD_DIR/examples/go/basic" examples/basic.go
+go build -o "$BUILD_DIR/examples/go/bind" examples/bind.go
 
 echo "Building test app"
-c++ webview_test.cc $CXXFLAGS -o webview_test
+c++ "$DIR/webview_test.cc" $CXXFLAGS -o "$BUILD_DIR/webview_test"
 
 echo "Running tests"
-./webview_test
+"$BUILD_DIR/webview_test"
 
 if command -v go >/dev/null 2>&1 ; then
 	echo "Running Go tests"
