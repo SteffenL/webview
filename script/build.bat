@@ -78,21 +78,21 @@ if not exist "%build_dir%\WebView2Loader.dll" (
 call "%vc_dir%\Common7\Tools\vsdevcmd.bat" -arch=x64 -host_arch=x64
 
 echo Building C++ examples (x64)
-mkdir "%build_dir%\examples\cpp"
+mkdir "%build_dir%\examples\cc"
 cl %warning_params% ^
 	/I "%src_dir%" ^
 	/I "%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\include" ^
 	"%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\x64\WebView2Loader.dll.lib" ^
 	"%src_dir%\dll\x64\webview.lib" ^
-	/std:c++17 /EHsc "/Fo%build_dir%\examples\cpp"\ ^
-	"%src_dir%\examples\basic.cc" /link "/OUT:%build_dir%\examples\cpp\basic.exe" || exit /b
+	/std:c++17 /EHsc "/Fo%build_dir%\examples\cc"\ ^
+	"%src_dir%\examples\basic.cc" /link "/OUT:%build_dir%\examples\cc\basic.exe" || exit /b
 cl %warning_params% ^
 	/I "%src_dir%" ^
 	/I "%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\include" ^
 	"%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\x64\WebView2Loader.dll.lib" ^
 	"%src_dir%\dll\x64\webview.lib" ^
-	/std:c++17 /EHsc "/Fo%build_dir%\examples\cpp"\ ^
-	"%src_dir%\examples\bind.cc" /link "/OUT:%build_dir%\examples\cpp\bind.exe" || exit /b
+	/std:c++17 /EHsc "/Fo%build_dir%\examples\cc"\ ^
+	"%src_dir%\examples\bind.cc" /link "/OUT:%build_dir%\examples\cc\bind.exe" || exit /b
 
 echo Building C examples (x64)
 mkdir "%build_dir%\examples\c"
