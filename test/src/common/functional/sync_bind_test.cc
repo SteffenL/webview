@@ -37,8 +37,7 @@ int main() {
       w.terminate();
       return "";
     }
-    REQUIRE(!"Should not reach here");
-    return "";
+    UNEXPECTED("Should not reach here");
   };
   auto html = "<script>\n"
               "  window.test(0);\n"

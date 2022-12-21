@@ -15,4 +15,13 @@
     exit(1);                                                                   \
   }
 
+#define UNEXPECTED(message)                                                    \
+  printf("############################################################\n"      \
+         "Unexpected: %s\n"                                                    \
+         "Line: %u\n"                                                          \
+         "File: %s\n"                                                          \
+         "############################################################\n",     \
+         message, __LINE__, __FILE__);                                         \
+  exit(1);
+
 #endif // TEST_H

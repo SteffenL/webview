@@ -50,7 +50,7 @@ int main() {
       webview_terminate(context->w);
       return;
     }
-    REQUIRE(!"Should not reach here");
+    UNEXPECTED("Should not reach here");
   };
   auto html = "<script>\n"
               "  window.test(0);\n"
