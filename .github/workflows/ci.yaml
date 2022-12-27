@@ -25,12 +25,7 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
       - name: Run lint checks
-        if: runner.os == 'Windows'
-        run: script\build.bat --lint=lax "--target-arch=${{ matrix.arch }}"
-        shell: cmd
-      - name: Run lint checks
-        if: runner.os != 'Windows'
-        run: script/build.sh --lint=lax "--target-arch=${{ matrix.arch }}"
+        run: python3 script/build.py --check-style --check-lint=lax "--target-arch=${{ matrix.arch }}"
 
   build-linux:
     name: build (linux, ${{ matrix.arch }}, ${{ matrix.compiler.id }})
@@ -46,9 +41,9 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
       - name: Build and run tests
-        run: xvfb-run ./script/build.sh "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --build-examples --test
+        run: xvfb-run python3 script/build.py "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --build-examples --test
       - name: Build Go examples and run Go tests
-        run: xvfb-run ./script/build.sh "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --go-build-examples --go-test
+        run: xvfb-run python3 script/build.py "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --go-build-examples --go-test
 
   build-macos:
     name: build (macos)
@@ -56,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build and run tests
-        run: ./script/build.sh --build-examples --test --go-test
+        run: python3 script/build.py --build-examples --test --go-test
 
   build-windows:
     name: build (windows, ${{ matrix.arch }}, ${{ matrix.compiler.id }})
@@ -99,11 +94,11 @@ jobs:
           Invoke-WebRequest -Uri "${{ matrix.mingw_url }}" -OutFile $zip_path
           Expand-Archive -LiteralPath $zip_path -DestinationPath "${env:SystemDrive}\"
       - name: Build and run tests
-        run: script\build.bat "--target-arch=${{ matrix.arch }}" "--toolchain=${{ matrix.compiler.toolchain }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --build-examples --test
+        run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--toolchain=${{ matrix.compiler.toolchain }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --build-examples --test
         shell: cmd
       - name: Build Go examples and run Go tests
         if: matrix.compiler.toolchain == 'mingw'
-        run: script\build.bat "--target-arch=${{ matrix.arch }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --go-build-examples --go-test
+        run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --go-build-examples --go-test
         shell: cmd
 
   clang-format:
