@@ -2,7 +2,13 @@ from internal.options import Options
 from internal.utility import bool_to_str
 
 import argparse
-from typing import Callable, get_args, get_type_hints, Sequence
+import sys
+from typing import Callable
+
+if sys.version_info >= (3, 8):
+    from typing import get_args, get_type_hints
+else:
+    from typing_extensions import get_args, get_type_hints
 
 
 class StrArgAction(argparse.Action):

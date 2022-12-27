@@ -1,5 +1,5 @@
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, List, TypeVar
 import uuid
 
 
@@ -36,7 +36,7 @@ class Task(Generic[T]):
 
 class TaskCollection:
     _concurrent: bool
-    _tasks: list[Task]
+    _tasks: List[Task]
 
     def __init__(self, concurrent: bool = False):
         self._concurrent = concurrent
@@ -56,7 +56,7 @@ class TaskCollection:
 
 
 class TaskRunner:
-    _collections: list[TaskCollection]
+    _collections: List[TaskCollection]
 
     def __init__(self):
         self._collections = []

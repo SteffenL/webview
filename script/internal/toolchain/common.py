@@ -8,7 +8,7 @@ from enum import Enum
 from dataclasses import dataclass
 import os
 import subprocess
-from typing import Iterable, MutableSequence, Sequence
+from typing import Iterable, MutableSequence, Sequence, Tuple
 
 
 class ToolchainId(Enum):
@@ -70,7 +70,7 @@ class Toolchain:
         self._binaries = binaries
 
     @staticmethod
-    def _process_task(arg: tuple[str, Sequence[str]]):
+    def _process_task(arg: Tuple[str, Sequence[str]]):
         output_path = arg[0]
         command = arg[1]
         if output_path is not None:
