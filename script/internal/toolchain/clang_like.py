@@ -14,6 +14,8 @@ from typing import List, Sequence
 
 
 class ClangLikeToolchain(Toolchain):
+    _MACOS_TARGET_VERSION = "10.9"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -97,6 +99,10 @@ class ClangLikeToolchain(Toolchain):
         # pkgconfig flags
         if system == "Linux" and len(pkgconfig_libs) > 0:
             cflags += pkgconfig_cflags
+
+        # macOS target version
+        cflags.append("-mmacosx-version-min=" + self._MACOS_TARGET_VERSION)
+
         result = []
         for source in target.get_sources():
             params = CompileParams()
@@ -205,6 +211,9 @@ class ClangLikeToolchain(Toolchain):
                 # Non-bundled
                 ldflags += ("-rpath", "@executable_path")
                 ldflags += ("-rpath", "@executable_path/../lib")
+
+        # macOS target version
+        ldflags.append("-mmacosx-version-min=" + self._MACOS_TARGET_VERSION)
 
         params = LinkParams()
         params.ldflags = ldflags
