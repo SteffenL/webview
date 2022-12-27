@@ -61,15 +61,12 @@ dependencies for your target architecture onto your system.
                        action=BoolArgAction)
     group.add_argument("--build-type",
                        help="Build type dictates code optimization.",
-                       choices=(BuildType.DEBUG.value,
-                                BuildType.RELEASE.value),
+                       choices=(tuple(v.value for v in BuildType)),
                        default=BuildType.RELEASE.value,
                        action=StrArgAction)
     group.add_argument("--target-arch",
                        help="Build for the target CPU architecture.",
-                       choices=(Arch.NATIVE.value,
-                                Arch.X64.value,
-                                Arch.X86.value),
+                       choices=(tuple(v.value for v in Arch)),
                        default=Arch.NATIVE.value,
                        action=StrArgAction)
     group.add_argument("--reformat",
@@ -80,9 +77,7 @@ dependencies for your target architecture onto your system.
                        action=BoolArgAction)
     group.add_argument("--check-lint",
                        help="Run lint checks (requires clang-tidy).",
-                       choices=(LintMode.STRICT.value,
-                                LintMode.LAX.value,
-                                LintMode.FALSE.value),
+                       choices=(tuple(v.value for v in LintMode)),
                        nargs="?",
                        default=LintMode.FALSE.value,
                        const=LintMode.STRICT.value,
@@ -106,8 +101,7 @@ dependencies for your target architecture onto your system.
                            action=BoolArgAction)
         group.add_argument("--toolchain",
                            help="C/C++ toolchain.",
-                           choices=(ToolchainId.MSVC.value,
-                                    ToolchainId.MINGW.value),
+                           choices=(tuple(v.value for v in ToolchainId)),
                            default=ToolchainId.MSVC.value)
         group.add_argument("--mswebview2-version",
                            help="MS WebView2 version to use.",
