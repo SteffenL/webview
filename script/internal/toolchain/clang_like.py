@@ -79,11 +79,10 @@ class ClangLikeToolchain(Toolchain):
             standard_str += str(math.floor(standard / 100) % 100)
             cflags.append("-std=" + standard_str)
 
-        # Architecture
+        # Target platform
         arch = self.get_architecture()
-        if arch != Arch.NATIVE:
-            cflags.append({Arch.X64: "-m64",
-                           Arch.X86: "-m32"}[arch])
+        cflags += ("-target", self.get_target_platform(arch))
+
         # Warnings
         #args += ("-Wall", "-Wextra", "-pedantic")
         # if system == "Windows":
@@ -106,10 +105,6 @@ class ClangLikeToolchain(Toolchain):
         if system == "Linux" and len(pkgconfig_libs) > 0:
             cflags += pkgconfig_cflags
 
-        if system == "Darwin":
-            # macOS target version
-            cflags.append("-mmacosx-version-min=" + self._MACOS_TARGET_VERSION)
-
         result = []
         for source in target.get_sources():
             params = CompileParams()
@@ -130,11 +125,9 @@ class ClangLikeToolchain(Toolchain):
         ldflags: List[str] = []
         input_paths: List[str] = []
 
-        # Architecture
+        # Target platform
         arch = self.get_architecture()
-        if arch != Arch.NATIVE:
-            ldflags.append({Arch.X64: "-m64",
-                            Arch.X86: "-m32"}[arch])
+        ldflags += ("-target", self.get_target_platform(arch))
 
         # Object files
         source_dir = target.get_workspace().get_source_dir()
@@ -219,10 +212,6 @@ class ClangLikeToolchain(Toolchain):
                 ldflags += ("-rpath", "@executable_path")
                 ldflags += ("-rpath", "@executable_path/../lib")
 
-        if system == "Darwin":
-            # macOS target version
-            ldflags.append("-mmacosx-version-min=" + self._MACOS_TARGET_VERSION)
-
         params = LinkParams()
         params.ldflags = ldflags
         params.input_paths = input_paths
@@ -263,3 +252,14 @@ class ClangLikeToolchain(Toolchain):
         if target_type == TargetType.STATIC_LIBRARY:
             return ".a"
         return super().get_file_name_extension(target_type, system)
+
+    def get_target_platform(self, architecture: Arch):
+        system = platform.system()
+        # x86 is unsupported on macOS
+        if system == "Darwin" and architecture != Arch.X86:
+            macos_arch = {Arch.ARM64: "arm64", Arch.X64: "x86_64"}[architecture]
+            return macos_arch + "-apple-macos" + self._MACOS_TARGET_VERSION
+        if system == "Linux":
+            linux_arch = {Arch.ARM64: "arm64", Arch.X64: "x86_64", Arch.X86: "i386"}[architecture]
+            return linux_arch + "-linux"
+        raise Exception("Unsupported target system/architecture: {}/{}".format(system, architecture.value))
