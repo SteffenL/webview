@@ -182,10 +182,7 @@ class ClangLikeToolchain(Toolchain):
                         ldflags.append("-l" + lib.get_link_output_name())
                     if lib.get_type() in (lib.get_type() == TargetType.OBJECT, TargetType.STATIC_LIBRARY):
                         if target.get_language() == Language.C and lib.get_language() == Language.CXX:
-                            if system == "Darwin":
-                                ldflags.append("-lc++")
-                            else:
-                                ldflags.append("-lstdc++")
+                            ldflags.append("-lc++")
                 else:
                     raise Exception("Invalid target type")
 
