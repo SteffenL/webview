@@ -30,7 +30,7 @@ class Target():
     _link_libs: MutableMapping[PropertyScope, List[Union[str, "Target"]]]
     _sources: List[str]
     _definitions: MutableMapping[PropertyScope, MutableMapping[str, str]]
-    _macos_frameworks: List[str]
+    _macos_frameworks: MutableMapping[PropertyScope, List[str]]
     _pkgconfig_libs: MutableMapping[PropertyScope, List[str]]
     _output_name: str
     #_output_dir: str
@@ -57,8 +57,8 @@ class Target():
         self._sources = []
         self._definitions = {PropertyScope.INTERNAL: {},
                              PropertyScope.EXTERNAL: {}}
-        self._macos_frameworks = {PropertyScope.INTERNAL: {},
-                                  PropertyScope.EXTERNAL: {}}
+        self._macos_frameworks = {PropertyScope.INTERNAL: [],
+                                  PropertyScope.EXTERNAL: []}
         self._pkgconfig_libs = {PropertyScope.INTERNAL: [],
                                 PropertyScope.EXTERNAL: []}
         self._output_name = None
@@ -151,6 +151,12 @@ class Target():
                 for k, v in lib._definitions[E].items():
                     self.add_definition(k, value=v, scope=I)
                     self.add_definition(k, value=v, scope=E)
+
+                # Add internal and external frameworks from dependency.
+                self._macos_frameworks[I] = list(dict.fromkeys(
+                    self._macos_frameworks[I] + lib._macos_frameworks[E]))
+                self._macos_frameworks[E] = list(dict.fromkeys(
+                    self._macos_frameworks[E] + lib._macos_frameworks[E]))
 
         # Add the specified dependencies.
         for s in scope:

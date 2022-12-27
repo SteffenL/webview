@@ -93,11 +93,7 @@ class ClangLikeToolchain(Toolchain):
         # Include directories
         cflags += tuple("-I{}".format(s)
                         for s in target.get_include_dirs(PropertyScope.INTERNAL))
-        # Frameworks
-        if system == "Darwin":
-            if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-                for framework in target.get_macos_frameworks(PropertyScope.INTERNAL):
-                    cflags += ("-framework", framework)
+
         # pkgconfig flags
         if system == "Linux" and len(pkgconfig_libs) > 0:
             cflags += pkgconfig_cflags
@@ -143,7 +139,11 @@ class ClangLikeToolchain(Toolchain):
                     ("pkg-config", "--libs", *pkgconfig_libs)).decode("utf-8").strip().split(" ")
 
         if target.get_type() == TargetType.SHARED_LIBRARY:
-            ldflags.append("-shared")
+            if system == "Darwin":
+                # Make dylib for macOS
+                ldflags.append("-dynamiclib")
+            else:
+                ldflags.append("-shared")
         elif target.get_type() == TargetType.STATIC_LIBRARY:
             # TODO: is this correct?
             ldflags.append("-static")
@@ -152,6 +152,7 @@ class ClangLikeToolchain(Toolchain):
         # if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
         #    if target.get_runtime_link_method() == RuntimeLinkMethod.STATIC:
         #        compile_command.append("-static")
+
         # Frameworks
         if system == "Darwin":
             if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
@@ -190,17 +191,20 @@ class ClangLikeToolchain(Toolchain):
         output_path = os.path.join(output_dir, target.get_output_file_name())
 
         # rpath
-        if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-            if system == "Darwin":
+        if system == "Linux" and target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
+            # Same directory as executable
+            ldflags.append("-Wl,-rpath=$ORIGIN")
+            # Executable directory's sibling lib directory
+            ldflags.append("-Wl,-rpath=$ORIGIN/../lib")
+        elif system == "Darwin":
+            if target.get_type() == TargetType.SHARED_LIBRARY:
+                ldflags += ("-install_name", "@rpath/" + target.get_output_file_name())
+            elif target.get_type() == TargetType.EXE:
                 # Bundled
-                ldflags.append("-Wl,-rpath=@executable_path/../Frameworks")
+                ldflags += ("-rpath", "@executable_path/../Frameworks")
                 # Non-bundled
-                ldflags.append("-Wl,-rpath=@executable_path")
-            elif system == "Linux":
-                # Same directory as executable
-                ldflags.append("-Wl,-rpath=$ORIGIN")
-                # Executable directory's sibling lib directory
-                ldflags.append("-Wl,-rpath=$ORIGIN/../lib")
+                ldflags += ("-rpath", "@executable_path")
+                ldflags += ("-rpath", "@executable_path/../lib")
 
         params = LinkParams()
         params.ldflags = ldflags
