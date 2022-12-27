@@ -21,7 +21,13 @@ class ClangLikeToolchain(Toolchain):
 
     def get_archive_exe(self, language: Language):
         binaries = self.get_binaries()
-        return binaries.ar
+        exe = binaries.ar
+        if exe is None:
+            ext = ".exe" if platform.system() == "Windows" else ""
+            exe = os.path.join(os.path.dirname(binaries.cc), "ar" + ext)
+        if exe is None:
+            raise Exception("Binary not found: ar")
+        return exe
 
     def get_link_exe(self, language: Language):
         binaries = self.get_binaries()

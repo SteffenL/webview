@@ -58,6 +58,10 @@ class ToolchainBinaries:
     cc: str
     cxx: str
 
+    def __init__(self, ar: str = None, cc: str = None, cxx: str = None) -> None:
+        self.ar = ar
+        self.cc = cc
+        self.cxx = cxx
 
 class Toolchain:
     _id: ToolchainId

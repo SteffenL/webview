@@ -54,24 +54,24 @@ def detect_toolchain(architecture: Arch, cc_override: str = None, cxx_override: 
         return toolchain_types[id](
             id=id,
             architecture=architecture,
-            binaries=ToolchainBinaries(ar=ar, cc=cc, cxx=cxx))
+            binaries=ToolchainBinaries(cc=cc, cxx=cxx))
 
     system = platform.system()
 
     hints = []
     if system == "Windows":
-        hints.append((None, "cl", "cl"))
-    hints += (("ar", "gcc", "g++"),
-              ("ar", "clang", "clang++"))
+        hints.append(("cl", "cl"))
+    hints += (("gcc", "g++"),
+              ("clang", "clang++"))
 
-    for ar_hint, cc_hint, cxx_hint in hints:
-        ar, cc, cxx = map(find_executable, (ar_hint, cc_hint, cxx_hint))
+    for cc_hint, cxx_hint in hints:
+        cc, cxx = map(find_executable, (cc_hint, cxx_hint))
         if cc is not None and cxx is not None:
             id = detect_compiler_from_exe(cc)
             return toolchain_types[id](
                 id=id,
                 architecture=architecture,
-                binaries=ToolchainBinaries(ar=ar, cc=cc, cxx=cxx))
+                binaries=ToolchainBinaries(cc=cc, cxx=cxx))
 
     raise Exception("Toolchain not found")
 
