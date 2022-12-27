@@ -121,6 +121,12 @@ class ClangLikeToolchain(Toolchain):
         ldflags: List[str] = []
         input_paths: List[str] = []
 
+        # Architecture
+        arch = self.get_architecture()
+        if arch != Arch.NATIVE:
+            ldflags.append({Arch.X64: "-m64",
+                            Arch.X86: "-m32"}[arch])
+
         # Object files
         source_dir = target.get_workspace().get_source_dir()
         for source in target.get_sources():
