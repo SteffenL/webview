@@ -106,8 +106,9 @@ class ClangLikeToolchain(Toolchain):
         if system == "Linux" and len(pkgconfig_libs) > 0:
             cflags += pkgconfig_cflags
 
-        # macOS target version
-        cflags.append("-mmacosx-version-min=" + self._MACOS_TARGET_VERSION)
+        if system == "Darwin":
+            # macOS target version
+            cflags.append("-mmacosx-version-min=" + self._MACOS_TARGET_VERSION)
 
         result = []
         for source in target.get_sources():
@@ -218,8 +219,9 @@ class ClangLikeToolchain(Toolchain):
                 ldflags += ("-rpath", "@executable_path")
                 ldflags += ("-rpath", "@executable_path/../lib")
 
-        # macOS target version
-        ldflags.append("-mmacosx-version-min=" + self._MACOS_TARGET_VERSION)
+        if system == "Darwin":
+            # macOS target version
+            ldflags.append("-mmacosx-version-min=" + self._MACOS_TARGET_VERSION)
 
         params = LinkParams()
         params.ldflags = ldflags
