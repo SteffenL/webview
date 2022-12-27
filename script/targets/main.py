@@ -39,7 +39,7 @@ def register(workspace: Workspace):
     # Shared/Static library targets
     shared_library = workspace.add_target(
         TargetType.SHARED_LIBRARY, "library_shared")
-    header_library.set_language_standard(cxx_standard)
+    shared_library.set_language_standard(cxx_standard)
     shared_library.set_condition(lambda: options.build_library.get_value())
     shared_library.set_output_name("webview")
     shared_library.add_link_libraries(
@@ -51,7 +51,7 @@ def register(workspace: Workspace):
 
     static_library = workspace.add_target(
         TargetType.STATIC_LIBRARY, "library_static")
-    header_library.set_language_standard(cxx_standard)
+    static_library.set_language_standard(cxx_standard)
     static_library.set_condition(lambda: options.build_library.get_value())
     static_library.set_output_name("webview_s")
     static_library.add_link_libraries(
