@@ -68,8 +68,11 @@ class ClangLikeToolchain(Toolchain):
                 ("pkg-config", "--cflags", *pkgconfig_libs)).decode("utf-8").strip().split(" ")
 
         # Optimization
-        cflags.append("-O" + {BuildType.DEBUG: "0",
-                      BuildType.RELEASE: "2"}[target.get_build_type()])
+        build_type = target.get_build_type()
+        if build_type == BuildType.DEBUG:
+            cflags += ("-Og", "-g")
+        elif build_type == BuildType.RELEASE:
+            cflags.append("-O2")
 
         # Language standard
         standard = target.get_language_standard()
@@ -81,7 +84,11 @@ class ClangLikeToolchain(Toolchain):
 
         # Target platform
         arch = self.get_architecture()
-        cflags += ("-target", self.get_target_platform(arch))
+        if system == "Darwin":
+            cflags += ("-target", self.get_darwin_target_platform(arch))
+        elif arch != Arch.NATIVE:
+            cflags.append({Arch.X64: "-m64",
+                           Arch.X86: "-m32"}[arch])
 
         # Warnings
         #args += ("-Wall", "-Wextra", "-pedantic")
@@ -127,7 +134,11 @@ class ClangLikeToolchain(Toolchain):
 
         # Target platform
         arch = self.get_architecture()
-        ldflags += ("-target", self.get_target_platform(arch))
+        if system == "Darwin":
+            ldflags += ("-target", self.get_darwin_target_platform(arch))
+        elif arch != Arch.NATIVE:
+            ldflags.append({Arch.X64: "-m64",
+                           Arch.X86: "-m32"}[arch])
 
         # Object files
         source_dir = target.get_workspace().get_source_dir()
@@ -182,7 +193,7 @@ class ClangLikeToolchain(Toolchain):
                         ldflags.append("-l" + lib.get_link_output_name())
                     if lib.get_type() in (lib.get_type() == TargetType.OBJECT, TargetType.STATIC_LIBRARY):
                         if target.get_language() == Language.C and lib.get_language() == Language.CXX:
-                            ldflags.append("-lc++")
+                            ldflags.append("-lc++" if system == "Darwin" else "-lstdc++")
                 else:
                     raise Exception("Invalid target type")
 
@@ -204,7 +215,8 @@ class ClangLikeToolchain(Toolchain):
             ldflags.append("-Wl,-rpath=$ORIGIN/../lib")
         elif system == "Darwin":
             if target.get_type() == TargetType.SHARED_LIBRARY:
-                ldflags += ("-install_name", "@rpath/" + target.get_output_file_name())
+                ldflags += ("-install_name", "@rpath/" +
+                            target.get_output_file_name())
             elif target.get_type() == TargetType.EXE:
                 # Bundled
                 ldflags += ("-rpath", "@executable_path/../Frameworks")
@@ -253,13 +265,16 @@ class ClangLikeToolchain(Toolchain):
             return ".a"
         return super().get_file_name_extension(target_type, system)
 
-    def get_target_platform(self, architecture: Arch):
+    def get_darwin_target_platform(self, architecture: Arch):
         system = platform.system()
         # x86 is unsupported on macOS
         if system == "Darwin" and architecture != Arch.X86:
-            macos_arch = {Arch.ARM64: "arm64", Arch.X64: "x86_64"}[architecture]
+            macos_arch = {Arch.ARM64: "arm64",
+                          Arch.X64: "x86_64"}[architecture]
             return macos_arch + "-apple-macos" + self._MACOS_TARGET_VERSION
         if system == "Linux":
-            linux_arch = {Arch.ARM64: "arm64", Arch.X64: "x86_64", Arch.X86: "i386"}[architecture]
+            linux_arch = {Arch.ARM64: "arm64",
+                          Arch.X64: "x86_64", Arch.X86: "i386"}[architecture]
             return linux_arch + "-linux"
-        raise Exception("Unsupported target system/architecture: {}/{}".format(system, architecture.value))
+        raise Exception(
+            "Unsupported target system/architecture: {}/{}".format(system, architecture.value))
