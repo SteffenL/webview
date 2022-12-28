@@ -29,7 +29,6 @@ class ClangLikeToolchain(Toolchain):
             exe = self._binaries.cc
         else:
             raise Exception("Invalid language")
-        exe = self._get_arch_specific_exe(exe)
         return exe
 
     def get_archive_exe(self, language: Language):
@@ -40,7 +39,6 @@ class ClangLikeToolchain(Toolchain):
             exe = os.path.join(os.path.dirname(binaries.cc), "ar" + ext)
         if exe is None:
             raise Exception("Binary not found: ar")
-        exe = self._get_arch_specific_exe(exe)
         return exe
 
     def get_link_exe(self, language: Language):
@@ -293,21 +291,3 @@ class ClangLikeToolchain(Toolchain):
             return linux_arch + "-linux"
         raise Exception(
             "Unsupported target system/architecture: {}/{}".format(system, architecture.value))
-
-    def _get_arch_specific_exe(self, exe: str, default: str = None):
-        target_arch = self.get_architecture()
-        host_arch = get_host_arch()
-        if target_arch == host_arch:
-            return exe
-        if platform.system() == "Linux":
-            # x86 uses x86_64 tools
-            arch_map = {Arch.ARM64: "aarch64",
-                        Arch.X64: "x86_64",
-                        Arch.X86: "x86_64"}
-            linux_arch = arch_map[target_arch]
-            dir = os.path.dirname(exe)
-            basename = os.path.basename(exe)
-            exe = os.path.join(dir, linux_arch + "-linux-gnu-" + basename)
-        if os.path.exists(exe):
-            return exe
-        raise Exception("Not found: " + exe)
