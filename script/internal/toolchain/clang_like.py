@@ -1,5 +1,6 @@
 from internal.build import BuildType, PropertyScope, RuntimeLinkMethod
 from internal.common import Arch
+from internal.utility import get_host_arch
 from internal.target import Target, TargetType
 from internal.toolchain.common import ArchiveParams, CompileParams, Language, LinkParams, Toolchain
 
@@ -19,6 +20,18 @@ class ClangLikeToolchain(Toolchain):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def get_compile_exe(self, language: Language):
+        if language is None:
+            raise Exception("No language specified")
+        if language == Language.CXX:
+            exe = self._binaries.cxx
+        elif language == Language.C:
+            exe = self._binaries.cc
+        else:
+            raise Exception("Invalid language")
+        exe = self._get_arch_specific_exe(exe)
+        return exe
+
     def get_archive_exe(self, language: Language):
         binaries = self.get_binaries()
         exe = binaries.ar
@@ -27,6 +40,7 @@ class ClangLikeToolchain(Toolchain):
             exe = os.path.join(os.path.dirname(binaries.cc), "ar" + ext)
         if exe is None:
             raise Exception("Binary not found: ar")
+        exe = self._get_arch_specific_exe(exe)
         return exe
 
     def get_link_exe(self, language: Language):
@@ -87,8 +101,8 @@ class ClangLikeToolchain(Toolchain):
         if system == "Darwin":
             cflags += ("-target", self.get_darwin_target_platform(arch))
         elif arch != Arch.NATIVE:
-            cflags.append({Arch.X64: "-m64",
-                           Arch.X86: "-m32"}[arch])
+            if arch in (Arch.X64, Arch.X86):
+                cflags.append({Arch.X64: "-m64", Arch.X86: "-m32"}[arch])
 
         # Warnings
         #args += ("-Wall", "-Wextra", "-pedantic")
@@ -137,8 +151,8 @@ class ClangLikeToolchain(Toolchain):
         if system == "Darwin":
             ldflags += ("-target", self.get_darwin_target_platform(arch))
         elif arch != Arch.NATIVE:
-            ldflags.append({Arch.X64: "-m64",
-                           Arch.X86: "-m32"}[arch])
+            if arch in (Arch.X64, Arch.X86):
+                ldflags.append({Arch.X64: "-m64", Arch.X86: "-m32"}[arch])
 
         # Object files
         source_dir = target.get_workspace().get_source_dir()
@@ -193,7 +207,8 @@ class ClangLikeToolchain(Toolchain):
                         ldflags.append("-l" + lib.get_link_output_name())
                     if lib.get_type() in (lib.get_type() == TargetType.OBJECT, TargetType.STATIC_LIBRARY):
                         if target.get_language() == Language.C and lib.get_language() == Language.CXX:
-                            ldflags.append("-lc++" if system == "Darwin" else "-lstdc++")
+                            ldflags.append("-lc++" if system ==
+                                           "Darwin" else "-lstdc++")
                 else:
                     raise Exception("Invalid target type")
 
@@ -278,3 +293,21 @@ class ClangLikeToolchain(Toolchain):
             return linux_arch + "-linux"
         raise Exception(
             "Unsupported target system/architecture: {}/{}".format(system, architecture.value))
+
+    def _get_arch_specific_exe(self, exe: str, default: str = None):
+        target_arch = self.get_architecture()
+        host_arch = get_host_arch()
+        if target_arch == host_arch:
+            return exe
+        if platform.system() == "Linux":
+            # x86 uses x86_64 tools
+            arch_map = {Arch.ARM64: "aarch64",
+                        Arch.X64: "x86_64",
+                        Arch.X86: "x86_64"}
+            linux_arch = arch_map[target_arch]
+            dir = os.path.dirname(exe)
+            basename = os.path.basename(exe)
+            exe = os.path.join(dir, linux_arch + "-linux-gnu-" + basename)
+        if os.path.exists(exe):
+            return exe
+        raise Exception("Not found: " + exe)

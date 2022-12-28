@@ -135,16 +135,9 @@ class Toolchain:
         return (Task(self._process_task, arg=(params.output_path, link_command),
                      description="Link target {}".format(target.get_name())),)
 
+    @abstractmethod
     def get_compile_exe(self, language: Language):
-        if language is None:
-            raise Exception("No language specified")
-        if language == Language.CXX:
-            exe = self._binaries.cxx
-        elif language == Language.C:
-            exe = self._binaries.cc
-        else:
-            raise Exception("Invalid language")
-        return exe
+        pass
 
     @abstractmethod
     def get_archive_exe(self, language: Language):
