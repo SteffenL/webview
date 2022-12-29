@@ -102,6 +102,7 @@ class TaskWorkPerCollection:
 class TaskStatus(Enum):
     STARTED = 0
     DONE = 1
+    FAILED = 2
 
 
 class TaskRunner:
@@ -119,16 +120,6 @@ class TaskRunner:
             next_task_number=1
         )
 
-        def task_wrapper(shared: TaskWorkShared, per_collection: TaskWorkPerCollection, task: Task):
-            with LockScope(shared.lock):
-                task_number = shared.get_next_task_number()
-            shared.status_queue.put((task_number, task, TaskStatus.STARTED))
-            task.execute()
-            shared.status_queue.put((task_number, task, TaskStatus.DONE))
-            with LockScope(shared.lock):
-                shared.one_done()
-                per_collection.one_done()
-
         for collection in self._collections:
             tasks = collection.get_tasks()
             if len(tasks) == 0:
@@ -141,7 +132,8 @@ class TaskRunner:
                     tasks_done=0
                 )
                 for task in tasks:
-                    executor.submit(task_wrapper, shared, per_collection, task)
+                    executor.submit(self._worker, shared, per_collection, task)
+                status = None
                 while True:
                     with LockScope(shared.lock):
                         done = per_collection.tasks_done >= per_collection.task_count
@@ -149,6 +141,25 @@ class TaskRunner:
                         break
                     task_number, task, status = shared.status_queue.get()
                     on_status(status, task.get_description(), is_concurrent)
+                    if status == TaskStatus.FAILED:
+                        break
+                if status == TaskStatus.FAILED:
+                    executor.shutdown(cancel_futures=True)
+
+    @staticmethod
+    def _worker(shared: TaskWorkShared, per_collection: TaskWorkPerCollection, task: Task):
+        with LockScope(shared.lock):
+            task_number = shared.get_next_task_number()
+        shared.status_queue.put((task_number, task, TaskStatus.STARTED))
+        try:
+            task.execute()
+        except:
+            shared.status_queue.put((task_number, task, TaskStatus.FAILED))
+            return
+        shared.status_queue.put((task_number, task, TaskStatus.DONE))
+        with LockScope(shared.lock):
+            shared.one_done()
+            per_collection.one_done()
 
     def get_task_count(self):
         return sum(c.get_count() for c in self._collections)
