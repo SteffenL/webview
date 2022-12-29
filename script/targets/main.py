@@ -24,6 +24,8 @@ def register(workspace: Workspace):
     header_library = workspace.add_target(
         TargetType.INTERFACE, "library_header")
     header_library.add_include_dirs(source_dir)
+    header_library.set_language_standard(c_standard)
+    header_library.set_language_standard(cxx_standard)
     if system == "Darwin":
         header_library.add_definition("WEBVIEW_COCOA")
         header_library.add_macos_frameworks("WebKit")
@@ -39,7 +41,6 @@ def register(workspace: Workspace):
     # Shared/Static library targets
     shared_library = workspace.add_target(
         TargetType.SHARED_LIBRARY, "library_shared")
-    shared_library.set_language_standard(cxx_standard)
     shared_library.set_condition(lambda: options.build_library.get_value())
     shared_library.set_output_name("webview")
     shared_library.add_link_libraries(
@@ -51,7 +52,6 @@ def register(workspace: Workspace):
 
     static_library = workspace.add_target(
         TargetType.STATIC_LIBRARY, "library_static")
-    static_library.set_language_standard(cxx_standard)
     static_library.set_condition(lambda: options.build_library.get_value())
     static_library.set_output_name("webview_s")
     static_library.add_link_libraries(
@@ -77,14 +77,9 @@ def register(workspace: Workspace):
             example.add_link_libraries(static_library)
         example.add_sources(source_path)
         lang = example.get_language()
-        if lang == Language.CXX:
-            example.set_language_standard(cxx_standard)
-        elif lang == Language.C:
-            example.set_language_standard(c_standard)
 
     # Test targets
     library_test_program = workspace.add_target(TargetType.EXE, "library_test")
-    library_test_program.set_language_standard(cxx_standard)
     library_test_program.set_condition(
         lambda: options.build_tests.get_value())
     library_test_program.add_link_libraries(header_library)

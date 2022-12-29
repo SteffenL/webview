@@ -12,23 +12,34 @@ class PropertyScopes:
     PUBLIC = (PropertyScope.INTERNAL, PropertyScope.EXTERNAL)
 
 
-class LanguageStandards:
-    # C
-    C99 = 199901
-    C11 = 201112
-    C17 = 201710
-    # C++
-    CXX11 = 201103
-    CXX14 = 201402
-    CXX17 = 201703
-    CXX20 = 202002
-
-
 class Language(Enum):
     C = "C"
     C_LIKE = "C-like"
     CXX = "C++",
     GO = "Go"
+
+class LanguageStandard:
+    _language: Language
+    _standard: int
+
+    def __init__(self, language: Language, standard: int) -> None:
+        self._language = language
+        self._standard = standard
+
+    def get_language(self):
+        return self._language
+
+    def get_standard(self):
+        return self._standard
+
+class LanguageStandards:
+    C99 = LanguageStandard(Language.C, 199901)
+    C11 = LanguageStandard(Language.C, 201112)
+    C17 = LanguageStandard(Language.C, 201710)
+    CXX11 = LanguageStandard(Language.CXX, 201103)
+    CXX14 = LanguageStandard(Language.CXX, 201402)
+    CXX17 = LanguageStandard(Language.CXX, 201703)
+    CXX20 = LanguageStandard(Language.CXX, 202002)
 
 
 class RuntimeLinkMethod(Enum):

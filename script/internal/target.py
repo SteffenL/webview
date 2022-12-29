@@ -1,4 +1,4 @@
-from internal.build import BuildType, Language, PropertyScope, RuntimeLinkMethod
+from internal.build import BuildType, Language, LanguageStandard, PropertyScope, RuntimeLinkMethod
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ class Target():
     _type: TargetType
     _name: str
     _language: Language
-    _language_standard: str
+    _language_standards: MutableMapping[Language, Union[int, None]]
     _include_dirs: MutableMapping[PropertyScope, List[str]]
     _lib_dirs: MutableMapping[PropertyScope, List[str]]
     _link_libs: MutableMapping[PropertyScope, List[Union[str, "Target"]]]
@@ -47,7 +47,7 @@ class Target():
         self._type = type
         self._name = name
         self._language = language
-        self._language_standard = None
+        self._language_standards = dict((k, None) for k in Language)
         self._include_dirs = {PropertyScope.INTERNAL: [],
                               PropertyScope.EXTERNAL: []}
         self._lib_dirs = {PropertyScope.INTERNAL: [],
@@ -84,14 +84,20 @@ class Target():
     def get_language(self):
         return self._language
 
-    def set_language(self, language: Language):
+    def set_language(self, language: Language, standard: LanguageStandard = None):
         self._language = language
+        if standard is not None:
+            self.set_language_standard(standard)
 
-    def get_language_standard(self):
-        return self._language_standard
+    def get_language_standard(self, language: Language = None):
+        if language is None:
+            language = self._language
+        if language is None:
+            raise Exception("No language set")
+        return self._language_standards[language]
 
-    def set_language_standard(self, standard: str):
-        self._language_standard = standard
+    def set_language_standard(self, standard: LanguageStandard):
+        self._language_standards[standard.get_language()] = standard.get_standard()
 
     def get_include_dirs(self, scope: PropertyScope) -> Iterable[str]:
         return tuple(self._include_dirs[scope])
@@ -123,6 +129,17 @@ class Target():
 
         for lib in libs:
             if type(lib) == type(self):
+                # Take the most recent language standard one from dependencies.
+                for language in Language:
+                    our_standard = self.get_language_standard(language)
+                    if our_standard is None:
+                        our_standard = 0
+                    their_standard = lib.get_language_standard(language)
+                    if their_standard is None:
+                        their_standard = 0
+                    if their_standard > our_standard:
+                        self.set_language_standard(LanguageStandard(language, their_standard))
+
                 # Add internal and external pkg-config packages from dependency.
                 self._pkgconfig_libs[I] = list(dict.fromkeys(
                     self._pkgconfig_libs[I] + lib._pkgconfig_libs[E]))
