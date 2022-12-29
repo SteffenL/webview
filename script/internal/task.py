@@ -1,9 +1,27 @@
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
+from enum import Enum
+import queue
+import threading
 from typing import Any, Callable, Generic, List, TypeVar
 import uuid
 
 
 T = TypeVar("T")
+
+
+class LockScope:
+    _lock: threading.Lock
+
+    def __init__(self, lock: threading.Lock) -> None:
+        self._lock = lock
+
+    def __enter__(self):
+        self._lock.acquire()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._lock.release()
 
 
 class Task(Generic[T]):
@@ -55,30 +73,82 @@ class TaskCollection:
         return len(self.get_tasks(all=all))
 
 
+@dataclass
+class TaskWorkShared:
+    status_queue: queue.Queue
+    lock: threading.Lock
+    task_count: int
+    tasks_done: int
+    next_task_number: int
+
+    def get_next_task_number(self):
+        n = self.next_task_number
+        self.next_task_number += 1
+        return n
+
+    def one_done(self):
+        self.tasks_done += 1
+
+
+@dataclass
+class TaskWorkPerCollection:
+    task_count: int
+    tasks_done: int
+
+    def one_done(self):
+        self.tasks_done += 1
+
+
+class TaskStatus(Enum):
+    STARTED = 0
+    DONE = 1
+
+
 class TaskRunner:
     _collections: List[TaskCollection]
 
     def __init__(self):
         self._collections = []
 
-    def execute(self, on_status: Callable[[int, str], None] = lambda *_: None):
-        task_count = self.get_task_count()
-        task_number = 0
+    def execute(self, on_status: Callable[[TaskStatus, str, bool], None] = lambda *_: None):
+        shared = TaskWorkShared(
+            status_queue=queue.Queue(),
+            lock=threading.Lock(),
+            task_count=self.get_task_count(),
+            tasks_done=0,
+            next_task_number=1
+        )
+
+        def task_wrapper(shared: TaskWorkShared, per_collection: TaskWorkPerCollection, task: Task):
+            with LockScope(shared.lock):
+                task_number = shared.get_next_task_number()
+            shared.status_queue.put((task_number, task, TaskStatus.STARTED))
+            task.execute()
+            shared.status_queue.put((task_number, task, TaskStatus.DONE))
+            with LockScope(shared.lock):
+                shared.one_done()
+                per_collection.one_done()
+
         for collection in self._collections:
-            concurrent = collection.is_concurrent()
-            workers = None if concurrent else 1
-            futures: list[Future] = []
-            with ThreadPoolExecutor(max_workers=workers) as executor:
-                for task in collection.get_tasks():
-                    task_number += 1
-                    on_status(task_number, task_count, task.get_description())
-                    future = executor.submit(task.execute)
-                    futures.append(future)
-                    if not concurrent:
-                        future.result()
-                if concurrent:
-                    for future in futures:
-                        future.result()
+            tasks = collection.get_tasks()
+            if len(tasks) == 0:
+                continue
+            is_concurrent = collection.is_concurrent()
+            worker_count = None if is_concurrent else 1
+            with ThreadPoolExecutor(max_workers=worker_count) as executor:
+                per_collection = TaskWorkPerCollection(
+                    task_count=len(tasks),
+                    tasks_done=0
+                )
+                for task in tasks:
+                    executor.submit(task_wrapper, shared, per_collection, task)
+                while True:
+                    with LockScope(shared.lock):
+                        done = per_collection.tasks_done >= per_collection.task_count
+                    if done and shared.status_queue.empty():
+                        break
+                    task_number, task, status = shared.status_queue.get()
+                    on_status(status, task.get_description(), is_concurrent)
 
     def get_task_count(self):
         return sum(c.get_count() for c in self._collections)

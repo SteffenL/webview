@@ -1,7 +1,6 @@
-from internal.task import TaskRunner
+from internal.task import TaskRunner, TaskStatus
 
 from abc import abstractmethod
-import sys
 
 
 class LifecycleStrategy:
@@ -17,6 +16,7 @@ class LifecycleStrategy:
     def on_configured(self):
         pass
 
+
 class Lifecycle:
     _strategy: LifecycleStrategy
 
@@ -29,10 +29,24 @@ class Lifecycle:
         self._strategy.configure_tasks(task_runner)
         self._strategy.on_configured()
 
-        if task_runner.get_task_count() == 0:
+        task_count = task_runner.get_task_count()
+        task_number = 0
+
+        if task_count == 0:
             return
 
-        def print_status(task_number: int, task_count: int, message: str):
-            sys.stdout.write(
-                "\r[{}/{}] {}\n".format(task_number, task_count, message))
+        def print_status(status: TaskStatus, message: str, is_concurrent: bool):
+            nonlocal task_count
+            nonlocal task_number
+            if is_concurrent:
+                if status == TaskStatus.STARTED:
+                    print("[started] {}".format(message))
+                    return
+                elif status != TaskStatus.DONE:
+                    return
+            elif status != TaskStatus.STARTED:
+                return
+            task_number += 1
+            print("[{}/{}] {}".format(task_number, task_count, message))
+
         task_runner.execute(on_status=print_status)

@@ -123,6 +123,7 @@ class LifecycleStrategy:
         print_toolchain(self._workspace.get_toolchain())
         print_targets(self._workspace.get_sorted_targets())
 
+
 def main(args):
     script_dir = os.path.dirname(__file__)
     source_dir = os.path.dirname(script_dir)
