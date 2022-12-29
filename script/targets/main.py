@@ -20,7 +20,7 @@ def register(workspace: Workspace):
     c_standard = LanguageStandards.C11 if toolchain_id == ToolchainId.MSVC else LanguageStandards.C99
     cxx_standard = LanguageStandards.CXX17 if system == "Windows" else LanguageStandards.CXX11
 
-    # Header-only library targets
+    # Header-only library target
     header_library = workspace.add_target(
         TargetType.INTERFACE, "library_header")
     header_library.add_include_dirs(source_dir)
@@ -38,7 +38,7 @@ def register(workspace: Workspace):
         header_library.add_link_libraries(
             "ole32", "shell32", "shlwapi", "user32")
 
-    # Shared/Static library targets
+    # Shared library target
     shared_library = workspace.add_target(
         TargetType.SHARED_LIBRARY, "library_shared")
     shared_library.set_condition(lambda: options.build_library.get_value())
@@ -50,6 +50,7 @@ def register(workspace: Workspace):
         "WEBVIEW_SHARED", scope=PropertyScopes.PUBLIC)
     shared_library.add_sources("webview.cc")
 
+    # Static library target
     static_library = workspace.add_target(
         TargetType.STATIC_LIBRARY, "library_static")
     static_library.set_condition(lambda: options.build_library.get_value())
@@ -77,7 +78,7 @@ def register(workspace: Workspace):
             example.add_link_libraries(static_library)
         example.add_sources(source_path)
 
-    # Test targets
+    # Test target
     library_test_program = workspace.add_target(TargetType.EXE, "library_test")
     library_test_program.set_condition(
         lambda: options.build_tests.get_value())
