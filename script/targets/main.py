@@ -1,4 +1,4 @@
-from internal.build import FileType, find_c_like_source_files, Language, LanguageStandards, PropertyScopes
+from internal.build import FileType, find_c_like_source_files, LanguageStandards, PropertyScopes
 from internal.target import TargetType
 from internal.toolchain.common import ToolchainId
 from internal.workspace import Workspace
@@ -76,7 +76,6 @@ def register(workspace: Workspace):
             # Use static library for C examples.
             example.add_link_libraries(static_library)
         example.add_sources(source_path)
-        lang = example.get_language()
 
     # Test targets
     library_test_program = workspace.add_target(TargetType.EXE, "library_test")
