@@ -75,6 +75,7 @@ class TaskCollection:
 
 @dataclass
 class TaskWorkShared:
+    stop: bool
     status_queue: queue.Queue
     lock: threading.Lock
 
@@ -102,11 +103,16 @@ class TaskRunner:
 
     def execute(self, on_status: Callable[[TaskStatus, str, bool], None] = lambda *_: None):
         shared = TaskWorkShared(
+            stop=False,
             status_queue=queue.Queue(),
             lock=threading.Lock()
         )
 
+        status = None
+        force_stop = False
         for collection in self._collections:
+            if force_stop:
+                break
             tasks = collection.get_tasks()
             if len(tasks) == 0:
                 continue
@@ -119,28 +125,35 @@ class TaskRunner:
                 )
                 for task in tasks:
                     executor.submit(self._worker, shared, per_collection, task)
-                status = None
-                while True:
+                while not force_stop:
                     with LockScope(shared.lock):
                         done = per_collection.tasks_done >= per_collection.task_count
                     if done and shared.status_queue.empty():
                         break
-                    task, status = shared.status_queue.get()
+                    task, status, exception = shared.status_queue.get()
                     on_status(status, task.get_description(), is_concurrent)
                     if status == TaskStatus.FAILED:
-                        break
-                if status == TaskStatus.FAILED:
+                        force_stop = True
+                        shared.stop = True
+                if force_stop:
                     executor.shutdown(cancel_futures=True)
+            if status == TaskStatus.FAILED:
+                raise Exception("One or more tasks failed.")
 
     @staticmethod
     def _worker(shared: TaskWorkShared, per_collection: TaskWorkPerCollection, task: Task):
-        shared.status_queue.put((task, TaskStatus.STARTED))
+        with LockScope(shared.lock):
+            if shared.stop:
+                return
+        shared.status_queue.put((task, TaskStatus.STARTED, None))
         try:
             task.execute()
-        except:
-            shared.status_queue.put((task, TaskStatus.FAILED))
+        except Exception as e:
+            with LockScope(shared.lock):
+                shared.stop = True
+            shared.status_queue.put((task, TaskStatus.FAILED, e))
             return
-        shared.status_queue.put((task, TaskStatus.DONE))
+        shared.status_queue.put((task, TaskStatus.DONE, None))
         with LockScope(shared.lock):
             per_collection.one_done()
 
