@@ -77,17 +77,6 @@ class TaskCollection:
 class TaskWorkShared:
     status_queue: queue.Queue
     lock: threading.Lock
-    task_count: int
-    tasks_done: int
-    next_task_number: int
-
-    def get_next_task_number(self):
-        n = self.next_task_number
-        self.next_task_number += 1
-        return n
-
-    def one_done(self):
-        self.tasks_done += 1
 
 
 @dataclass
@@ -114,10 +103,7 @@ class TaskRunner:
     def execute(self, on_status: Callable[[TaskStatus, str, bool], None] = lambda *_: None):
         shared = TaskWorkShared(
             status_queue=queue.Queue(),
-            lock=threading.Lock(),
-            task_count=self.get_task_count(),
-            tasks_done=0,
-            next_task_number=1
+            lock=threading.Lock()
         )
 
         for collection in self._collections:
@@ -139,7 +125,7 @@ class TaskRunner:
                         done = per_collection.tasks_done >= per_collection.task_count
                     if done and shared.status_queue.empty():
                         break
-                    task_number, task, status = shared.status_queue.get()
+                    task, status = shared.status_queue.get()
                     on_status(status, task.get_description(), is_concurrent)
                     if status == TaskStatus.FAILED:
                         break
@@ -148,17 +134,14 @@ class TaskRunner:
 
     @staticmethod
     def _worker(shared: TaskWorkShared, per_collection: TaskWorkPerCollection, task: Task):
-        with LockScope(shared.lock):
-            task_number = shared.get_next_task_number()
-        shared.status_queue.put((task_number, task, TaskStatus.STARTED))
+        shared.status_queue.put((task, TaskStatus.STARTED))
         try:
             task.execute()
         except:
-            shared.status_queue.put((task_number, task, TaskStatus.FAILED))
+            shared.status_queue.put((task, TaskStatus.FAILED))
             return
-        shared.status_queue.put((task_number, task, TaskStatus.DONE))
+        shared.status_queue.put((task, TaskStatus.DONE))
         with LockScope(shared.lock):
-            shared.one_done()
             per_collection.one_done()
 
     def get_task_count(self):
