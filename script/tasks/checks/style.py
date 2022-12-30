@@ -6,7 +6,7 @@ import os
 import subprocess
 
 
-def check_file(file_path: str):
+def check_file(task: Task, file_path: str):
     clang_format_args = ["clang-format", "--Werror", file_path]
     with subprocess.Popen(clang_format_args, stdout=subprocess.PIPE) as clang_format:
         git_diff_args = ["git", "diff", "--no-index", "--", file_path, "-"]

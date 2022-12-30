@@ -1,7 +1,7 @@
 from internal.build import Language
 from internal.common import Arch
 from internal.target import Target, TargetType
-from internal.task import Task, TaskCollection
+from internal.task import Task, TaskCollection, TaskStatus
 
 from abc import abstractmethod
 from enum import Enum
@@ -76,7 +76,7 @@ class Toolchain:
         self._binaries = binaries
 
     @staticmethod
-    def _process_task(arg: Tuple[str, Sequence[str], bool]):
+    def _process_task(task: Task, arg: Tuple[str, Sequence[str], bool]):
         output_path, command, pipe_output = arg
         if output_path is not None:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -85,11 +85,9 @@ class Toolchain:
             stdout_result, stderr_result = p.communicate()
             code = p.wait()
             if code == 0:
-                sys.stdout.buffer.write(stdout_result)
-                sys.stdout.flush()
+                task.set_result(stdout_result)
             else:
-                sys.stderr.buffer.write(stderr_result)
-                sys.stderr.flush()
+                task.set_result(stderr_result)
                 raise Exception("Command failed: {}".format(command))
 
     def create_compile_tasks(self, *targets: Target) -> Iterable[TaskCollection]:

@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import Enum
 import queue
+import sys
 import threading
 from typing import Any, Callable, Generic, List, TypeVar
 import uuid
@@ -10,37 +11,31 @@ import uuid
 T = TypeVar("T")
 
 
-class LockScope:
-    _lock: threading.Lock
-
-    def __init__(self, lock: threading.Lock) -> None:
-        self._lock = lock
-
-    def __enter__(self):
-        self._lock.acquire()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._lock.release()
-
-
 class Task(Generic[T]):
     _id: str
-    _work: Callable[[T], None]
+    _work: Callable[["Task", T], None]
     _arg: T
     _description: str
     _condition: Callable[[T], bool]
+    _result: T
+    _exception: Exception
+    _lock: threading.Lock
+    _status: "TaskStatus"
 
-    def __init__(self, work: Callable[[T], None], arg: T = None, description: str = None, condition: Callable[[T], bool] = lambda *_: True):
+    def __init__(self, work: Callable[["Task", T], None], arg: T = None, description: str = None, condition: Callable[[T], bool] = lambda *_: True):
         self._id = uuid.uuid4().hex
         self._work = work
         self._arg = arg
         self._description = description
         self._condition = condition
+        self._result = None
+        self._exception = None
+        self._lock = threading.Lock()
+        self._status = TaskStatus.IDLE
 
     def execute(self) -> Any:
         if self._work:
-            self._work(self._arg)
+            self._work(self, self._arg)
 
     def get_id(self):
         return self._id
@@ -51,6 +46,29 @@ class Task(Generic[T]):
     def is_condition_met(self):
         return self._condition(self._arg)
 
+    def get_result(self):
+        with self._lock:
+            return self._result
+
+    def get_exception(self):
+        with self._lock:
+            return self._exception
+
+    def set_result(self, value: Any, status: "TaskStatus" = None):
+        with self._lock:
+            self._result = value
+            if status is not None:
+                self.set_status(status)
+
+    def set_exception(self, e: Exception):
+        with self._lock:
+            self._exception = e
+
+    def set_status(self, status: "TaskStatus"):
+        self._status = status
+
+    def get_status(self):
+        return self._status
 
 class TaskCollection:
     _concurrent: bool
@@ -90,9 +108,11 @@ class TaskWorkPerCollection:
 
 
 class TaskStatus(Enum):
-    STARTED = 0
-    DONE = 1
-    FAILED = 2
+    IDLE = 0
+    STARTED = 1
+    DONE = 2
+    FAILED = 3
+    CANCELED = 4
 
 
 class TaskRunner:
@@ -101,7 +121,7 @@ class TaskRunner:
     def __init__(self):
         self._collections = []
 
-    def execute(self, on_status: Callable[[TaskStatus, str, bool], None] = lambda *_: None):
+    def execute(self, on_status: Callable[[TaskStatus, str, bool, bytes, Exception], None] = lambda *_: None):
         shared = TaskWorkShared(
             stop=False,
             status_queue=queue.Queue(),
@@ -126,36 +146,41 @@ class TaskRunner:
                 for task in tasks:
                     executor.submit(self._worker, shared, per_collection, task)
                 while not force_stop:
-                    with LockScope(shared.lock):
+                    with shared.lock:
                         done = per_collection.tasks_done >= per_collection.task_count
                     if done and shared.status_queue.empty():
                         break
-                    task, status, exception = shared.status_queue.get()
-                    on_status(status, task.get_description(), is_concurrent)
+                    task, status = shared.status_queue.get()
+                    output = task.get_result()
+                    e = task.get_exception()
+                    on_status(status, task.get_description(), is_concurrent, output, e)
                     if status == TaskStatus.FAILED:
                         force_stop = True
-                        shared.stop = True
+                        with shared.lock:
+                            shared.stop = True
                 if force_stop:
                     executor.shutdown(cancel_futures=True)
-            if status == TaskStatus.FAILED:
-                raise Exception("One or more tasks failed.")
 
     @staticmethod
     def _worker(shared: TaskWorkShared, per_collection: TaskWorkPerCollection, task: Task):
-        with LockScope(shared.lock):
+        with shared.lock:
             if shared.stop:
+                task.set_status(TaskStatus.CANCELED)
+                per_collection.one_done()
+                shared.status_queue.put((task, TaskStatus.CANCELED))
                 return
-        shared.status_queue.put((task, TaskStatus.STARTED, None))
+        task.set_status(TaskStatus.STARTED)
+        shared.status_queue.put((task, TaskStatus.STARTED))
+        status: TaskStatus
         try:
             task.execute()
+            status = TaskStatus.DONE
         except Exception as e:
-            with LockScope(shared.lock):
-                shared.stop = True
-            shared.status_queue.put((task, TaskStatus.FAILED, e))
-            return
-        shared.status_queue.put((task, TaskStatus.DONE, None))
-        with LockScope(shared.lock):
-            per_collection.one_done()
+            status = TaskStatus.FAILED
+            task.set_exception(e)
+        task.set_status(status)
+        per_collection.one_done()
+        shared.status_queue.put((task, status))
 
     def get_task_count(self):
         return sum(c.get_count() for c in self._collections)

@@ -36,6 +36,6 @@ def register(task_runner: TaskRunner, workspace: Workspace):
             args += compile_params.cflags
 
             tasks.add_task(Task(
-                lambda args: subprocess.check_call(args),
+                lambda _, args: subprocess.check_call(args),
                 arg=args,
                 description="Lint target {} ({})".format(target.get_name(), compile_params.input_path)))

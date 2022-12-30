@@ -4,7 +4,7 @@ from internal.task import Task, TaskRunner
 import shutil
 
 
-def clean_build_dir(workspace: Workspace):
+def clean_build_dir(task: Task, workspace: Workspace):
     dir = workspace.get_build_arch_dir()
     if dir is None or len(dir) == 0:
         return

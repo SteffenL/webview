@@ -5,7 +5,7 @@ from internal.task import Task, TaskRunner
 import subprocess
 
 
-def generate_task(workspace: Workspace):
+def generate_task(task: Task, workspace: Workspace):
     """Reformats C/C++ source code files in the source directory."""
 
     sources = find_c_like_source_files(

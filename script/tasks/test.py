@@ -7,5 +7,5 @@ def register(task_runner: TaskRunner, workspace: Workspace):
 
     test_tasks = task_runner.create_task_collection()
     for test in workspace.get_tests():
-        test_tasks.add_task(Task(lambda _: test.run(),
+        test_tasks.add_task(Task(lambda *_: test.run(),
                             description="Test {}".format(test.get_executable())))
