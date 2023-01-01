@@ -1,3 +1,5 @@
+from internal.utility import execute_program
+
 import os
 import subprocess
 from typing import Callable, Iterable, Mapping
@@ -37,8 +39,8 @@ class Test():
         return self._condition()
 
     def run(self):
-        args = (self.get_executable(), *self.get_arguments())
+        command = (self.get_executable(), *self.get_arguments())
         env = dict()
         env.update(os.environ)
         env.update(self.get_environment())
-        subprocess.check_call(args, env=env)
+        return execute_program(command, env=env, pipe_output=True, ignore_error=True)

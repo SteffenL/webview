@@ -5,9 +5,8 @@ from http.client import HTTPResponse
 import platform
 import shutil
 import subprocess
-import sys
 from tempfile import TemporaryDirectory, TemporaryFile
-from typing import IO, Iterable, Tuple, Union
+from typing import IO, Iterable, Mapping, Union
 from urllib.request import Request, urlopen
 from zipfile import ZipFile
 
@@ -90,9 +89,12 @@ class ExecuteProgramResult:
         return self.get_output_bytes().decode(encoding=encoding)
 
 
-def execute_program(command: Iterable[str], pipe_output: bool = False, ignore_error: bool = False) -> ExecuteProgramResult:
+def execute_program(command: Iterable[str],
+                    env: Mapping[str, str] = None,
+                    pipe_output: bool = False,
+                    ignore_error: bool = False) -> ExecuteProgramResult:
     pipe = subprocess.PIPE if pipe_output else None
-    with subprocess.Popen(command, stdout=pipe, stderr=pipe) as p:
+    with subprocess.Popen(command, env=env, stdout=pipe, stderr=pipe) as p:
         stdout_result, stderr_result = p.communicate()
         code = p.wait()
         if ignore_error or code == 0:
