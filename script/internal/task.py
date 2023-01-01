@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import Enum
 import queue
-import sys
 import threading
 from typing import Any, Callable, Generic, List, TypeVar
 import uuid
@@ -70,6 +69,7 @@ class Task(Generic[T]):
     def get_status(self):
         return self._status
 
+
 class TaskCollection:
     _concurrent: bool
     _tasks: List[Task]
@@ -107,12 +107,13 @@ class TaskWorkPerCollection:
         self.tasks_done += 1
 
 
+# Keep the length of each value an even number for display and alignment purposes.
 class TaskStatus(Enum):
-    IDLE = 0
-    STARTED = 1
-    DONE = 2
-    FAILED = 3
-    CANCELED = 4
+    IDLE = "IDLE"
+    STARTED = "STARTED"
+    FINISHED = "FINISHED"
+    FAILED = "FAILED"
+    CANCELED = "CANCELED"
 
 
 class TaskRunner:
@@ -153,13 +154,12 @@ class TaskRunner:
                     task, status = shared.status_queue.get()
                     output = task.get_result()
                     e = task.get_exception()
-                    on_status(status, task.get_description(), is_concurrent, output, e)
+                    on_status(status, task.get_description(),
+                              is_concurrent, output, e)
                     if status == TaskStatus.FAILED:
                         force_stop = True
-                        with shared.lock:
-                            shared.stop = True
                 if force_stop:
-                    executor.shutdown(cancel_futures=True)
+                    executor.shutdown(wait=False, cancel_futures=True)
 
     @staticmethod
     def _worker(shared: TaskWorkShared, per_collection: TaskWorkPerCollection, task: Task):
@@ -174,10 +174,12 @@ class TaskRunner:
         status: TaskStatus
         try:
             task.execute()
-            status = TaskStatus.DONE
+            status = TaskStatus.FINISHED
         except Exception as e:
             status = TaskStatus.FAILED
             task.set_exception(e)
+            with shared.lock:
+                shared.stop = True
         task.set_status(status)
         per_collection.one_done()
         shared.status_queue.put((task, status))

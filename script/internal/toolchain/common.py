@@ -1,14 +1,14 @@
 from internal.build import Language
 from internal.common import Arch
 from internal.target import Target, TargetType
-from internal.task import Task, TaskCollection, TaskStatus
+from internal.task import Task, TaskCollection
+from internal.utility import execute_program
 
 from abc import abstractmethod
 from enum import Enum
 from dataclasses import dataclass
 import os
 import subprocess
-import sys
 from typing import Iterable, MutableSequence, Sequence, Tuple
 
 
@@ -80,15 +80,11 @@ class Toolchain:
         output_path, command, pipe_output = arg
         if output_path is not None:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        pipe = subprocess.PIPE if pipe_output else None
-        with subprocess.Popen(command, stdout=pipe, stderr=pipe) as p:
-            stdout_result, stderr_result = p.communicate()
-            code = p.wait()
-            if code == 0:
-                task.set_result(stdout_result)
-            else:
-                task.set_result(stderr_result)
-                raise Exception("Command failed: {}".format(command))
+        result = execute_program(
+            command, pipe_output=pipe_output, ignore_error=True)
+        task.set_result(result.get_output_string())
+        if result.exit_code != 0:
+            raise Exception("Command failed: {}".format(command))
 
     def create_compile_tasks(self, *targets: Target) -> Iterable[TaskCollection]:
         compile_tasks = TaskCollection(concurrent=True)

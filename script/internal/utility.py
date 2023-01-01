@@ -1,11 +1,13 @@
 from internal.common import Arch
 
+from dataclasses import dataclass
 from http.client import HTTPResponse
 import platform
 import shutil
 import subprocess
+import sys
 from tempfile import TemporaryDirectory, TemporaryFile
-from typing import IO, Union
+from typing import IO, Iterable, Tuple, Union
 from urllib.request import Request, urlopen
 from zipfile import ZipFile
 
@@ -68,3 +70,31 @@ def is_false_string(s: str):
 
 def is_true_string(s: str):
     return s.lower() in ("1", "true", "yes")
+
+
+@dataclass
+class ExecuteProgramResult:
+    exit_code: int
+    stdout: bytes
+    stderr: bytes
+
+    def get_output_bytes(self) -> bytes:
+        output = bytes()
+        if self.stdout:
+            output += self.stdout
+        if self.stderr:
+            output += self.stderr
+        return output
+
+    def get_output_string(self, encoding: str = "utf8") -> str:
+        return self.get_output_bytes().decode(encoding=encoding)
+
+
+def execute_program(command: Iterable[str], pipe_output: bool = False, ignore_error: bool = False) -> ExecuteProgramResult:
+    pipe = subprocess.PIPE if pipe_output else None
+    with subprocess.Popen(command, stdout=pipe, stderr=pipe) as p:
+        stdout_result, stderr_result = p.communicate()
+        code = p.wait()
+        if ignore_error or code == 0:
+            return ExecuteProgramResult(code, stdout_result, stderr_result)
+        raise Exception("Command failed: {}".format(command))
