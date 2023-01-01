@@ -3,9 +3,10 @@ from internal.target import TargetType
 from internal.task import Task, TaskRunner
 from internal.toolchain.clang_like import ClangLikeToolchain
 from internal.toolchain.common import ToolchainBinaries, ToolchainId
+from internal.utility import execute_program
 from internal.workspace import Workspace
 
-import subprocess
+from typing import Iterable
 
 
 def register(task_runner: TaskRunner, workspace: Workspace):
@@ -19,6 +20,12 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         ar="ar", cc="clang", cxx="clang++"))
     tasks = task_runner.create_task_collection(concurrent=True)
 
+    def check(task: Task, command: Iterable[str]):
+        result = execute_program(command, pipe_output=True, ignore_error=True)
+        task.set_result(result.get_output_string())
+        if result.exit_code != 0:
+            raise Exception("Command failed: {}".format(command))
+
     for target in workspace.get_targets(all=True):
         if target.get_type() == TargetType.INTERFACE:
             continue
@@ -29,13 +36,13 @@ def register(task_runner: TaskRunner, workspace: Workspace):
             if workspace.get_options().check_lint.get_value() == LintMode.STRICT:
                 tidy_params += ("--warnings-as-errors=*",)
 
-            args = ["clang-tidy", "--quiet"]
-            args += tidy_params
-            args.append(compile_params.input_path)
-            args.append("--")
-            args += compile_params.cflags
+            command = ["clang-tidy", "--quiet"]
+            command += tidy_params
+            command.append(compile_params.input_path)
+            command.append("--")
+            command += compile_params.cflags
 
             tasks.add_task(Task(
-                lambda _, args: subprocess.check_call(args),
-                arg=args,
+                check,
+                arg=command,
                 description="Lint target {} ({})".format(target.get_name(), compile_params.input_path)))
