@@ -92,8 +92,8 @@ class Lifecycle:
             sys.stdout.flush()
             sys.stdout.write("\033[M\033[u")
 
-            # if exception is not None:
-            #    raise exception
+            if exception is not None:
+                raise exception
 
         print("Running tasks...")
         try:
