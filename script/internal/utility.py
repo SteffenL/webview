@@ -57,9 +57,9 @@ def get_host_arch() -> Arch:
         return Arch.X64
     if arch == ("i386", "x86"):
         return Arch.X86
-    #if arch == "aarch64":
+    # if arch == "aarch64":
     #    return Arch.ARM64
-    #if arch == "armv7l":
+    # if arch == "armv7l":
     #    return Arch.ARM32
     raise Exception("Unsupported host machine architecture.")
 

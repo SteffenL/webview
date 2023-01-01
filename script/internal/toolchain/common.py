@@ -94,9 +94,12 @@ class Toolchain:
         for target in targets:
             if not target.is_condition_met():
                 continue
-            compile_tasks.add_task(*self._create_compile_tasks(target, compile_tasks.is_concurrent()))
-            archive_tasks.add_task(*self._create_archive_tasks(target, archive_tasks.is_concurrent()))
-            link_tasks.add_task(*self._create_link_tasks(target, link_tasks.is_concurrent()))
+            compile_tasks.add_task(
+                *self._create_compile_tasks(target, compile_tasks.is_concurrent()))
+            archive_tasks.add_task(
+                *self._create_archive_tasks(target, archive_tasks.is_concurrent()))
+            link_tasks.add_task(
+                *self._create_link_tasks(target, link_tasks.is_concurrent()))
 
         return (
             compile_tasks,
