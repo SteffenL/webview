@@ -122,7 +122,7 @@ class TaskRunner:
     def __init__(self):
         self._collections = []
 
-    def execute(self, on_status: Callable[[TaskStatus, str, bool, bytes, Exception], None] = lambda *_: None):
+    def execute(self, on_status: Callable[[TaskStatus, str, bool, str, Exception], None] = lambda *_: None):
         shared = TaskWorkShared(
             stop=False,
             status_queue=queue.Queue(),
