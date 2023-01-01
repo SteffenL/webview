@@ -37,6 +37,7 @@ class Option(Generic[T]):
 
 #@dataclass
 class Options():
+    check: Option[bool]
     check_lint: Option[LintMode]
     check_style: Option[bool]
     clean: Option[bool]

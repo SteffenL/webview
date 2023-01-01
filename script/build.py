@@ -30,6 +30,13 @@ else:
 
 
 def pre_process_options(options: Options):
+    # Enable all checks.
+    if options.check.get_value():
+        if not options.check_lint.is_explicit():
+            options.check_lint.set_value(True)
+        if not options.check_style.is_explicit():
+            options.check_style.set_value(True)
+
     # Cannot specify only one of C/C++ compiler.
     if (options.cc.get_value() is None) != (options.cxx.get_value() is None):
         raise Exception(

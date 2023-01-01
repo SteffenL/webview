@@ -72,6 +72,9 @@ dependencies for your target architecture onto your system.
     group.add_argument("--reformat",
                        help="Reformat code (requires clang-format).",
                        action=BoolArgAction)
+    group.add_argument("--check",
+                       help="Enable all checks.",
+                       action=BoolArgAction)
     group.add_argument("--check-style",
                        help="Check code style (requires clang-format).",
                        action=BoolArgAction)
