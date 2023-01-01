@@ -35,7 +35,6 @@ class Option(Generic[T]):
         self._value = value
 
 
-#@dataclass
 class Options():
     check: Option[bool]
     check_lint: Option[LintMode]

@@ -10,6 +10,7 @@ import platform
 import subprocess
 from typing import Callable, Sequence
 
+
 class MsvcToolchain(Toolchain):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -88,6 +89,7 @@ class MsvcCompiler(Compiler):
                 compile_command.append("/OUT:" + target.get_output_path())
         return compile_command
 """
+
 
 def find_msvc_dev_cmd():
     python_arch_bits, _ = platform.architecture()

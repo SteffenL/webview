@@ -22,4 +22,4 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         workspace.get_source_dir(), include_headers=True)
     for _, source in sources:
         tasks.add_task(Task(reformat, arg=source,
-                    description="Reformat {}".format(source)))
+                            description="Reformat {}".format(source)))

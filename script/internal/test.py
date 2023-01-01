@@ -1,7 +1,6 @@
 from internal.utility import execute_program
 
 import os
-import subprocess
 from typing import Callable, Iterable, Mapping
 
 

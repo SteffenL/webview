@@ -18,6 +18,7 @@ class Language(Enum):
     CXX = "C++",
     GO = "Go"
 
+
 class LanguageStandard:
     _language: Language
     _standard: int
@@ -31,6 +32,7 @@ class LanguageStandard:
 
     def get_standard(self):
         return self._standard
+
 
 class LanguageStandards:
     C99 = LanguageStandard(Language.C, 199901)

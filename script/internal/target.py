@@ -97,7 +97,8 @@ class Target():
         return self._language_standards[language]
 
     def set_language_standard(self, standard: LanguageStandard):
-        self._language_standards[standard.get_language()] = standard.get_standard()
+        self._language_standards[standard.get_language()
+                                 ] = standard.get_standard()
 
     def get_include_dirs(self, scope: PropertyScope) -> Iterable[str]:
         return tuple(self._include_dirs[scope])
@@ -138,7 +139,8 @@ class Target():
                     if their_standard is None:
                         their_standard = 0
                     if their_standard > our_standard:
-                        self.set_language_standard(LanguageStandard(language, their_standard))
+                        self.set_language_standard(
+                            LanguageStandard(language, their_standard))
 
                 # Add internal and external pkg-config packages from dependency.
                 self._pkgconfig_libs[I] = list(dict.fromkeys(

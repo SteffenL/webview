@@ -4,6 +4,7 @@ from internal.target import Target
 
 import platform
 
+
 def apply_common_target_configuration(target: Target, context: Context):
     system = platform.system()
     lang = target.get_language()
