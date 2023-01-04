@@ -138,6 +138,7 @@ def main(args):
     print_toolchain(workspace.get_toolchain())
     print_targets(workspace.get_sorted_targets())
 
+    print("Running tasks...")
     Lifecycle(task_runner).run()
 
 

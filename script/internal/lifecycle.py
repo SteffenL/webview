@@ -64,7 +64,6 @@ class Lifecycle:
             if exception is not None:
                 raise exception
 
-        print("Running tasks...")
         try:
             self._task_runner.execute(on_status=on_status)
         finally:
