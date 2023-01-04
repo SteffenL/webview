@@ -15,7 +15,7 @@ else:
     from internal.toolchain.toolchain import activate_toolchain, detect_toolchain, Toolchain
     from internal.utility import get_host_arch
     from internal.workspace import Workspace
-    # import targets.deps.main
+    import targets.deps.main
     import targets.main
     import tasks.checks.lint
     import tasks.checks.style
@@ -116,6 +116,7 @@ class LifecycleStrategy:
         self._workspace = workspace
 
     def configure_targets(self):
+        targets.deps.main.register(self._workspace)
         targets.main.register(self._workspace)
 
     def configure_tasks(self, task_runner: TaskRunner):

@@ -4,9 +4,6 @@ from internal.utility import get_host_arch
 from internal.target import Target, TargetType
 from internal.toolchain.common import ArchiveParams, CompileParams, Language, LinkParams, Toolchain
 
-
-from abc import abstractmethod
-from dataclasses import dataclass
 import math
 import os
 import platform

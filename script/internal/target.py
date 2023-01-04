@@ -33,7 +33,6 @@ class Target():
     _macos_frameworks: MutableMapping[PropertyScope, List[str]]
     _pkgconfig_libs: MutableMapping[PropertyScope, List[str]]
     _output_name: str
-    #_output_dir: str
     _link_output_name: str
     _enabled: bool
     _runtime_link_method: RuntimeLinkMethod
@@ -42,6 +41,9 @@ class Target():
     _default_scope: Union[PropertyScope, Iterable[PropertyScope]]
     _workspace: "Workspace"
     _condition: Callable[[], bool]
+    _bin_dir: str
+    _lib_dir: str
+    _obj_dir: str
 
     def __init__(self, workspace: "Workspace", type: TargetType, name: str, language: Language = None):
         self._type = type
@@ -62,7 +64,6 @@ class Target():
         self._pkgconfig_libs = {PropertyScope.INTERNAL: [],
                                 PropertyScope.EXTERNAL: []}
         self._output_name = None
-        #self._output_dir = os.path.normpath(output_dir)
         self._link_output_name = None
         self._enabled = True
         self._runtime_link_method = RuntimeLinkMethod.SHARED
@@ -71,6 +72,9 @@ class Target():
         self._default_scope = PropertyScope.EXTERNAL if type == TargetType.INTERFACE else PropertyScope.INTERNAL
         self._workspace = workspace
         self._condition = lambda: True
+        self._bin_dir = None
+        self._lib_dir = None
+        self._obj_dir = None
 
     def __hash__(self) -> int:
         return hash((self._type, self._name))
@@ -232,13 +236,22 @@ class Target():
         self._link_output_name = name
 
     def get_bin_dir(self):
-        return self._workspace.get_bin_dir()
+        return self._workspace.get_bin_dir() if self._bin_dir is None else self._bin_dir
+
+    def set_bin_dir(self, dir: str):
+        self._bin_dir = dir
 
     def get_lib_dir(self):
-        return self._workspace.get_lib_dir()
+        return self._workspace.get_lib_dir() if self._lib_dir is None else self._lib_dir
+
+    def set_lib_dir(self, dir: str):
+        self._lib_dir = dir
 
     def get_obj_dir(self):
-        return self._workspace.get_obj_dir(self)
+        return self._workspace.get_obj_dir(self) if self._obj_dir is None else self._obj_dir
+
+    def set_obj_dir(self, dir: str):
+        self._obj_dir = dir
 
     def is_enabled(self):
         return self._enabled

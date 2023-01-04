@@ -8,7 +8,6 @@ from abc import abstractmethod
 from enum import Enum
 from dataclasses import dataclass
 import os
-import subprocess
 from typing import Iterable, MutableSequence, Sequence, Tuple
 
 
@@ -145,43 +144,43 @@ class Toolchain:
 
     @abstractmethod
     def get_compile_exe(self, language: Language):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_archive_exe(self, language: Language):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_link_exe(self, language: Language):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_archive_params(self, target: Target) -> ArchiveParams:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_compile_params(self, target: Target) -> Sequence[CompileParams]:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_link_params(self, target: Target) -> LinkParams:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def _format_compile_params(self, target: Target, params: CompileParams, add_input: bool = False, add_output: bool = False) -> Sequence[str]:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def _format_archive_params(self, params: LinkParams) -> Sequence[str]:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def _format_link_params(self, params: LinkParams) -> Sequence[str]:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_file_name_prefix(self, target_type: TargetType) -> str:
-        pass
+        return ""
 
     def get_file_name_extension(self, target_type: TargetType, system: str) -> str:
         if target_type == TargetType.EXE:
