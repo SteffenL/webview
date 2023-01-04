@@ -131,7 +131,7 @@ def main(args):
     #tasks.generate.reformat.register(task_runner, workspace)
     #tasks.checks.style.register(task_runner, workspace)
     #tasks.checks.lint.register(task_runner, workspace)
-    #tasks.clean.register(task_runner, workspace)
+    tasks.clean.register(task_runner, workspace)
     tasks.compile.register(task_runner, workspace)
     #tasks.test.register(task_runner, workspace)
     #print_toolchain(workspace.get_toolchain())

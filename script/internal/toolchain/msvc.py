@@ -36,7 +36,13 @@ class MsvcToolchain(Toolchain):
         return exe
 
     def get_link_exe(self, language: Language):
-        return self.get_compile_exe(language)
+        binaries = self.get_binaries()
+        exe = binaries.cc
+        if exe is None:
+            exe = os.path.join(os.path.dirname(binaries.cc), "link.exe")
+        if exe is None:
+            raise Exception("Binary not found: link")
+        return exe
 
     def get_archive_params(self, target: Target) -> ArchiveParams:
         input_paths: List[str] = []
@@ -46,12 +52,12 @@ class MsvcToolchain(Toolchain):
         for source in target.get_sources():
             rel_source_path = os.path.relpath(source, source_dir)
             input_path = os.path.join(
-                target.get_obj_dir(), rel_source_path + ".o")
+                target.get_obj_dir(), rel_source_path + ".obj")
             input_paths.append(input_path)
 
         output_dir = target.get_lib_dir()
         output_path = os.path.join(
-            output_dir, target.get_output_file_name(extension=".a"))
+            output_dir, target.get_output_file_name(extension=".lib"))
 
         params = ArchiveParams()
         params.input_paths = input_paths
@@ -63,6 +69,7 @@ class MsvcToolchain(Toolchain):
         system = platform.system()
         cflags: List[str] = []
 
+        # "/options:strict"
         cflags += ("/nologo", "/utf-8")
 
         # Optimization
@@ -103,7 +110,7 @@ class MsvcToolchain(Toolchain):
             source_dir = target.get_workspace().get_source_dir()
             rel_source_path = os.path.relpath(source, source_dir)
             output_path = os.path.join(
-                target.get_obj_dir(), rel_source_path + ".o")
+                target.get_obj_dir(), rel_source_path + ".obj")
             params.output_path = output_path
             # Sources
             params.input_path = source
@@ -115,6 +122,7 @@ class MsvcToolchain(Toolchain):
         ldflags: List[str] = []
         input_paths: List[str] = []
 
+        ldflags += ("/nologo", "/utf-8")
 
         # Note: Architecture is dictated by toolchain environment.
 
@@ -124,7 +132,7 @@ class MsvcToolchain(Toolchain):
             # Output path
             rel_source_path = os.path.relpath(source, source_dir)
             input_path = os.path.join(
-                target.get_obj_dir(), rel_source_path + ".o")
+                target.get_obj_dir(), rel_source_path + ".obj")
             input_paths.append(input_path)
 
         # Runtime linking
@@ -132,9 +140,14 @@ class MsvcToolchain(Toolchain):
         #    if target.get_runtime_link_method() == RuntimeLinkMethod.STATIC:
         #        compile_command.append("-static")
 
+        ldflags.append("/link")
+
+        if target.get_type() == TargetType.SHARED_LIBRARY:
+            ldflags.append("/DLL")
+
         if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
             # Link library directories
-            ldflags += tuple("/L{}".format(s)
+            ldflags += tuple("/LIBPATH:{}".format(s)
                              for s in target.get_library_dirs(PropertyScope.INTERNAL))
             # Link libraries
             for lib in target.get_link_libraries(PropertyScope.INTERNAL):
@@ -173,7 +186,8 @@ class MsvcToolchain(Toolchain):
 
     def _format_archive_params(self, target_type: TargetType, params: LinkParams) -> Sequence[str]:
         args: List[str] = []
-        args += ("/nologo", "/OUT:" + params.output_path)
+        args.append("/nologo")
+        args.append("/OUT:" + params.output_path)
         args += params.input_paths
         return args
 
@@ -188,11 +202,9 @@ class MsvcToolchain(Toolchain):
 
     def _format_link_params(self, target_type: TargetType, params: LinkParams) -> Sequence[str]:
         args: List[str] = []
-        args.append("/link")
-        args += params.ldflags
-        if target_type == TargetType.SHARED_LIBRARY:
-            args += ("/DLL", "/Fe:" + params.output_path)
         args += params.input_paths
+        args += params.ldflags
+        args.append("/OUT:" + params.output_path)
         return args
 
     def get_file_name_prefix(self, target_type: TargetType) -> str:
@@ -200,7 +212,7 @@ class MsvcToolchain(Toolchain):
 
     def get_file_name_extension(self, target_type: TargetType, system: str) -> str:
         if target_type == TargetType.OBJECT:
-            return ".o"
+            return ".obj"
         if target_type == TargetType.STATIC_LIBRARY:
             return ".lib"
         return super().get_file_name_extension(target_type, system)
