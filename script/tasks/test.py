@@ -1,5 +1,5 @@
 from internal.workspace import Workspace
-from internal.task import Task, TaskRunner
+from internal.task import Task, TaskPhase, TaskRunner
 from internal.test import Test
 
 
@@ -13,7 +13,7 @@ def run_test(task: Task, test: Test):
 def register(task_runner: TaskRunner, workspace: Workspace):
     """Registers tasks for running tests."""
 
-    test_tasks = task_runner.create_task_collection()
+    test_tasks = task_runner.create_task_collection(TaskPhase.TEST)
     for test in workspace.get_tests():
         test_tasks.add_task(Task(run_test, arg=test,
                             description="Test {}".format(test.get_executable())))

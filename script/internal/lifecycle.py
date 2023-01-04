@@ -1,4 +1,4 @@
-from internal.cli import is_terminal_interactive, PrintColor, PrintSequenceBuilder
+from internal.cli import terminal_supports_escape, PrintColor, PrintSequenceBuilder
 from internal.task import TaskRunner, TaskStatus
 
 import sys
@@ -25,7 +25,7 @@ class Lifecycle:
         if task_count == 0:
             return
 
-        interactive = is_terminal_interactive()
+        interactive = terminal_supports_escape()
         task_count_digits = len(str(task_count))
         max_progress_length = len("[{}/{}]".format("9".rjust(task_count_digits),
                                                    "9".rjust(task_count_digits)))
