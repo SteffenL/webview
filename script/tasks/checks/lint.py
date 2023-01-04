@@ -3,7 +3,7 @@ from internal.target import TargetType
 from internal.task import Task, TaskPhase, TaskRunner
 from internal.toolchain.clang_like import ClangLikeToolchain
 from internal.toolchain.common import ToolchainBinaries, ToolchainId
-from internal.utility import execute_program
+from internal.utility import execute_program, find_executable
 from internal.workspace import Workspace
 
 from typing import Iterable
@@ -27,6 +27,8 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         if result.exit_code != 0:
             raise Exception("Command failed: {}".format(command))
 
+    exe = find_executable("clang-tidy", required=True)
+
     for target in workspace.get_targets(all=True):
         if target.get_type() == TargetType.INTERFACE:
             continue
@@ -37,7 +39,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
             if workspace.get_options().check_lint.get_value() == LintMode.STRICT:
                 tidy_params += ("--warnings-as-errors=*",)
 
-            command = ["clang-tidy", "--quiet"]
+            command = [exe, "--quiet"]
             command += tidy_params
             command.append(compile_params.input_path)
             command.append("--")

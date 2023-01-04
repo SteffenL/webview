@@ -134,8 +134,9 @@ def main(args):
     tasks.clean.register(task_runner, workspace)
     tasks.compile.register(task_runner, workspace)
     tasks.test.register(task_runner, workspace)
-    #print_toolchain(workspace.get_toolchain())
-    #print_targets(workspace.get_sorted_targets())
+
+    print_toolchain(workspace.get_toolchain())
+    print_targets(workspace.get_sorted_targets())
 
     Lifecycle(task_runner).run()
 

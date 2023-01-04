@@ -39,12 +39,14 @@ def extract_file(file: Union[str, IO[bytes]], destination_path: str):
         shutil.move(temp_dir, destination_path)
 
 
-def find_executable(name: str) -> Union[str, None]:
+def find_executable(name: str, required: bool=False) -> Union[str, None]:
     name += ".exe" if platform.system() == "Windows" else ""
     which_exe = "where" if platform.system() == "Windows" else "which"
     with subprocess.Popen((which_exe, name), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
         output, _ = p.communicate()
         if p.returncode != 0 or output is None:
+            if required:
+                raise Exception("Executable not found: " + name)
             return None
         output = output.decode("utf-8").strip().splitlines()[0]
         return output
