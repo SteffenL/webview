@@ -2,7 +2,7 @@ from internal.build import BuildType
 from internal.common import Arch
 from internal.cli import BoolArgAction, HelpFormatter, StrArgAction
 from internal.options import LintMode
-from internal.toolchain.common import ToolchainId
+from internal.toolchain.common import ToolchainEnvironmentId, ToolchainId
 
 import argparse
 import platform
@@ -103,9 +103,12 @@ dependencies for your target architecture onto your system.
                            help="Fetch library dependencies. Implied when building and linting.",
                            action=BoolArgAction)
         group.add_argument("--toolchain",
-                           help="C/C++ toolchain.",
+                           help="C/C++ toolchain environment.",
                            choices=(tuple(v.value for v in ToolchainId)),
                            default=ToolchainId.MSVC.value)
+        group.add_argument("--load-toolchain",
+                           help="Attempt to load a C/C++ toolchain environment.",
+                           choices=(tuple(v.value for v in ToolchainEnvironmentId)))
         group.add_argument("--mswebview2-version",
                            help="MS WebView2 version to use.",
                            default="1.0.1150.38")

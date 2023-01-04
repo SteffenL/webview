@@ -145,7 +145,8 @@ class ClangLikeToolchain(Toolchain):
         input_paths: List[str] = []
 
         # Color output
-        ldflags.append("-fdiagnostics-color=always")
+        if platform.system() != "Windows":
+            ldflags.append("-fdiagnostics-color=always")
 
         # Target platform
         arch = self.get_architecture()

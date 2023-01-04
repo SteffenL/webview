@@ -12,6 +12,7 @@ else:
     from internal.lifecycle import Lifecycle
     from internal.options import format_option_value, Options
     from internal.task import TaskRunner
+    from internal.toolchain.common import ToolchainEnvironmentId
     from internal.toolchain.toolchain import activate_toolchain, detect_toolchain, Toolchain
     from internal.utility import get_host_arch
     from internal.workspace import Workspace
@@ -113,8 +114,13 @@ def main(args):
     script_dir = os.path.dirname(__file__)
     source_dir = os.path.dirname(script_dir)
     options = pre_process_options(parse_options(args, create_arg_parser))
+    architecture = options.target_arch.get_value()
 
-    toolchain = detect_toolchain(architecture=options.target_arch.get_value(),
+    toolchain_env = options.load_toolchain.get_value()
+    if toolchain_env is not None:
+        activate_toolchain(toolchain_env, architecture)
+
+    toolchain = detect_toolchain(architecture=architecture,
                                  cc_override=options.cc.get_value(),
                                  cxx_override=options.cxx.get_value())
 

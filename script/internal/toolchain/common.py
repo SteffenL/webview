@@ -17,7 +17,7 @@ class ToolchainId(Enum):
     MSVC = "msvc"
 
 
-class EnvironmentId(Enum):
+class ToolchainEnvironmentId(Enum):
     MSVC = "msvc"
     MINGW = "mingw"
 

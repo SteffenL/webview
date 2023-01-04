@@ -132,6 +132,11 @@ class Target():
         E = PropertyScope.EXTERNAL
         scope = self._normalize_property_scope_list(scope)
 
+        # Add the specified dependencies.
+        for s in scope:
+            self._link_libs[s] = list(dict.fromkeys(
+                self._link_libs[s] + list(libs)))
+
         for lib in libs:
             if type(lib) == type(self):
                 # Take the most recent language standard one from dependencies.
@@ -180,11 +185,6 @@ class Target():
                     self._macos_frameworks[I] + lib._macos_frameworks[E]))
                 self._macos_frameworks[E] = list(dict.fromkeys(
                     self._macos_frameworks[E] + lib._macos_frameworks[E]))
-
-        # Add the specified dependencies.
-        for s in scope:
-            self._link_libs[s] = list(dict.fromkeys(
-                self._link_libs[s] + list(libs)))
 
     def get_sources(self) -> Iterable[str]:
         return tuple(self._sources)
