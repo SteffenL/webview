@@ -113,7 +113,11 @@ class Toolchain:
         language = target.get_language()
         compile_exe = self.get_compile_exe(language)
         params_per_file = self.get_compile_params(target)
+        if len(params_per_file) == 0:
+            return tuple()
         for params in params_per_file:
+            if len(params.input_path) == 0:
+                continue
             compile_command = (compile_exe, *self._format_compile_params(
                 params, add_input=True, add_output=True))
             tasks.append(Task(self._process_task, arg=(params.output_path, compile_command, pipe_output),
@@ -125,6 +129,8 @@ class Toolchain:
             return tuple()
         language = target.get_language()
         params = self.get_archive_params(target)
+        if len(params.input_paths) == 0:
+            return tuple()
         archive_exe = self.get_archive_exe(language)
         archive_command = (archive_exe, *self._format_archive_params(
             target.get_type(), params))
@@ -136,6 +142,8 @@ class Toolchain:
             return tuple()
         language = target.get_language()
         params = self.get_link_params(target)
+        if len(params.input_paths) == 0:
+            return tuple()
         link_exe = self.get_link_exe(language)
         link_command = (link_exe, *self._format_link_params(
             target.get_type(), params))

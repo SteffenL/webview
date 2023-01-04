@@ -27,7 +27,13 @@ class MsvcToolchain(Toolchain):
         return exe
 
     def get_archive_exe(self, language: Language):
-        return self.get_compile_exe(language)
+        binaries = self.get_binaries()
+        exe = binaries.ar
+        if exe is None:
+            exe = os.path.join(os.path.dirname(binaries.cc), "lib.exe")
+        if exe is None:
+            raise Exception("Binary not found: lib")
+        return exe
 
     def get_link_exe(self, language: Language):
         return self.get_compile_exe(language)
@@ -57,20 +63,14 @@ class MsvcToolchain(Toolchain):
         system = platform.system()
         cflags: List[str] = []
 
-        pkgconfig_libs = target.get_pkgconfig_libs(PropertyScope.INTERNAL)
-        if system == "Linux" and len(pkgconfig_libs) > 0:
-            pkgconfig_cflags = subprocess.check_output(
-                ("pkg-config", "--cflags", *pkgconfig_libs)).decode("utf-8").strip().split(" ")
-
-        # Color output
-        cflags.append("-fdiagnostics-color=always")
+        cflags += ("/nologo", "/utf-8")
 
         # Optimization
         build_type = target.get_build_type()
         if build_type == BuildType.DEBUG:
-            cflags += ("-Og", "-g")
+            cflags.append("/Od")
         elif build_type == BuildType.RELEASE:
-            cflags.append("-O2")
+            cflags.append("/O2")
 
         # Language standard
         standard = target.get_language_standard()
@@ -78,37 +78,22 @@ class MsvcToolchain(Toolchain):
             language = target.get_language()
             standard_str = "c" if language == Language.C else "c++" if language == Language.CXX else None
             standard_str += str(math.floor(standard / 100) % 100)
-            cflags.append("-std=" + standard_str)
+            cflags.append("/std:" + standard_str)
 
-        # Target platform
-        arch = self.get_architecture()
-        if system == "Darwin":
-            cflags += ("-target", self.get_darwin_target_platform(arch))
-        elif arch != Arch.NATIVE:
-            if arch in (Arch.X64, Arch.X86):
-                cflags.append({Arch.X64: "-m64", Arch.X86: "-m32"}[arch])
+        # C++ exceptions
+        if target.get_language() == Language.CXX:
+            cflags.append("/EHsc")
+
+        # Note: Architecture is dictated by toolchain environment.
 
         # Warnings
-        #args += ("-Wall", "-Wextra", "-pedantic")
-        # if system == "Windows":
-        #    # These warnings are emitted because of WebView2 so suppress them.
-        #    args += ("-Wno-unknown-pragmas",
-        #             "-Wno-unused-parameter", "-Wno-cast-function-type")
-
-        # Shared libraries need PIC
-        if target.get_type() == TargetType.SHARED_LIBRARY:
-            cflags.append("-fPIC")
 
         # Definitions
-        cflags += tuple("-D" + k if v is None else "-D{}={}".format(k, v)
+        cflags += tuple("/D" + k if v is None else "/D{}={}".format(k, v)
                         for k, v in target.get_definitions(PropertyScope.INTERNAL).items())
         # Include directories
-        cflags += tuple("-I{}".format(s)
+        cflags += tuple("/I{}".format(s)
                         for s in target.get_include_dirs(PropertyScope.INTERNAL))
-
-        # pkgconfig flags
-        if system == "Linux" and len(pkgconfig_libs) > 0:
-            cflags += pkgconfig_cflags
 
         result = []
         for source in target.get_sources():
@@ -130,16 +115,8 @@ class MsvcToolchain(Toolchain):
         ldflags: List[str] = []
         input_paths: List[str] = []
 
-        # Color output
-        ldflags.append("-fdiagnostics-color=always")
 
-        # Target platform
-        arch = self.get_architecture()
-        if system == "Darwin":
-            ldflags += ("-target", self.get_darwin_target_platform(arch))
-        elif arch != Arch.NATIVE:
-            if arch in (Arch.X64, Arch.X86):
-                ldflags.append({Arch.X64: "-m64", Arch.X86: "-m32"}[arch])
+        # Note: Architecture is dictated by toolchain environment.
 
         # Object files
         source_dir = target.get_workspace().get_source_dir()
@@ -150,81 +127,42 @@ class MsvcToolchain(Toolchain):
                 target.get_obj_dir(), rel_source_path + ".o")
             input_paths.append(input_path)
 
-        pkgconfig_libs = target.get_pkgconfig_libs(PropertyScope.INTERNAL)
-        if system == "Linux" and len(pkgconfig_libs) > 0:
-            if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-                pkgconfig_ldflags = subprocess.check_output(
-                    ("pkg-config", "--libs", *pkgconfig_libs)).decode("utf-8").strip().split(" ")
-
-        if target.get_type() == TargetType.SHARED_LIBRARY:
-            if system == "Darwin":
-                # Make dylib for macOS
-                ldflags.append("-dynamiclib")
-            else:
-                ldflags.append("-shared")
-        elif target.get_type() == TargetType.STATIC_LIBRARY:
-            # TODO: is this correct?
-            ldflags.append("-static")
-
         # Runtime linking
         # if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
         #    if target.get_runtime_link_method() == RuntimeLinkMethod.STATIC:
         #        compile_command.append("-static")
 
-        # Frameworks
-        if system == "Darwin":
-            if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-                for framework in target.get_macos_frameworks(PropertyScope.INTERNAL):
-                    ldflags += ("-framework", framework)
-
         if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
             # Link library directories
-            ldflags += tuple("-L{}".format(s)
+            ldflags += tuple("/L{}".format(s)
                              for s in target.get_library_dirs(PropertyScope.INTERNAL))
             # Link libraries
             for lib in target.get_link_libraries(PropertyScope.INTERNAL):
                 if type(lib) == str:
-                    ldflags.append("-l" + lib)
+                    if not ".lib" in lib:
+                        lib += ".lib"
+                    ldflags.append(lib)
                 elif type(lib) == Target:
                     if lib.get_type() == TargetType.OBJECT:
                         input_paths.append(lib.get_output_file_path())
                     elif lib.get_type() in (TargetType.SHARED_LIBRARY, TargetType.STATIC_LIBRARY):
                         # Allow us to take advantage of rpath
-                        ldflags.append("-L" + lib.get_lib_dir())
-                        ldflags.append("-l" + lib.get_link_output_name())
-                    if lib.get_type() in (lib.get_type() == TargetType.OBJECT, TargetType.STATIC_LIBRARY):
-                        if target.get_language() == Language.C and lib.get_language() == Language.CXX:
-                            ldflags.append("-lc++" if system ==
-                                           "Darwin" else "-lstdc++")
+                        ldflags.append("/LIBPATH:" + lib.get_lib_dir())
+                        lib_name = lib.get_link_output_name()
+                        if not ".lib" in lib_name:
+                            lib_name += ".lib"
+                        ldflags.append(lib_name)
+                    #if lib.get_type() in (lib.get_type() == TargetType.OBJECT, TargetType.STATIC_LIBRARY):
+                    #    if target.get_language() == Language.C and lib.get_language() == Language.CXX:
+                    #        ldflags.append("-lc++" if system ==
+                    #                       "Darwin" else "-lstdc++")
                 else:
                     raise Exception("Invalid target type")
-
-        # pkgconfig flags
-        if system == "Linux" and len(pkgconfig_libs) > 0:
-            if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-                ldflags += pkgconfig_ldflags
 
         target_type = target.get_type()
         output_dir = target.get_bin_dir(
         ) if target_type == TargetType.EXE else target.get_lib_dir()
         output_path = os.path.join(output_dir, target.get_output_file_name())
-
-        # rpath
-        if system == "Linux" and target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-            # Same directory as executable
-            ldflags.append("-Wl,-rpath=$ORIGIN")
-            # Executable directory's sibling lib directory
-            ldflags.append("-Wl,-rpath=$ORIGIN/../lib")
-        elif system == "Darwin":
-            if target.get_type() == TargetType.SHARED_LIBRARY:
-                ldflags += ("-install_name", "@rpath/" +
-                            target.get_output_file_name())
-            elif target.get_type() == TargetType.EXE:
-                # Bundled
-                ldflags += ("-rpath", "@executable_path/../Frameworks")
-                # Non-bundled
-                ldflags += ("-rpath", "@executable_path")
-                ldflags += ("-rpath", "@executable_path/../lib")
 
         params = LinkParams()
         params.ldflags = ldflags
@@ -235,7 +173,7 @@ class MsvcToolchain(Toolchain):
 
     def _format_archive_params(self, target_type: TargetType, params: LinkParams) -> Sequence[str]:
         args: List[str] = []
-        args += ("rcs", params.output_path)
+        args += ("/nologo", "/OUT:" + params.output_path)
         args += params.input_paths
         return args
 
@@ -243,28 +181,28 @@ class MsvcToolchain(Toolchain):
         args: List[str] = []
         args += params.cflags
         if add_output:
-            args += ("-c", "-o", params.output_path)
+            args += ("/c", "/Fo:" + params.output_path)
         if add_input:
             args.append(params.input_path)
         return args
 
     def _format_link_params(self, target_type: TargetType, params: LinkParams) -> Sequence[str]:
         args: List[str] = []
-        args += ("-o", params.output_path)
-        args += params.input_paths
+        args.append("/link")
         args += params.ldflags
+        if target_type == TargetType.SHARED_LIBRARY:
+            args += ("/DLL", "/Fe:" + params.output_path)
+        args += params.input_paths
         return args
 
     def get_file_name_prefix(self, target_type: TargetType) -> str:
-        if target_type in (TargetType.SHARED_LIBRARY, TargetType.STATIC_LIBRARY):
-            return "lib"
         return ""
 
     def get_file_name_extension(self, target_type: TargetType, system: str) -> str:
         if target_type == TargetType.OBJECT:
             return ".o"
         if target_type == TargetType.STATIC_LIBRARY:
-            return ".a"
+            return ".lib"
         return super().get_file_name_extension(target_type, system)
 
     def get_darwin_target_platform(self, architecture: Arch):

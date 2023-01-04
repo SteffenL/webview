@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 import queue
 import threading
-from typing import Any, Callable, Generic, List, TypeVar
+from typing import Any, Callable, Generic, List, Mapping, TypeVar
 import uuid
 
 
@@ -107,7 +107,33 @@ class TaskWorkPerCollection:
         self.tasks_done += 1
 
 
+class TaskPhase(Enum):
+    CHECK = "CHECK"
+    CLEAN = "CLEAN"
+    COMPILE = "COMPILE"
+    CONFIGURE = "CONFIGURE"
+    POST_CONFIGURE = "POST_CONFIGURE"
+    FETCH = "FETCH"
+    GENERATE = "GENERATE"
+    TEST = "TEST"
+    VALIDATE = "VALIDATE"
+
+
+TASK_PHASE_ORDER = (
+    TaskPhase.CLEAN,
+    TaskPhase.VALIDATE,
+    TaskPhase.FETCH,
+    TaskPhase.CONFIGURE,
+    TaskPhase.POST_CONFIGURE,
+    TaskPhase.CHECK,
+    TaskPhase.GENERATE,
+    TaskPhase.COMPILE,
+    TaskPhase.TEST
+)
+
 # Keep the length of each value an even number for display and alignment purposes.
+
+
 class TaskStatus(Enum):
     IDLE = "IDLE"
     STARTED = "STARTED"
@@ -117,10 +143,10 @@ class TaskStatus(Enum):
 
 
 class TaskRunner:
-    _collections: List[TaskCollection]
+    _collections: Mapping[TaskPhase, List[TaskCollection]]
 
     def __init__(self):
-        self._collections = []
+        self._collections = dict((phase, []) for phase in TaskPhase)
 
     def execute(self, on_status: Callable[[TaskStatus, str, bool, str, Exception], None] = lambda *_: None):
         shared = TaskWorkShared(
@@ -131,35 +157,39 @@ class TaskRunner:
 
         status = None
         force_stop = False
-        for collection in self._collections:
+        for phase in TASK_PHASE_ORDER:
             if force_stop:
                 break
-            tasks = collection.get_tasks()
-            if len(tasks) == 0:
-                continue
-            is_concurrent = collection.is_concurrent()
-            worker_count = None if is_concurrent else 1
-            with ThreadPoolExecutor(max_workers=worker_count) as executor:
-                per_collection = TaskWorkPerCollection(
-                    task_count=len(tasks),
-                    tasks_done=0
-                )
-                for task in tasks:
-                    executor.submit(self._worker, shared, per_collection, task)
-                while not force_stop:
-                    with shared.lock:
-                        done = per_collection.tasks_done >= per_collection.task_count
-                    if done and shared.status_queue.empty():
-                        break
-                    task, status = shared.status_queue.get()
-                    output = task.get_result()
-                    e = task.get_exception()
-                    on_status(status, task.get_description(),
-                              is_concurrent, output, e)
-                    if status == TaskStatus.FAILED:
-                        force_stop = True
+            for collection in self._collections[phase]:
                 if force_stop:
-                    executor.shutdown(wait=False, cancel_futures=True)
+                    break
+                tasks = collection.get_tasks()
+                if len(tasks) == 0:
+                    continue
+                is_concurrent = collection.is_concurrent()
+                worker_count = None if is_concurrent else 1
+                with ThreadPoolExecutor(max_workers=worker_count) as executor:
+                    per_collection = TaskWorkPerCollection(
+                        task_count=len(tasks),
+                        tasks_done=0
+                    )
+                    for task in tasks:
+                        executor.submit(self._worker, shared,
+                                        per_collection, task)
+                    while not force_stop:
+                        with shared.lock:
+                            done = per_collection.tasks_done >= per_collection.task_count
+                        if done and shared.status_queue.empty():
+                            break
+                        task, status = shared.status_queue.get()
+                        output = task.get_result()
+                        e = task.get_exception()
+                        on_status(status, task.get_description(),
+                                  is_concurrent, output, e)
+                        if status == TaskStatus.FAILED:
+                            force_stop = True
+                    if force_stop:
+                        executor.shutdown(wait=False, cancel_futures=True)
 
     @staticmethod
     def _worker(shared: TaskWorkShared, per_collection: TaskWorkPerCollection, task: Task):
@@ -185,12 +215,16 @@ class TaskRunner:
         shared.status_queue.put((task, status))
 
     def get_task_count(self):
-        return sum(c.get_count() for c in self._collections)
+        sum = 0
+        for phase in TaskPhase:
+            for collections in self._collections[phase]:
+                sum += collections.get_count()
+        return sum
 
-    def create_task_collection(self, concurrent: bool = False):
+    def create_task_collection(self, phase: TaskPhase, concurrent: bool = False):
         collection = TaskCollection(concurrent=concurrent)
-        self.add_task_collection(collection)
+        self.add_task_collection(phase, collection)
         return collection
 
-    def add_task_collection(self, *collections: TaskCollection):
-        self._collections += collections
+    def add_task_collection(self, phase: TaskPhase, *collections: TaskCollection):
+        self._collections[phase] += collections

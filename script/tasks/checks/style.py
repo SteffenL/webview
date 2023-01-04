@@ -1,6 +1,6 @@
 from internal.build import find_c_like_source_files
 from internal.workspace import Workspace
-from internal.task import Task, TaskRunner
+from internal.task import Task, TaskPhase, TaskRunner
 
 import os
 import subprocess
@@ -24,7 +24,8 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     if not workspace.get_options().check_style.get_value():
         return
 
-    tasks = task_runner.create_task_collection(concurrent=True)
+    tasks = task_runner.create_task_collection(
+        TaskPhase.VALIDATE, concurrent=True)
     sources = find_c_like_source_files(
         workspace.get_source_dir(), include_headers=True)
     for _, source in sources:

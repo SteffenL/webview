@@ -109,29 +109,6 @@ def print_targets(targets: Sequence[Target]):
             print("  {}".format(target.get_name()))
 
 
-class LifecycleStrategy:
-    _workspace: Workspace
-
-    def __init__(self, workspace: Workspace):
-        self._workspace = workspace
-
-    def configure_targets(self):
-        targets.deps.main.register(self._workspace)
-        targets.main.register(self._workspace)
-
-    def configure_tasks(self, task_runner: TaskRunner):
-        tasks.generate.reformat.register(task_runner, self._workspace)
-        tasks.checks.style.register(task_runner, self._workspace)
-        tasks.checks.lint.register(task_runner, self._workspace)
-        tasks.clean.register(task_runner, self._workspace)
-        tasks.compile.register(task_runner, self._workspace)
-        tasks.test.register(task_runner, self._workspace)
-
-    def on_configured(self):
-        print_toolchain(self._workspace.get_toolchain())
-        print_targets(self._workspace.get_sorted_targets())
-
-
 def main(args):
     script_dir = os.path.dirname(__file__)
     source_dir = os.path.dirname(script_dir)
@@ -146,7 +123,21 @@ def main(args):
                           source_dir=source_dir,
                           build_type=options.build_type.get_value())
 
-    Lifecycle(LifecycleStrategy(workspace)).run()
+    task_runner = TaskRunner()
+
+    targets.deps.main.register(task_runner, workspace)
+    targets.main.register(task_runner, workspace)
+
+    #tasks.generate.reformat.register(task_runner, workspace)
+    #tasks.checks.style.register(task_runner, workspace)
+    #tasks.checks.lint.register(task_runner, workspace)
+    #tasks.clean.register(task_runner, workspace)
+    tasks.compile.register(task_runner, workspace)
+    #tasks.test.register(task_runner, workspace)
+    #print_toolchain(workspace.get_toolchain())
+    #print_targets(workspace.get_sorted_targets())
+
+    Lifecycle(task_runner).run()
 
 
 if __name__ == "__main__":

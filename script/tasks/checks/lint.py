@@ -1,6 +1,6 @@
 from internal.options import LintMode
 from internal.target import TargetType
-from internal.task import Task, TaskRunner
+from internal.task import Task, TaskPhase, TaskRunner
 from internal.toolchain.clang_like import ClangLikeToolchain
 from internal.toolchain.common import ToolchainBinaries, ToolchainId
 from internal.utility import execute_program
@@ -18,7 +18,8 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     arch = workspace.get_toolchain().get_architecture()
     toolchain = ClangLikeToolchain(ToolchainId.CLANG, arch, ToolchainBinaries(
         ar="ar", cc="clang", cxx="clang++"))
-    tasks = task_runner.create_task_collection(concurrent=True)
+    tasks = task_runner.create_task_collection(
+        TaskPhase.CHECK, concurrent=True)
 
     def check(task: Task, command: Iterable[str]):
         result = execute_program(command, pipe_output=True, ignore_error=True)

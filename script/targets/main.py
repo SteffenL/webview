@@ -1,5 +1,6 @@
 from internal.build import FileType, find_c_like_source_files, LanguageStandards, PropertyScopes
 from internal.target import TargetType
+from internal.task import Task, TaskPhase, TaskRunner
 from internal.toolchain.common import ToolchainId
 from internal.workspace import Workspace
 
@@ -7,7 +8,7 @@ import os
 import platform
 
 
-def register(workspace: Workspace):
+def register(task_runner: TaskRunner, workspace: Workspace):
     system = platform.system()
     source_dir = workspace.get_source_dir()
     options = workspace.get_options()
@@ -34,6 +35,7 @@ def register(workspace: Workspace):
         header_library.add_pkgconfig_libs("gtk+-3.0", "webkit2gtk-4.0")
     elif system == "Windows":
         header_library.add_definition("WEBVIEW_EDGE")
+        header_library.add_link_libraries(workspace.get_target("mswebview2"))
         # Add link libraries to help compilers other than MSVC.
         header_library.add_link_libraries(
             "ole32", "shell32", "shlwapi", "user32")
@@ -79,7 +81,8 @@ def register(workspace: Workspace):
         example.add_sources(source_path)
 
     # Test target
-    library_test_program = workspace.add_target(TargetType.EXE, "library_test")
+    library_test_program = workspace.add_target(
+        TargetType.EXE, "library_test")
     library_test_program.set_condition(
         lambda: options.build_tests.get_value())
     library_test_program.add_link_libraries(header_library)

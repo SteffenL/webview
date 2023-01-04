@@ -5,23 +5,7 @@ import math
 import sys
 
 
-class LifecycleStrategy:
-    @abstractmethod
-    def configure_targets(self):
-        pass
-
-    @abstractmethod
-    def configure_tasks(self, task_runner: TaskRunner):
-        pass
-
-    @abstractmethod
-    def on_configured(self):
-        pass
-
-
 class Lifecycle:
-    _strategy: LifecycleStrategy
-
     _color_red = "\033[31m"
     _color_gray = "\033[34m"
     _color_green = "\033[32m"
@@ -36,16 +20,13 @@ class Lifecycle:
         TaskStatus.STARTED: _color_gray
     }
 
-    def __init__(self, strategy: LifecycleStrategy):
-        self._strategy = strategy
+    _task_runner: TaskRunner
+
+    def __init__(self, task_runner: TaskRunner):
+        self._task_runner = task_runner
 
     def run(self):
-        task_runner = TaskRunner()
-        self._strategy.configure_targets()
-        self._strategy.configure_tasks(task_runner)
-        self._strategy.on_configured()
-
-        task_count = task_runner.get_task_count()
+        task_count = self._task_runner.get_task_count()
         task_number = 0
 
         if task_count == 0:
@@ -97,6 +78,6 @@ class Lifecycle:
 
         print("Running tasks...")
         try:
-            task_runner.execute(on_status=on_status)
+            self._task_runner.execute(on_status=on_status)
         finally:
             sys.stdout.flush()
