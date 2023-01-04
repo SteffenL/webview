@@ -5,7 +5,6 @@ if TYPE_CHECKING:
     from internal.workspace import Workspace
 
 from enum import Enum
-from dataclasses import dataclass
 import os
 import platform
 import shutil
