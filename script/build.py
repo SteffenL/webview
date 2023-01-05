@@ -24,7 +24,7 @@ else:
     import tasks.compile
     import tasks.generate.reformat
     import tasks.test
-    # import tasks.go
+    import tasks.go
     from internal.target import Target
     import os
     from typing import Sequence
@@ -140,6 +140,7 @@ def main(args):
     tasks.clean.register(task_runner, workspace)
     tasks.compile.register(task_runner, workspace)
     tasks.test.register(task_runner, workspace)
+    tasks.go.register(task_runner, workspace)
 
     print_toolchain(workspace.get_toolchain())
     print_targets(workspace.get_sorted_targets())

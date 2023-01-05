@@ -93,10 +93,11 @@ class ExecuteProgramResult:
 
 def execute_program(command: Iterable[str],
                     env: Mapping[str, str] = None,
+                    working_dir: str = None,
                     pipe_output: bool = False,
                     ignore_error: bool = False) -> ExecuteProgramResult:
     pipe = subprocess.PIPE if pipe_output else None
-    with subprocess.Popen(command, env=env, stdout=pipe, stderr=pipe) as p:
+    with subprocess.Popen(command, env=env, cwd=working_dir, stdout=pipe, stderr=pipe) as p:
         stdout_result, stderr_result = p.communicate()
         code = p.wait()
         if ignore_error or code == 0:
