@@ -9,9 +9,10 @@ import subprocess
 
 def check_file(task: Task, exe: str, file_path: str):
     clang_format_args = [exe, "--Werror", file_path]
-    with subprocess.Popen(clang_format_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as clang_format:
+    pipe = subprocess.PIPE
+    with subprocess.Popen(clang_format_args, stdout=pipe, stderr=pipe) as clang_format:
         git_diff_args = ["git", "diff", "--no-index", "--", file_path, "-"]
-        with subprocess.Popen(git_diff_args, stdin=clang_format.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as git_diff:
+        with subprocess.Popen(git_diff_args, stdin=clang_format.stdout, stdout=pipe, stderr=pipe) as git_diff:
             clang_format.stdout.close()
             output = git_diff.communicate()[0]
             if output:
