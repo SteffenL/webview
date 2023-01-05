@@ -3,28 +3,35 @@ from dataclasses import dataclass
 from enum import Enum
 import queue
 import threading
-from typing import Any, Callable, Generic, List, Mapping, TypeVar
+from typing import Any, Callable, Generic, List, Mapping, Sequence, Tuple, TypeVar
 import uuid
 
 
 T = TypeVar("T")
+AnyArgs = Tuple[T, ...]
+WorkFunction = Callable[["Task", AnyArgs], None]
+ConditionFunction = Callable[["Task", AnyArgs], bool]
 
 
 class Task(Generic[T]):
     _id: str
-    _work: Callable[["Task", T], None]
-    _arg: T
+    _work: WorkFunction
+    _args: Sequence[Any]
     _description: str
-    _condition: Callable[[T], bool]
+    _condition: ConditionFunction
     _result: T
     _exception: Exception
     _lock: threading.Lock
     _status: "TaskStatus"
 
-    def __init__(self, work: Callable[["Task", T], None], arg: T = None, description: str = None, condition: Callable[[T], bool] = lambda *_: True):
+    def __init__(self,
+                 work: WorkFunction,
+                 args: AnyArgs = tuple(),
+                 description: str = None,
+                 condition: ConditionFunction = lambda *_: True):
         self._id = uuid.uuid4().hex
         self._work = work
-        self._arg = arg
+        self._args = args
         self._description = description
         self._condition = condition
         self._result = None
@@ -34,7 +41,7 @@ class Task(Generic[T]):
 
     def execute(self) -> Any:
         if self._work:
-            self._work(self, self._arg)
+            self._work(self, *self._args)
 
     def get_id(self):
         return self._id
@@ -43,7 +50,7 @@ class Task(Generic[T]):
         return self._description
 
     def is_condition_met(self):
-        return self._condition(self._arg)
+        return self._condition(self, *self._args)
 
     def get_result(self):
         with self._lock:
@@ -108,32 +115,33 @@ class TaskWorkPerCollection:
 
 
 class TaskPhase(Enum):
-    CHECK = "CHECK"
     CLEAN = "CLEAN"
     COMPILE = "COMPILE"
     CONFIGURE = "CONFIGURE"
-    POST_CONFIGURE = "POST_CONFIGURE"
     FETCH = "FETCH"
-    GENERATE = "GENERATE"
+    POST_COMPILE = "POST_COMPILE"
+    POST_CONFIGURE = "POST_CONFIGURE"
+    PRE_COMPILE = "PRE_COMPILE"
+    PRE_VALIDATE = "PRE_VALIDATE"
     TEST = "TEST"
     VALIDATE = "VALIDATE"
 
 
 TASK_PHASE_ORDER = (
     TaskPhase.CLEAN,
+    TaskPhase.PRE_VALIDATE,
     TaskPhase.VALIDATE,
     TaskPhase.FETCH,
     TaskPhase.CONFIGURE,
     TaskPhase.POST_CONFIGURE,
-    TaskPhase.CHECK,
-    TaskPhase.GENERATE,
+    TaskPhase.PRE_COMPILE,
     TaskPhase.COMPILE,
+    TaskPhase.POST_COMPILE,
     TaskPhase.TEST
 )
 
+
 # Keep the length of each value an even number for display and alignment purposes.
-
-
 class TaskStatus(Enum):
     IDLE = "IDLE"
     STARTED = "STARTED"

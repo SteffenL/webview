@@ -7,12 +7,7 @@ import os
 import subprocess
 
 
-def check_file(task: Task, arg):
-    exe: str
-    file_path: str
-
-    exe, file_path = arg
-
+def check_file(task: Task, exe: str, file_path: str):
     clang_format_args = [exe, "--Werror", file_path]
     with subprocess.Popen(clang_format_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as clang_format:
         git_diff_args = ["git", "diff", "--no-index", "--", file_path, "-"]
@@ -37,5 +32,5 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         workspace.get_source_dir(), include_headers=True)
     for _, source in sources:
         full_path = os.path.join(workspace.get_source_dir(), source)
-        tasks.add_task(Task(check_file, arg=(exe, full_path),
+        tasks.add_task(Task(check_file, args=(exe, full_path),
                             description="Check code style ({})".format(full_path)))

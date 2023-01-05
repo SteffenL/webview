@@ -29,13 +29,13 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     target.set_lib_dir(lib_dir)
     target.set_link_output_name("WebView2Loader.dll")
 
-    def fetch(task: Task, arg):
+    def fetch(task: Task):
         url = "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/{}".format(
             version)
         with download_file(url) as file:
             extract_file(file, root_dir)
 
-    def should_fetch(arg):
+    def should_fetch(task: Task):
         if platform.system() != "Windows":
             return False
         if not workspace.get_options().fetch_deps.get_value():

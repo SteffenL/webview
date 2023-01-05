@@ -75,8 +75,7 @@ class Toolchain:
         self._binaries = binaries
 
     @staticmethod
-    def _process_task(task: Task, arg: Tuple[str, Sequence[str], bool]):
-        output_path, command = arg
+    def _process_task(task: Task, output_path: str, command: Sequence[str]):
         if output_path is not None:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
         result = execute_program(
@@ -117,7 +116,7 @@ class Toolchain:
                 continue
             compile_command = (compile_exe, *self._format_compile_params(
                 params, add_input=True, add_output=True))
-            tasks.append(Task(self._process_task, arg=(params.output_path, compile_command),
+            tasks.append(Task(self._process_task, args=(params.output_path, compile_command),
                               description="Compile {}".format(params.input_path)))
         return tasks
 
@@ -131,7 +130,7 @@ class Toolchain:
         archive_exe = self.get_archive_exe(language)
         archive_command = (archive_exe, *self._format_archive_params(
             target.get_type(), params))
-        return (Task(self._process_task, arg=(params.output_path, archive_command),
+        return (Task(self._process_task, args=(params.output_path, archive_command),
                      description="Archive target {}".format(target.get_name())),)
 
     def _create_link_tasks(self, target: Target) -> Sequence[Task]:
@@ -144,7 +143,7 @@ class Toolchain:
         link_exe = self.get_link_exe(language)
         link_command = (link_exe, *self._format_link_params(
             target.get_type(), params))
-        return (Task(self._process_task, arg=(params.output_path, link_command),
+        return (Task(self._process_task, args=(params.output_path, link_command),
                      description="Link target {}".format(target.get_name())),)
 
     @abstractmethod

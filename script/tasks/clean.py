@@ -5,6 +5,8 @@ import shutil
 
 
 def clean_build_dir(task: Task, workspace: Workspace):
+    """Deletes the architecture subdirectory under the build directory. """
+
     dir = workspace.get_build_arch_dir()
     if dir is None or len(dir) == 0:
         return
@@ -21,5 +23,5 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         return
 
     tasks = task_runner.create_task_collection(TaskPhase.CLEAN)
-    tasks.add_task(Task(clean_build_dir, arg=workspace,
+    tasks.add_task(Task(clean_build_dir, args=(workspace,),
                    description="Clean build directory"))

@@ -4,13 +4,8 @@ from internal.task import Task, TaskPhase, TaskRunner
 from internal.utility import execute_program, find_executable
 
 
-def reformat(task: Task, arg):
+def reformat(task: Task, exe: str, source: str):
     """Reformats C/C++ source code files in the source directory."""
-
-    exe: str
-    source: str
-
-    exe, source = arg
 
     command = (exe, "-i", source)
     execute_program(command, pipe_output=True)
@@ -23,10 +18,11 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         return
 
     exe = find_executable("clang-format", required=True)
+    # Reformat before the code style check.
     tasks = task_runner.create_task_collection(
-        TaskPhase.GENERATE, concurrent=True)
+        TaskPhase.PRE_VALIDATE, concurrent=True)
     sources = find_c_like_source_files(
         workspace.get_source_dir(), include_headers=True)
     for _, source in sources:
-        tasks.add_task(Task(reformat, arg=(exe, source),
+        tasks.add_task(Task(reformat, args=(exe, source),
                             description="Reformat {}".format(source)))
