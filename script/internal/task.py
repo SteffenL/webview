@@ -119,8 +119,6 @@ class TaskPhase(Enum):
     COMPILE = "COMPILE"
     CONFIGURE = "CONFIGURE"
     FETCH = "FETCH"
-    GO_BUILD = "GO_BUILD"
-    GO_TEST = "GO_TEST"
     POST_COMPILE = "POST_COMPILE"
     POST_CONFIGURE = "POST_CONFIGURE"
     PRE_COMPILE = "PRE_COMPILE"
@@ -139,9 +137,7 @@ TASK_PHASE_ORDER = (
     TaskPhase.PRE_COMPILE,
     TaskPhase.COMPILE,
     TaskPhase.POST_COMPILE,
-    TaskPhase.TEST,
-    TaskPhase.GO_BUILD,
-    TaskPhase.GO_TEST
+    TaskPhase.TEST
 )
 
 

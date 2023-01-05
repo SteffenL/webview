@@ -84,7 +84,3 @@ def register(task_runner: TaskRunner, workspace: Workspace):
                        working_dir=source_dir,
                        description="Go bindings",
                        condition=lambda *_: test_condition(workspace))
-    # test_tasks.add_task(Task(go_cmd,
-    #                         args=(workspace, test_command, env, source_dir),
-    #                         description=f"Run Go test",
-    #                         condition=test_condition))
