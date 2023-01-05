@@ -47,7 +47,6 @@ def build_condition(task: Task, workspace: Workspace, *args):
 
 
 def test_condition(workspace: Workspace):
-    print("test condition")
     return workspace.get_options().go_test.get_value()
 
 
