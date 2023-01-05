@@ -210,7 +210,11 @@ class PrintSequenceBuilder:
             elif isinstance(element, str):
                 self._result.append(self._factory.write(element))
 
-    def progress_bar(self, label: str, current: int, total: int, width: int = os.get_terminal_size().columns):
+    def progress_bar(self, label: str, current: int, total: int, width: int = None):
+        try:
+            width = os.get_terminal_size().columns if width is None else width
+        except:
+            width = 0
         before_bar = "".join((
             label,
             ": ",
