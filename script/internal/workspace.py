@@ -5,7 +5,7 @@ from internal.test import Test
 from internal.toolchain.common import Toolchain
 
 import os
-from typing import Iterable, Mapping, MutableMapping, MutableSequence, Sequence, Union
+from typing import Callable, Iterable, Mapping, MutableMapping, MutableSequence, Sequence, Union
 
 
 class Workspace:
@@ -95,10 +95,21 @@ class Workspace:
                 sorted_targets.insert(target_index, moved_target)
         return tuple(filter(lambda target: all or target.is_condition_met(), sorted_targets))
 
-    def add_test(self, executable: Union[Target, str], arguments: Iterable[str] = None, environment: Mapping[str, str] = None) -> Test:
+    def add_test(self,
+                 executable: Union[Target, str],
+                 arguments: Iterable[str] = None,
+                 environment: Mapping[str, str] = None,
+                 condition: Callable[[], bool] = None,
+                 working_dir: str = None,
+                 description: str = None) -> Test:
         executable = executable.get_output_file_path() if isinstance(
             executable, Target) else executable
-        test = Test(executable, arguments=arguments, environment=environment)
+        test = Test(executable,
+                    arguments=arguments,
+                    environment=environment,
+                    condition=condition,
+                    working_dir=working_dir,
+                    description=description)
         self._tests.append(test)
         return test
 

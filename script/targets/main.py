@@ -88,5 +88,6 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     library_test_program.add_link_libraries(header_library)
     library_test_program.add_sources("webview_test.cc")
     library_test = workspace.add_test(
-        library_test_program.get_output_file_path())
+        library_test_program.get_output_file_path(),
+        description="Library")
     library_test.set_condition(lambda: options.test.get_value())

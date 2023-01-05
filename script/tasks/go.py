@@ -4,11 +4,10 @@ from internal.test import Test
 
 from internal.build import FileType, find_sources, Language
 from internal.common import Arch
-from internal.options import Options
 from internal.target import get_file_extension_for_target_type, TargetType
 from internal.toolchain.common import Toolchain, ToolchainId
 from internal.toolchain.toolchain import activate_toolchain, detect_toolchain
-from internal.utility import execute_program
+from internal.utility import execute_program, get_host_arch
 
 import os
 import platform
@@ -17,15 +16,21 @@ from typing import Iterable, Mapping
 
 
 def get_env(arch: Arch, toolchain: Toolchain):
-    go_arch = "amd64" if arch == Arch.X64 else "x86" if arch == Arch.X86 else None
     env = {}
     env.update(os.environ)
     env.update({
-        "GOARCH": go_arch,
         "CGO_ENABLED": "1",
         "CC": toolchain.get_compile_exe(Language.C),
         "CXX": toolchain.get_compile_exe(Language.CXX)
     })
+    if arch != Arch.NATIVE:
+        go_arch = {
+            Arch.ARM64: "arm64",
+            Arch.ARM32: "arm",
+            Arch.X64: "amd64",
+            Arch.X86: "x86"
+        }[arch]
+        env["GOARCH"] = go_arch
     return env
 
 
@@ -41,14 +46,14 @@ def build_condition(task: Task, workspace: Workspace, *args):
     return workspace.get_options().go_build_examples.get_value()
 
 
-def test_condition(task: Task, workspace: Workspace, *args):
+def test_condition(workspace: Workspace):
+    print("test condition")
     return workspace.get_options().go_test.get_value()
 
 
 def register(task_runner: TaskRunner, workspace: Workspace):
     build_tasks = task_runner.create_task_collection(
-        TaskPhase.GO_BUILD, concurrent=True)
-    test_tasks = task_runner.create_task_collection(TaskPhase.GO_TEST)
+        TaskPhase.COMPILE, concurrent=True)
 
     toolchain = workspace.get_toolchain()
     source_dir = workspace.get_source_dir()
@@ -73,8 +78,13 @@ def register(task_runner: TaskRunner, workspace: Workspace):
                                   description=f"Build Go example {full_source_path}",
                                   condition=build_condition))
     # Test
-    test_command = ("go", "test", "-v")
-    test_tasks.add_task(Task(go_cmd,
-                             args=(workspace, test_command, env, source_dir),
-                             description=f"Run Go test",
-                             condition=test_condition))
+    workspace.add_test("go",
+                       ("test", "-v"),
+                       environment=env,
+                       working_dir=source_dir,
+                       description="Go bindings",
+                       condition=lambda *_: test_condition(workspace))
+    # test_tasks.add_task(Task(go_cmd,
+    #                         args=(workspace, test_command, env, source_dir),
+    #                         description=f"Run Go test",
+    #                         condition=test_condition))

@@ -15,5 +15,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
 
     test_tasks = task_runner.create_task_collection(TaskPhase.TEST)
     for test in workspace.get_tests():
-        test_tasks.add_task(Task(run_test, args=(test,),
-                            description="Test {}".format(test.get_executable())))
+        test_tasks.add_task(Task(run_test,
+                                 args=(test,),
+                                 description="Test: {}".format(test.get_description()),
+                                 condition=lambda *_: test.is_condition_met()))
