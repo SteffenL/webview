@@ -15,7 +15,8 @@ def check_file(task: Task, exe: str, file_path: str):
             clang_format.stdout.close()
             output = git_diff.communicate()[0]
             if output:
-                task.set_result(output.decode("utf8"))
+                output = output.decode("utf8")
+                task.set_result(output)
                 raise Exception("Code style violation:\n" + output)
 
 
