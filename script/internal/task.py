@@ -141,7 +141,6 @@ TASK_PHASE_ORDER = (
 )
 
 
-# Keep the length of each value an even number for display and alignment purposes.
 class TaskStatus(Enum):
     IDLE = "IDLE"
     STARTED = "STARTED"
