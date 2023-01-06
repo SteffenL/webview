@@ -1,0 +1,10 @@
+{
+    "toolchain": {
+        "binaries": {
+            "ar": "ar",
+            "cc": "gcc",
+            "cxx": "g++",
+            "ld": "gold"
+        }
+    }
+}

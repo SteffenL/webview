@@ -1,0 +1,10 @@
+{
+    "toolchain": {
+        "binaries": {
+            "ar": "lib",
+            "cc": "cl",
+            "cxx": "cl",
+            "ld": "link"
+        }
+    }
+}
