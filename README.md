@@ -25,6 +25,11 @@ This project uses CMake and Ninja. See instructions on building below.
 Development packages: `libgtk-3-dev`, `libwebkit2gtk-4.0-dev`
 Production packages: `libgtk-3-0`, `libwebkit2gtk-4.0-37`
 
+#### Linux (Fedora)
+
+Development packages: `gtk3-devel`, `webkit2gtk4.0-devel`
+Production packages: `gtk3`, `webkit2gtk4.0`
+
 #### Windows
 
 Make sure to run `scripts\windows\fetch_webview2.bat` first to retrieve the Microsoft Edge WebView2 loader library. You will also need the [WebView2 Runtime](https://go.microsoft.com/fwlink/p/?LinkId=2124703) both for development and distribution to client machines. For your convenience you can install the runtime with `MicrosoftEdgeWebview2Setup.exe /silent /install`.

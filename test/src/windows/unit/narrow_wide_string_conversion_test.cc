@@ -7,8 +7,8 @@
 
 int main() {
   using namespace webview::detail;
-  REQUIRE(widen_string("") == L"");
-  REQUIRE(narrow_string(L"") == "");
+  REQUIRE(widen_string("").empty());
+  REQUIRE(narrow_string(L"").empty());
   REQUIRE(widen_string("foo") == L"foo");
   REQUIRE(narrow_string(L"foo") == "foo");
   REQUIRE(widen_string("フー") == L"フー");

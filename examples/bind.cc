@@ -21,7 +21,7 @@ int webview_app_main(int argc, const char *argv[]) {
   webview::webview w(false, nullptr);
   w.set_title("Bind Example");
   w.set_size(480, 320, WEBVIEW_HINT_NONE);
-  w.bind("increment", [&](const std::string &s) -> std::string {
+  w.bind("increment", [&](const std::string & /*req*/) -> std::string {
     auto count_string = std::to_string(++count);
     return "{\"count\": " + count_string + "}";
   });

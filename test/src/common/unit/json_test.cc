@@ -9,7 +9,7 @@ int main() {
   auto J = webview::detail::json_parse;
   // Valid input with expected output
   REQUIRE(J(R"({"foo":"bar"})", "foo", -1) == "bar");
-  REQUIRE(J(R"({"foo":""})", "foo", -1) == "");
+  REQUIRE(J(R"({"foo":""})", "foo", -1).empty());
   REQUIRE(J(R"({"foo":{}")", "foo", -1) == "{}");
   REQUIRE(J(R"({"foo": {"bar": 1}})", "foo", -1) == R"({"bar": 1})");
   REQUIRE(J(R"(["foo", "bar", "baz"])", "", 0) == "foo");
@@ -20,23 +20,23 @@ int main() {
   // Invalid input with valid output - should probably fail
   REQUIRE(J(R"({"foo":"bar")", "foo", -1) == "bar");
   // Valid input with other invalid parameters - should fail
-  REQUIRE(J(R"([])", "", 0) == "");
-  REQUIRE(J(R"({})", "foo", -1) == "");
-  REQUIRE(J(R"(["foo", "bar", "baz"])", "", -1) == "");
-  REQUIRE(J(R"(["foo"])", "", 1234) == "");
-  REQUIRE(J(R"(["foo"])", "", -1234) == "");
+  REQUIRE(J(R"([])", "", 0).empty());
+  REQUIRE(J(R"({})", "foo", -1).empty());
+  REQUIRE(J(R"(["foo", "bar", "baz"])", "", -1).empty());
+  REQUIRE(J(R"(["foo"])", "", 1234).empty());
+  REQUIRE(J(R"(["foo"])", "", -1234).empty());
   // Invalid input - should fail
-  REQUIRE(J("", "", 0) == "");
-  REQUIRE(J("", "foo", -1) == "");
-  REQUIRE(J(R"({"foo":")", "foo", -1) == "");
-  REQUIRE(J(R"({"foo":{)", "foo", -1) == "");
-  REQUIRE(J(R"({"foo":{")", "foo", -1) == "");
-  REQUIRE(J(R"(}")", "foo", -1) == "");
-  REQUIRE(J(R"({}}")", "foo", -1) == "");
-  REQUIRE(J(R"("foo)", "foo", -1) == "");
-  REQUIRE(J(R"(foo)", "foo", -1) == "");
-  REQUIRE(J(R"({{[[""foo""]]}})", "", 1234) == "");
-  REQUIRE(J("bad", "", 0) == "");
-  REQUIRE(J("bad", "foo", -1) == "");
+  REQUIRE(J("", "", 0).empty());
+  REQUIRE(J("", "foo", -1).empty());
+  REQUIRE(J(R"({"foo":")", "foo", -1).empty());
+  REQUIRE(J(R"({"foo":{)", "foo", -1).empty());
+  REQUIRE(J(R"({"foo":{")", "foo", -1).empty());
+  REQUIRE(J(R"(}")", "foo", -1).empty());
+  REQUIRE(J(R"({}}")", "foo", -1).empty());
+  REQUIRE(J(R"("foo)", "foo", -1).empty());
+  REQUIRE(J(R"(foo)", "foo", -1).empty());
+  REQUIRE(J(R"({{[[""foo""]]}})", "", 1234).empty());
+  REQUIRE(J("bad", "", 0).empty());
+  REQUIRE(J("bad", "foo", -1).empty());
   return 0;
 }
