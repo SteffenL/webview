@@ -50,7 +50,10 @@ go build -o build/examples/go/basic examples/basic.go
 go build -o build/examples/go/bind examples/bind.go
 
 echo "Building test app"
-c++ webview_test.cc $CXXFLAGS -o webview_test
+c++ $(find "$DIR/test/src" -type f -name "*.cc") \
+	"-I$DIR" \
+	"-I$DIR/test/include" \
+	$CXXFLAGS -o webview_test
 
 echo "Running tests"
 ./webview_test
