@@ -1,4 +1,4 @@
-#include "test.hpp"
+#include "test.hh"
 
 #include <atomic>
 #include <iostream>

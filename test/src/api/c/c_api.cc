@@ -1,4 +1,4 @@
-#include "test.hpp"
+#include "test.hh"
 #include "webview.h"
 
 void cb_assert_arg(webview_t w, void *arg) {

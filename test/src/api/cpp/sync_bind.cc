@@ -1,4 +1,4 @@
-#include "test.hpp"
+#include "test.hh"
 #include "webview.h"
 
 // TEST: test synchronous binding and unbinding.

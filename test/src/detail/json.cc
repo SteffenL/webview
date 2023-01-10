@@ -1,4 +1,4 @@
-#include "test.hpp"
+#include "test.hh"
 #include "webview.h"
 
 // TEST: ensure that JSON parsing works.

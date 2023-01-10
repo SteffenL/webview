@@ -4,7 +4,7 @@
 #define WEBVIEW_VERSION_PRE_RELEASE "-test"
 #define WEBVIEW_VERSION_BUILD_METADATA "+gaabbccd"
 
-#include "test.hpp"
+#include "test.hh"
 #include "webview.h"
 
 // TEST: webview_version().

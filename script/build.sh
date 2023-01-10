@@ -16,7 +16,7 @@ TEST_CXXFLAGS="$CXXFLAGS -I$DIR/test/include"
 
 if command -v clang-format >/dev/null 2>&1 ; then
 	echo "Formatting..."
-	clang-format -i $(find "$DIR" -type f -regextype egrep -regex '.*\.(c|cc|h|hpp)')
+	clang-format -i $(find "$DIR" -type f -regextype egrep -regex '.*\.(cc?|hh?)')
 else
 	echo "SKIP: Formatting (clang-format not installed)"
 fi

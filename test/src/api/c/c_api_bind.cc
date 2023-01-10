@@ -1,4 +1,4 @@
-#include "test.hpp"
+#include "test.hh"
 #include "webview.h"
 
 // TEST: use C API to test binding and unbinding.
