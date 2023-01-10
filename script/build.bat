@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 echo Prepare directories...
 set script_dir=%~dp0
@@ -114,13 +114,16 @@ cl %warning_params% ^
 	"%src_dir%\examples\bind.c" /link "/OUT:%build_dir%\examples\c\bind.exe" || exit /b
 
 echo Building webview_test.exe (x64)
+set test_sources=
+for /r "%src_dir%\test\src" %%f in (*.cc) do set test_sources=!test_sources! "%%f"
 cl %warning_params% ^
-	/utf-8 ^
+	/utf-8 /MP ^
 	/I "%src_dir%" ^
+	/I "%src_dir%\test\include" ^
 	/I "%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\include" ^
 	"%script_dir%\microsoft.web.webview2.%nuget_version%\build\native\x64\WebView2Loader.dll.lib" ^
 	/std:c++17 /EHsc "/Fo%build_dir%"\ ^
-	"%src_dir%\webview_test.cc" /link "/OUT:%build_dir%\webview_test.exe" || exit /b
+	%test_sources% /link "/OUT:%build_dir%\webview_test.exe" || exit /b
 
 echo Setting up environment for Go...
 rem Argument quoting works for Go 1.18 and later but as of 2022-06-26 GitHub Actions has Go 1.17.11.
