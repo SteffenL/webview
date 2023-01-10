@@ -4,7 +4,6 @@
 #include <cassert>
 #include <functional>
 #include <map>
-#include <memory>
 #include <string>
 
 // Utility macro for stringifying a macro argument.
@@ -12,6 +11,7 @@
 
 #define TEST(name)                                                             \
   void test_fn_##name();                                                       \
+  /* NOLINTNEXTLINE(cert-err58-cpp) */                                         \
   static const test::test_registration test_reg_##name{TEST_STRINGIFY(name),   \
                                                        test_fn_##name};        \
   void test_fn_##name()
@@ -27,7 +27,6 @@ public:
   const std::map<std::string, test_fn> &get_items() const noexcept;
 
 private:
-  static std::unique_ptr<test_storage> m_instance;
   std::map<std::string, test_fn> m_items;
 };
 

@@ -1,5 +1,6 @@
 #include "test.hpp"
 
+#include <atomic>
 #include <iostream>
 #include <thread>
 
