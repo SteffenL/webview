@@ -28,6 +28,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     target.set_bin_dir(lib_dir)
     target.set_lib_dir(lib_dir)
     target.set_link_output_name("WebView2Loader.dll")
+    target.set_output_name_prefix("")
 
     def fetch(task: Task):
         url = "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/{}".format(

@@ -1,5 +1,5 @@
 from internal.build import FileType, find_c_like_source_files, LanguageStandards, PropertyScopes
-from internal.target import TargetType
+from internal.target import copy_dependencies, TargetType
 from internal.task import Task, TaskPhase, TaskRunner
 from internal.toolchain.common import ToolchainId
 from internal.workspace import Workspace
@@ -91,3 +91,11 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         library_test_program.get_output_file_path(),
         description="Library")
     library_test.set_condition(lambda: options.test.get_value())
+
+    # Copy dependencies to output directory
+    post_build_tasks = task_runner.create_task_collection(
+        TaskPhase.POST_COMPILE)
+    for target in (shared_library, library_test_program):
+        post_build_tasks.add_task(Task(lambda _, t: copy_dependencies(t),
+                                       args=(target,),
+                                       description=f"Copy dependencies for target {target.get_name()}"))

@@ -264,12 +264,12 @@ class Target():
         prefix = self.get_output_name_prefix()
         prefix = toolchain.get_file_name_prefix(
             type) if prefix is None else prefix
-        name = self.get_link_output_name()
+        name = self.get_output_name()
         extension = toolchain.get_file_name_extension(
             type, platform.system()) if extension is None else extension
         return prefix + name + extension
 
-    def get_output_file_path(self):
+    def get_output_dir(self):
         type = self.get_type()
         if type == TargetType.INTERFACE:
             return None
@@ -279,6 +279,10 @@ class Target():
             dir = self.get_obj_dir()
         elif type in (TargetType.SHARED_LIBRARY, TargetType.STATIC_LIBRARY):
             dir = self.get_lib_dir()
+        return dir
+
+    def get_output_file_path(self):
+        dir = self.get_output_dir()
         return os.path.join(dir, self.get_output_file_name())
 
     def get_runtime_link_method(self):
@@ -353,11 +357,7 @@ def get_file_extension_for_target_type(type: TargetType, system: str):
 def copy_dependencies(target: Target):
     libs = target.get_link_libraries(PropertyScope.INTERNAL)
     libs_to_copy: Tuple[Target] = tuple(lib for lib in libs if type(
-        lib) == Target and lib.get_type() == TargetType.SHARED_LIBRARY and lib.get_output_path() != target.get_output_path())
-    count = len(libs_to_copy)
-    if count > 0:
-        print("Copying dependencies for target {}: {}".format(
-            target.get_name(), ", ".join(tuple(lib.get_name() for lib in libs_to_copy))))
+        lib) == Target and lib.get_type() == TargetType.SHARED_LIBRARY and lib.get_output_file_path() != target.get_output_file_path())
     for lib in libs_to_copy:
         os.makedirs(target.get_output_dir(), exist_ok=True)
-        shutil.copy(lib.get_output_path(), target.get_output_dir())
+        shutil.copy(lib.get_output_file_path(), target.get_output_dir())
