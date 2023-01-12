@@ -34,16 +34,16 @@ jobs:
       fail-fast: false
       matrix:
         compiler:
-          - { id: gcc, cc: gcc, cxx: g++ }
-          - { id: clang, cc: clang, cxx: clang++ }
+          - { id: gcc, ar: ar, cc: gcc, cxx: g++, ld: ld }
+          - { id: clang, ar: ar, cc: clang, cxx: clang++, ld: ld }
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
       - name: Build and run tests
-        run: xvfb-run python3 script/build.py "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --build-examples --test
+        run: xvfb-run python3 script/build.py "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --build-examples --test
       - name: Build Go examples and run Go tests
-        run: xvfb-run python3 script/build.py "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --go-build-examples --go-test
+        run: xvfb-run python3 script/build.py "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --go-build-examples --go-test
 
   build-macos:
     name: build (macos)
@@ -61,9 +61,9 @@ jobs:
       matrix:
         arch: [x86, x64]
         compiler:
-          - { id: msvc, toolchain: msvc, cc: unused, cxx: unused }
-          - { id: mingw-gcc, toolchain: mingw, cc: gcc, cxx: g++ }
-          - { id: mingw-clang, toolchain: mingw, cc: clang, cxx: clang++ }
+          - { id: msvc, toolchain: msvc, ar: lib, cc: cl, cxx: cl, ld: link }
+          - { id: mingw-gcc, toolchain: mingw, ar: ar, cc: gcc, cxx: g++, ld: ld }
+          - { id: mingw-clang, toolchain: mingw, ar: ar, cc: clang, cxx: clang++, ld: ld }
         include:
           - arch: x64
             compiler: { toolchain: mingw }
@@ -94,11 +94,11 @@ jobs:
           Invoke-WebRequest -Uri "${{ matrix.mingw_url }}" -OutFile $zip_path
           Expand-Archive -LiteralPath $zip_path -DestinationPath "${env:SystemDrive}\"
       - name: Build and run tests
-        run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--toolchain=${{ matrix.compiler.toolchain }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --build-examples --test
+        run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--load-toolchain=${{ matrix.compiler.toolchain }}" "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --build-examples --test
         shell: cmd
       - name: Build Go examples and run Go tests
         if: matrix.compiler.toolchain == 'mingw'
-        run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" --go-build-examples --go-test
+        run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --go-build-examples --go-test
         shell: cmd
 
   swig:
