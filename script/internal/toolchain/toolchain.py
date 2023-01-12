@@ -26,23 +26,46 @@ def activate_toolchain(id: ToolchainEnvironmentId, arch: Arch):
     raise Exception("Invalid toolchain environment: " + id.value)
 
 
-def detect_toolchain(architecture: Arch, cc_override: str = None, cxx_override: str = None) -> Toolchain:
-    if (cc_override is None) != (cxx_override is None):
+def detect_toolchain(architecture: Arch,
+                     toolchain_prefix: str = None,
+                     ar_override: str = None,
+                     cc_override: str = None,
+                     cxx_override: str = None,
+                     ld_override: str = None) -> Toolchain:
+    if any([(exe is None) != (ar_override is None) for exe in (cc_override, cxx_override, ld_override)]):
         raise Exception(
-            "Either all overrides or none must be specified")
+            "Either all toolchain binary overrides or none must be specified")
 
+    toolchain_prefix = "" if toolchain_prefix is None else toolchain_prefix
+
+    ar: str = None
     cc: str = None
     cxx: str = None
+    ld: str = None
+
+    if ar_override is not None:
+        ar_override = toolchain_prefix + ar_override
+        ar = find_executable(ar_override)
+        if ar is None:
+            raise Exception("Archiver not found: {}".format(ar_override))
 
     if cc_override is not None:
+        cc_override = toolchain_prefix + cc_override
         cc = find_executable(cc_override)
         if cc is None:
             raise Exception("C compiler not found: {}".format(cc_override))
 
     if cxx_override is not None:
+        cxx_override = toolchain_prefix + cxx_override
         cxx = find_executable(cxx_override)
         if cxx is None:
             raise Exception("C++ compiler not found: {}".format(cxx_override))
+
+    if ld_override is not None:
+        ld_override = toolchain_prefix + ld_override
+        ld = find_executable(ld_override)
+        if ld is None:
+            raise Exception("Linker not found: {}".format(ld_override))
 
     toolchain_types: Mapping[ToolchainId, Type[Toolchain]] = {
         ToolchainId.CLANG: ClangLikeToolchain,
@@ -50,29 +73,33 @@ def detect_toolchain(architecture: Arch, cc_override: str = None, cxx_override: 
         ToolchainId.MSVC: MsvcToolchain
     }
 
-    if cc is not None and cxx is not None:
+    if all([exe is not None for exe in (ar, cc, cxx, ld)]):
         id = detect_compiler_from_exe(cc)
-        return toolchain_types[id](
-            id=id,
-            architecture=architecture,
-            binaries=ToolchainBinaries(cc=cc, cxx=cxx))
+        if id is not None:
+            return toolchain_types[id](
+                id=id,
+                architecture=architecture,
+                binaries=ToolchainBinaries(ar=ar, cc=cc, cxx=cxx, ld=ld))
 
     system = platform.system()
 
     hints = []
     if system == "Windows":
-        hints.append(("cl", "cl"))
-    hints += (("gcc", "g++"),
-              ("clang", "clang++"))
+        hints.append(("lib", "cl", "cl", "link"))
+    hints += (("ar", "gcc", "g++", "ld"),
+              ("ar", "clang", "clang++", "ld"))
 
-    for cc_hint, cxx_hint in hints:
-        cc, cxx = map(find_executable, (cc_hint, cxx_hint))
-        if cc is not None and cxx is not None:
+    for chain in hints:
+        chain = tuple(toolchain_prefix + exe for exe in chain)
+        chain = tuple(map(find_executable, chain))
+        if all([exe is not None for exe in chain]):
+            ar, cc, cxx, ld = chain
             id = detect_compiler_from_exe(cc)
-            return toolchain_types[id](
-                id=id,
-                architecture=architecture,
-                binaries=ToolchainBinaries(cc=cc, cxx=cxx))
+            if id is not None:
+                return toolchain_types[id](
+                    id=id,
+                    architecture=architecture,
+                    binaries=ToolchainBinaries(ar=ar, cc=cc, cxx=cxx, ld=ld))
 
     raise Exception("Toolchain not found")
 

@@ -84,6 +84,10 @@ def pre_process_options(options: Options):
     if options.build_library.get_value() and not options.fetch_deps.is_explicit():
         options.fetch_deps.set_value(True)
 
+    # Set the archiver binary based on the environment.
+    if not options.ar.is_explicit():
+        options.ar.set_value(os.environ.get("AR", None))
+
     # Set the C compiler binary based on the environment.
     if not options.cc.is_explicit():
         options.cc.set_value(os.environ.get("CC", None))
@@ -92,6 +96,10 @@ def pre_process_options(options: Options):
     if not options.cxx.is_explicit():
         options.cxx.set_value(os.environ.get("CXX", None))
 
+    # Set the linker binary based on the environment.
+    if not options.ld.is_explicit():
+        options.ld.set_value(os.environ.get("LD", None))
+
     return options
 
 
@@ -99,8 +107,10 @@ def print_toolchain(toolchain: Toolchain):
     toolchain_binaries = toolchain.get_binaries()
     print("Toolchain:")
     print("  ID: {}".format(toolchain.get_id().value))
+    print("  Archiver: {}".format(toolchain_binaries.ar))
     print("  C compiler: {}".format(toolchain_binaries.cc))
     print("  C++ compiler: {}".format(toolchain_binaries.cxx))
+    print("  Linker: {}".format(toolchain_binaries.ld))
 
 
 def print_targets(targets: Sequence[Target]):
@@ -121,8 +131,11 @@ def main(args):
         activate_toolchain(toolchain_env, architecture)
 
     toolchain = detect_toolchain(architecture=architecture,
+                                 toolchain_prefix=options.toolchain_prefix.get_value(),
+                                 ar_override=options.ar.get_value(),
                                  cc_override=options.cc.get_value(),
-                                 cxx_override=options.cxx.get_value())
+                                 cxx_override=options.cxx.get_value(),
+                                 ld_override=options.ld.get_value())
 
     workspace = Workspace(options,
                           toolchain,

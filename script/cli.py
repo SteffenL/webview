@@ -69,6 +69,9 @@ dependencies for your target architecture onto your system.
                        choices=(tuple(v.value for v in Arch)),
                        default=Arch.NATIVE.value,
                        action=StrArgAction)
+    group.add_argument("--toolchain-prefix",
+                       help="Toolchain executable name prefix.",
+                       action=StrArgAction)
     group.add_argument("--reformat",
                        help="Reformat code (requires clang-format).",
                        action=BoolArgAction)
@@ -85,11 +88,17 @@ dependencies for your target architecture onto your system.
                        default=LintMode.FALSE.value,
                        const=LintMode.STRICT.value,
                        action=StrArgAction)
+    group.add_argument("--ar",
+                       help="Archiver binary, e.g. ar or lib. Can be set by the AR environment variable.",
+                       action=StrArgAction)
     group.add_argument("--cc",
-                       help="C compiler binary, e.g. cc, gcc or clang. Can be set by the CC environment variable.",
+                       help="C compiler binary, e.g. cc, gcc, clang or cl. Can be set by the CC environment variable.",
                        action=StrArgAction)
     group.add_argument("--cxx",
-                       help="C++ compiler binary, e.g. c++, g++ or clang++. Can be set by the CXX environment variable.",
+                       help="C++ compiler binary, e.g. c++, g++, clang++ or cl. Can be set by the CXX environment variable.",
+                       action=StrArgAction)
+    group.add_argument("--ld",
+                       help="Linker binary, e.g. ld or link. Can be set by the LD environment variable.",
                        action=StrArgAction)
     group.add_argument("--go-build-examples",
                        help="Build Go examples.",

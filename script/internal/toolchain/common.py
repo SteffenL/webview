@@ -57,11 +57,13 @@ class ToolchainBinaries:
     ar: str
     cc: str
     cxx: str
+    ld: str
 
-    def __init__(self, ar: str = None, cc: str = None, cxx: str = None) -> None:
+    def __init__(self, ar: str = None, cc: str = None, cxx: str = None, ld: str = None) -> None:
         self.ar = ar
         self.cc = cc
         self.cxx = cxx
+        self.ld = ld
 
 
 class Toolchain:
