@@ -37,6 +37,12 @@ Debian-based systems:
   * Development: `apt install libgtk-3-dev libwebkit2gtk-4.0-dev`
   * Production: `apt install libgtk-3-0 libwebkit2gtk-4.0-37`
 
+Fedora-based systems:
+
+* Packages:
+  * Development: `dnf install gtk3-devel webkit2gtk4.0-devel`
+  * Production: `dnf install gtk3 webkit2gtk4.0`
+
 BSD-based systems:
 
 * FreeBSD packages: `pkg install webkit2-gtk3`
@@ -107,6 +113,8 @@ g++ basic.cc -std=c++11 -Ilibs/webview -framework WebKit -o build/basic && ./bui
 g++ basic.cc -std=c++17 -mwindows -Ilibs/webview -Ilibs/webview2/build/native/include -Llibs/webview2/build/native/x64 -lWebView2Loader.dll -lole32 -lshell32 -lshlwapi -luser32 -o build/basic.exe && "build/basic.exe"
 ```
 
+> Windows Tip: The library supports linking `WebView2Loader.dll` explicitly when `WEBVIEW_MSWEBVIEW2_EXPLICIT_LINK` is defined, avoiding the need for `WebView2Loader.dll.lib`.
+
 #### Bonus for Visual C++
 
 Build a shared library with WebView2 linked statically:
@@ -169,7 +177,6 @@ On Windows you will need to make the WebView2 loader discoverable by cgo (see [W
 
 ```bat
 set CGO_CXXFLAGS="-I%cd%\libs\webview2\build\native\include"
-set CGO_LDFLAGS="-L%cd%\libs\webview2\build\native\x64"
 ```
 
 > **Note:** Argument quoting works for Go 1.18 and later. Quotes can be removed if paths have no spaces.
@@ -300,6 +307,20 @@ Rust        | [Boscop/webview-rs](https://github.com/Boscop/webview-rs)
 V           | [malisipi/mui](https://github.com/malisipi/mui/tree/main/webview)
 
 If you wish to add bindings to the list, feel free to submit a pull request or [open an issue][issues-new].
+
+## Generating Bindings
+
+You can generate bindings for the library by yourself using the included SWIG interface (`webview.i`).
+
+Here are some examples to get you started. Unix-style command lines are used for conciseness.
+
+```sh
+mkdir -p build/bindings/{python,csharp,java,ruby}
+swig -c++ -python -outdir build/bindings/python -o build/bindings/python/python_wrap.cpp webview.i
+swig -c++ -csharp -outdir build/bindings/csharp -o build/bindings/csharp/csharp_wrap.cpp webview.i
+swig -c++ -java -outdir build/bindings/java -o build/bindings/java/java_wrap.cpp webview.i
+swig -c++ -ruby -outdir build/bindings/ruby -o build/bindings/ruby/ruby_wrap.cpp webview.i
+```
 
 ## License
 
