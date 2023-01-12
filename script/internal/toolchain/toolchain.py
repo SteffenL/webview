@@ -1,17 +1,14 @@
 from internal.common import Arch
-from internal.target import TargetType
 from internal.utility import find_executable
-#from internal.toolchain.clang_like import ClangLikeCompiler, is_clang_like_compiler
 from internal.toolchain.clang_like import ClangLikeToolchain
 from internal.toolchain.common import Toolchain, ToolchainBinaries, ToolchainEnvironmentId, ToolchainId
 from internal.toolchain.mingw import activate_mingw_toolchain
 from internal.toolchain.msvc import activate_msvc_toolchain, MsvcToolchain
 
-from dataclasses import dataclass
 import os
 import platform
 import subprocess
-from typing import Callable, Mapping, Tuple, Type
+from typing import Mapping, Type
 
 
 def activate_toolchain(id: ToolchainEnvironmentId, arch: Arch):
@@ -118,14 +115,6 @@ def detect_toolchain(architecture: Arch,
                 binaries=ToolchainBinaries(ar=ar, cc=cc, cxx=cxx, ld=ld))
 
     raise Exception("Toolchain not found")
-
-
-# def get_file_name_prefix_for_target_type(type: TargetType, system: str, compiler_id: CompilerId = None):
-#    if type == TargetType.SHARED_LIBRARY:
-#        if is_clang_like_compiler(compiler_id):
-#            return "lib"
-#        return {"Linux": "lib", "Darwin": "lib"}.get(system, "")
-#    return ""
 
 
 def detect_compiler_from_exe(exe_path: str) -> ToolchainId:
