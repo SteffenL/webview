@@ -83,23 +83,39 @@ def detect_toolchain(architecture: Arch,
 
     system = platform.system()
 
-    hints = []
-    if system == "Windows":
-        hints.append(("lib", "cl", "cl", "link"))
-    hints += (("ar", "gcc", "g++", "ld"),
-              ("ar", "clang", "clang++", "ld"))
+    all_chain_hints = []
+    if system == "Darwin":
+        all_chain_hints.append([["ar"], ["clang"], ["clang++"], ["ld64.lld"]])
+        all_chain_hints.append([["ar"], ["gcc"], ["g++"], ["ld"]])
+    elif system == "Linux":
+        all_chain_hints.append([["ar"], ["gcc"], ["g++"], ["gold", "ld"]])
+        all_chain_hints.append(
+            [["llvm-ar", "ar"], ["clang"], ["clang++"], ["ld.lld", "ld"]])
+    elif system == "Windows":
+        all_chain_hints.append([["lib"], ["cl"], ["cl"], ["link"]])
+        all_chain_hints.append([["ar"], ["gcc"], ["g++"], ["ld"]])
+        all_chain_hints.append(
+            [["llvm-ar", "ar"], ["clang"], ["clang++"], ["ld.lld", "ld"]])
 
-    for chain in hints:
-        chain = tuple(toolchain_prefix + exe for exe in chain)
-        chain = tuple(map(find_executable, chain))
-        if all([exe is not None for exe in chain]):
-            ar, cc, cxx, ld = chain
-            id = detect_compiler_from_exe(cc)
-            if id is not None:
-                return toolchain_types[id](
-                    id=id,
-                    architecture=architecture,
-                    binaries=ToolchainBinaries(ar=ar, cc=cc, cxx=cxx, ld=ld))
+    for chain_hints in all_chain_hints:
+        found = []
+        for exe_hints in chain_hints:
+            for exe_hint in exe_hints:
+                exe = find_executable(toolchain_prefix + exe_hint)
+                found.append(exe)
+                if exe:
+                    break
+        if len(found) != len(chain_hints):
+            continue
+        if any([exe is None for exe in found]):
+            continue
+        ar, cc, cxx, ld = found
+        id = detect_compiler_from_exe(cc)
+        if id is not None:
+            return toolchain_types[id](
+                id=id,
+                architecture=architecture,
+                binaries=ToolchainBinaries(ar=ar, cc=cc, cxx=cxx, ld=ld))
 
     raise Exception("Toolchain not found")
 
