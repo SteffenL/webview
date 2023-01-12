@@ -111,10 +111,6 @@ dependencies for your target architecture onto your system.
         group.add_argument("--fetch-deps",
                            help="Fetch library dependencies. Implied when building and linting.",
                            action=BoolArgAction)
-        group.add_argument("--toolchain",
-                           help="C/C++ toolchain environment.",
-                           choices=(tuple(v.value for v in ToolchainId)),
-                           default=ToolchainId.MSVC.value)
         group.add_argument("--load-toolchain",
                            help="Attempt to load a C/C++ toolchain environment.",
                            choices=(tuple(v.value for v in ToolchainEnvironmentId)))
