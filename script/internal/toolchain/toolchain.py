@@ -3,7 +3,7 @@ from internal.target import TargetType
 from internal.utility import find_executable
 #from internal.toolchain.clang_like import ClangLikeCompiler, is_clang_like_compiler
 from internal.toolchain.clang_like import ClangLikeToolchain
-from internal.toolchain.common import Toolchain, ToolchainBinaries, ToolchainId
+from internal.toolchain.common import Toolchain, ToolchainBinaries, ToolchainEnvironmentId, ToolchainId
 from internal.toolchain.mingw import activate_mingw_toolchain
 from internal.toolchain.msvc import activate_msvc_toolchain, MsvcToolchain
 
@@ -14,15 +14,16 @@ import subprocess
 from typing import Callable, Mapping, Tuple, Type
 
 
-def activate_toolchain(id: ToolchainId, arch: Arch):
+def activate_toolchain(id: ToolchainEnvironmentId, arch: Arch):
     system = platform.system()
     if system == "Windows":
-        if id == ToolchainId.MSVC:
+        if id == ToolchainEnvironmentId.MSVC:
             activate_msvc_toolchain(arch)
             return
-        if id in (ToolchainId.GCC, ToolchainId.CLANG):
+        if id == ToolchainEnvironmentId.MINGW:
             activate_mingw_toolchain(arch)
             return
+    raise Exception("Invalid toolchain environment: " + id.value)
 
 
 def detect_toolchain(architecture: Arch, cc_override: str = None, cxx_override: str = None) -> Toolchain:

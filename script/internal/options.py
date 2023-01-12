@@ -1,6 +1,6 @@
 from internal.build import BuildType
 from internal.common import Arch
-from internal.toolchain.common import EnvironmentId, ToolchainId
+from internal.toolchain.common import ToolchainEnvironmentId, ToolchainId
 
 from dataclasses import dataclass
 from enum import Enum
@@ -58,6 +58,7 @@ class Options():
     # Windows
     fetch_deps:  Option[bool]
     toolchain: Option[ToolchainId]
+    load_toolchain: Option[ToolchainEnvironmentId]
     mswebview2_version: Option[str]
 
 

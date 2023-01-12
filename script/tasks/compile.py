@@ -1,5 +1,5 @@
 from internal.workspace import Workspace
-from internal.task import TaskRunner
+from internal.task import Task, TaskPhase, TaskRunner
 
 
 def register(task_runner: TaskRunner, workspace: Workspace):
@@ -7,4 +7,5 @@ def register(task_runner: TaskRunner, workspace: Workspace):
 
     targets = workspace.get_sorted_targets()
     toolchain = workspace.get_toolchain()
-    task_runner.add_task_collection(*toolchain.create_compile_tasks(*targets))
+    task_runner.add_task_collection(
+        TaskPhase.COMPILE, *toolchain.create_compile_tasks(*targets))

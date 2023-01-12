@@ -12,10 +12,11 @@ else:
     from internal.lifecycle import Lifecycle
     from internal.options import format_option_value, Options
     from internal.task import TaskRunner
+    from internal.toolchain.common import ToolchainEnvironmentId
     from internal.toolchain.toolchain import activate_toolchain, detect_toolchain, Toolchain
     from internal.utility import get_host_arch
     from internal.workspace import Workspace
-    # import targets.deps.main
+    import targets.deps.main
     import targets.main
     import tasks.checks.lint
     import tasks.checks.style
@@ -23,7 +24,7 @@ else:
     import tasks.compile
     import tasks.generate.reformat
     import tasks.test
-    # import tasks.go
+    import tasks.go
     from internal.target import Target
     import os
     from typing import Sequence
@@ -109,34 +110,17 @@ def print_targets(targets: Sequence[Target]):
             print("  {}".format(target.get_name()))
 
 
-class LifecycleStrategy:
-    _workspace: Workspace
-
-    def __init__(self, workspace: Workspace):
-        self._workspace = workspace
-
-    def configure_targets(self):
-        targets.main.register(self._workspace)
-
-    def configure_tasks(self, task_runner: TaskRunner):
-        tasks.generate.reformat.register(task_runner, self._workspace)
-        tasks.checks.style.register(task_runner, self._workspace)
-        tasks.checks.lint.register(task_runner, self._workspace)
-        tasks.clean.register(task_runner, self._workspace)
-        tasks.compile.register(task_runner, self._workspace)
-        tasks.test.register(task_runner, self._workspace)
-
-    def on_configured(self):
-        print_toolchain(self._workspace.get_toolchain())
-        print_targets(self._workspace.get_sorted_targets())
-
-
 def main(args):
     script_dir = os.path.dirname(__file__)
     source_dir = os.path.dirname(script_dir)
     options = pre_process_options(parse_options(args, create_arg_parser))
+    architecture = options.target_arch.get_value()
 
-    toolchain = detect_toolchain(architecture=options.target_arch.get_value(),
+    toolchain_env = options.load_toolchain.get_value()
+    if toolchain_env is not None:
+        activate_toolchain(toolchain_env, architecture)
+
+    toolchain = detect_toolchain(architecture=architecture,
                                  cc_override=options.cc.get_value(),
                                  cxx_override=options.cxx.get_value())
 
@@ -145,7 +129,24 @@ def main(args):
                           source_dir=source_dir,
                           build_type=options.build_type.get_value())
 
-    Lifecycle(LifecycleStrategy(workspace)).run()
+    task_runner = TaskRunner()
+
+    targets.deps.main.register(task_runner, workspace)
+    targets.main.register(task_runner, workspace)
+
+    tasks.go.register(task_runner, workspace)
+    tasks.generate.reformat.register(task_runner, workspace)
+    tasks.checks.style.register(task_runner, workspace)
+    tasks.checks.lint.register(task_runner, workspace)
+    tasks.clean.register(task_runner, workspace)
+    tasks.compile.register(task_runner, workspace)
+    tasks.test.register(task_runner, workspace)
+
+    print_toolchain(workspace.get_toolchain())
+    print_targets(workspace.get_sorted_targets())
+
+    print("Running tasks...")
+    Lifecycle(task_runner).run()
 
 
 if __name__ == "__main__":
