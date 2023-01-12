@@ -76,9 +76,6 @@ class ClangLikeToolchain(Toolchain):
             pkgconfig_cflags = subprocess.check_output(
                 ("pkg-config", "--cflags", *pkgconfig_libs)).decode("utf-8").strip().split(" ")
 
-        # Color output
-        cflags.append("-fdiagnostics-color=always")
-
         # Optimization
         build_type = target.get_build_type()
         if build_type == BuildType.DEBUG:
@@ -143,10 +140,6 @@ class ClangLikeToolchain(Toolchain):
         system = platform.system()
         ldflags: List[str] = []
         input_paths: List[str] = []
-
-        # Color output
-        if platform.system() != "Windows":
-            ldflags.append("-fdiagnostics-color=always")
 
         # Target platform
         arch = self.get_architecture()
