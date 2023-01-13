@@ -1,6 +1,6 @@
 from internal.common import Arch
 from internal.utility import find_executable
-from internal.toolchain.clang_like import ClangLikeToolchain
+from internal.toolchain.gcc_like import GccLikeToolchain
 from internal.toolchain.common import Toolchain, ToolchainBinaries, ToolchainEnvironmentId, ToolchainId
 from internal.toolchain.mingw import activate_mingw_toolchain
 from internal.toolchain.msvc import activate_msvc_toolchain, MsvcToolchain
@@ -67,8 +67,8 @@ def detect_toolchain(architecture: Arch,
             raise Exception("Linker not found: {}".format(ld_override))
 
     toolchain_types: Mapping[ToolchainId, Type[Toolchain]] = {
-        ToolchainId.CLANG: ClangLikeToolchain,
-        ToolchainId.GCC: ClangLikeToolchain,
+        ToolchainId.CLANG: GccLikeToolchain,
+        ToolchainId.GCC: GccLikeToolchain,
         ToolchainId.MSVC: MsvcToolchain
     }
 

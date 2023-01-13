@@ -11,7 +11,7 @@ import subprocess
 from typing import List, Sequence
 
 
-class ClangLikeToolchain(Toolchain):
+class GccLikeToolchain(Toolchain):
     _MACOS_TARGET_VERSION = "10.9"
 
     def __init__(self, *args, **kwargs):
