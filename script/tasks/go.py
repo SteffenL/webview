@@ -5,7 +5,7 @@ from internal.test import Test
 from internal.build import FileType, find_sources, Language, PropertyScope
 from internal.common import Arch
 from internal.go import go_version_supports_quoted_params, parse_go_version_string, to_go_architecture
-from internal.target import get_file_extension_for_target_type, TargetType
+from internal.target import TargetType
 from internal.toolchain.common import Toolchain, ToolchainId
 from internal.toolchain.toolchain import activate_toolchain, detect_toolchain
 from internal.utility import execute_program, get_host_arch, quote_string
@@ -86,7 +86,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
                            relative_to=source_dir)
     for _, source in sources:
         full_source_path = os.path.join(source_dir, source)
-        output_file_ext = get_file_extension_for_target_type(
+        output_file_ext = toolchain.get_file_name_extension(
             TargetType.EXE, platform.system())
         output_file_name = "".join(("example_", os.path.basename(
             source).replace(".", "_"), output_file_ext))

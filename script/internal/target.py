@@ -342,18 +342,6 @@ class Target():
         return normalized
 
 
-def get_file_extension_for_target_type(type: TargetType, system: str):
-    if type == TargetType.OBJECT:
-        return ".o"
-    if type == TargetType.EXE:
-        return {"Windows": ".exe"}.get(system, "")
-    if type == TargetType.SHARED_LIBRARY:
-        return {"Linux": ".so",
-                "Darwin": ".dylib",
-                "Windows": ".dll"}.get(system, "")
-    return ""
-
-
 def copy_dependencies(target: Target):
     libs = target.get_link_libraries(PropertyScope.INTERNAL)
     libs_to_copy: Tuple[Target] = tuple(lib for lib in libs if type(
