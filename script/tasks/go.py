@@ -8,7 +8,7 @@ from internal.go import go_version_supports_quoted_params, parse_go_version_stri
 from internal.target import get_file_extension_for_target_type, TargetType
 from internal.toolchain.common import Toolchain, ToolchainId
 from internal.toolchain.toolchain import activate_toolchain, detect_toolchain
-from internal.utility import execute_program, get_host_arch
+from internal.utility import execute_program, get_host_arch, quote_string
 
 import os
 import platform
@@ -17,7 +17,7 @@ from typing import Iterable, Mapping
 
 def get_env(workspace: Workspace, toolchain: Toolchain):
     # Argument quoting only works for Go 1.18 and later.
-    # We therefore conditionally quote arguments in e.g. CGO_CXXFLAGS
+    # We therefore conditionally quote arguments in e.g. CC, CXX, CGO_CXXFLAGS
     # and CGO_LDFLAGS based on the version of Go.
     go_version_string = execute_program(
         ("go", "version"), pipe_output=True).get_output_string()
@@ -35,14 +35,17 @@ def get_env(workspace: Workspace, toolchain: Toolchain):
         exe_search_paths.append(workspace.get_lib_dir())
 
     cxxflags = []
-    cxxflags += tuple(f"{quote}-I{s}{quote}" for s in includes)
+    cxxflags += tuple(quote_string(f"-I{s}", quote_char=quote) for s in includes)
+
+    cc = quote_string(toolchain.get_compile_exe(Language.C), quote_char=quote)
+    cxx = quote_string(toolchain.get_compile_exe(Language.CXX), quote_char=quote)
 
     env = {}
     env.update(os.environ)
     env.update({
         "CGO_ENABLED": "1",
-        "CC": toolchain.get_compile_exe(Language.C),
-        "CXX": toolchain.get_compile_exe(Language.CXX),
+        "CC": cc,
+        "CXX": cxx
     })
     if arch != Arch.NATIVE:
         env["GOARCH"] = to_go_architecture(arch)

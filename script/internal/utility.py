@@ -103,3 +103,6 @@ def execute_program(command: Iterable[str],
         if ignore_error or code == 0:
             return ExecuteProgramResult(code, stdout_result, stderr_result)
         raise Exception("Command failed: {}".format(command))
+
+def quote_string(s: str, quote_char: str = '"') -> str:
+    return f"{quote_char}{s}{quote_char}"
