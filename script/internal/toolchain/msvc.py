@@ -165,7 +165,7 @@ class MsvcToolchain(Toolchain):
                         if not ".lib" in lib_name:
                             lib_name += ".lib"
                         ldflags.append(lib_name)
-                    #if lib.get_type() in (lib.get_type() == TargetType.OBJECT, TargetType.STATIC_LIBRARY):
+                    # if lib.get_type() in (lib.get_type() == TargetType.OBJECT, TargetType.STATIC_LIBRARY):
                     #    if target.get_language() == Language.C and lib.get_language() == Language.CXX:
                     #        ldflags.append("-lc++" if system ==
                     #                       "Darwin" else "-lstdc++")
@@ -216,20 +216,6 @@ class MsvcToolchain(Toolchain):
         if target_type == TargetType.STATIC_LIBRARY:
             return ".lib"
         return super().get_file_name_extension(target_type, system)
-
-    def get_darwin_target_platform(self, architecture: Arch):
-        system = platform.system()
-        # x86 is unsupported on macOS
-        if system == "Darwin" and architecture != Arch.X86:
-            macos_arch = {Arch.ARM64: "arm64",
-                          Arch.X64: "x86_64"}[architecture]
-            return macos_arch + "-apple-macos" + self._MACOS_TARGET_VERSION
-        if system == "Linux":
-            linux_arch = {Arch.ARM64: "arm64",
-                          Arch.X64: "x86_64", Arch.X86: "i386"}[architecture]
-            return linux_arch + "-linux"
-        raise Exception(
-            "Unsupported target system/architecture: {}/{}".format(system, architecture.value))
 
 
 """
