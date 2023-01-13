@@ -99,8 +99,8 @@ def detect_toolchain(architecture: Arch,
         for exe_hints in chain_hints:
             for exe_hint in exe_hints:
                 exe = find_executable(toolchain_prefix + exe_hint)
-                found.append(exe)
                 if exe:
+                    found.append(exe)
                     break
         if len(found) != len(chain_hints):
             continue
