@@ -10,6 +10,21 @@ import platform
 import subprocess
 from typing import List, Sequence
 
+ARCH_TO_MSVC_COMPONENT_ARCH_MAP = {
+    Arch.X64: "x86.x64",
+    Arch.X86: "x86.x64",
+    Arch.ARM64: "ARM64",
+    Arch.ARM32: "ARM"
+}
+
+
+ARCH_TO_DEV_CMD_ARCH_MAP = {
+    Arch.X64: "x64",
+    Arch.X86: "x86",
+    Arch.ARM64: "ARM64",
+    Arch.ARM32: "ARM"
+}
+
 
 class MsvcToolchain(Toolchain):
     def __init__(self, *args, **kwargs):
@@ -293,7 +308,7 @@ class MsvcCompiler(Compiler):
 """
 
 
-def find_msvc_dev_cmd():
+def find_msvc_dev_cmd(target_arch: Arch):
     python_arch_bits, _ = platform.architecture()
     if python_arch_bits == "64bit":
         pf_path_x64 = os.environ["ProgramFiles"]
@@ -313,8 +328,9 @@ def find_msvc_dev_cmd():
         vswhere_path = vswhere_path_x64
     else:
         raise Exception("Unable to find vswhere.exe")
+    msvc_arch_component_suffix = ARCH_TO_MSVC_COMPONENT_ARCH_MAP[target_arch]
     vswhere_args = (vswhere_path, "-latest", "-products", "*", "-requires",
-                    "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+                    "Microsoft.VisualStudio.Component.VC.Tools." + msvc_arch_component_suffix,
                     "-property", "installationPath")
     vs_dir = subprocess.check_output(vswhere_args).decode("utf8").strip()
     vsdevcmd_path = os.path.join(vs_dir, "Common7", "Tools", "vsdevcmd.bat")
@@ -323,14 +339,10 @@ def find_msvc_dev_cmd():
     return vsdevcmd_path
 
 
-def activate_msvc_toolchain(arch: Arch):
-    arch_to_dev_cmd_arch = {
-        Arch.X64: "x64",
-        Arch.X86: "x86"
-    }
-    dev_cmd_target_arch = arch_to_dev_cmd_arch[arch]
-    dev_cmd_host_arch = arch_to_dev_cmd_arch[get_host_arch()]
-    dev_cmd_path = find_msvc_dev_cmd()
+def activate_msvc_toolchain(architecture: Arch):
+    dev_cmd_target_arch = ARCH_TO_DEV_CMD_ARCH_MAP[architecture]
+    dev_cmd_host_arch = ARCH_TO_DEV_CMD_ARCH_MAP[get_host_arch()]
+    dev_cmd_path = find_msvc_dev_cmd(architecture)
     # Extract environment variables set by dev cmd.
     dev_cmd_args = ("cmd.exe", "/C", "call", dev_cmd_path, "-no_logo", "-arch=" +
                     dev_cmd_target_arch, "-host_arch=" + dev_cmd_host_arch, "&&", "set")
