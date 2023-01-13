@@ -6,7 +6,7 @@ GO_ARCH_MAP = {
     Arch.ARM64: "arm64",
     Arch.ARM32: "arm",
     Arch.X64: "amd64",
-    Arch.X86: "x86"
+    Arch.X86: "386"
 }
 
 def to_go_architecture(architecture: Arch) -> str:
