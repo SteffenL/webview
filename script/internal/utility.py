@@ -2,6 +2,7 @@ from internal.common import Arch
 
 from dataclasses import dataclass
 from http.client import HTTPResponse
+import os
 import platform
 import shutil
 import subprocess
@@ -40,7 +41,11 @@ def extract_file(file: Union[str, IO[bytes]], destination_path: str):
 
 
 def find_executable(name: str, required: bool=False) -> Union[str, None]:
-    name += ".exe" if platform.system() == "Windows" else ""
+    if platform.system() == "Windows":
+        if not name.endswith(".exe"):
+            name += ".exe"
+    if os.path.isabs(name):
+        return name if os.path.exists(name) else None
     which_exe = "where" if platform.system() == "Windows" else "which"
     with subprocess.Popen((which_exe, name), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
         output, _ = p.communicate()
