@@ -25,9 +25,17 @@ def get_env(workspace: Workspace, toolchain: Toolchain):
     use_quotes = go_version_supports_quoted_params(go_version)
     quote = '"' if use_quotes else ""
 
+    options = workspace.get_options()
     arch = toolchain.get_architecture()
     includes = []
     exe_search_paths = []
+    toolchain = detect_toolchain(arch,
+                                 (ToolchainId.CLANG, ToolchainId.GCC),
+                                 toolchain_prefix=options.toolchain_prefix.get_value(),
+                                 ar_override=options.ar.get_value(),
+                                 cc_override=options.cc.get_value(),
+                                 cxx_override=options.cxx.get_value(),
+                                 ld_override=options.ld.get_value())
 
     if platform.system() == "Windows":
         mswebview2 = workspace.get_target("mswebview2")

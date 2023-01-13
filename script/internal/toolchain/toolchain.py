@@ -8,7 +8,7 @@ from internal.toolchain.msvc import activate_msvc_toolchain, MsvcToolchain
 import os
 import platform
 import subprocess
-from typing import Mapping, Type
+from typing import Mapping, Sequence, Type
 
 
 def activate_toolchain(id: ToolchainEnvironmentId, arch: Arch):
@@ -24,6 +24,7 @@ def activate_toolchain(id: ToolchainEnvironmentId, arch: Arch):
 
 
 def detect_toolchain(architecture: Arch,
+                     whitelist: Sequence[ToolchainId] = None,
                      toolchain_prefix: str = None,
                      ar_override: str = None,
                      cc_override: str = None,
@@ -33,6 +34,7 @@ def detect_toolchain(architecture: Arch,
         raise Exception(
             "Either all toolchain binary overrides or none must be specified")
 
+    whitelist = None if whitelist is None else set(whitelist)
     toolchain_prefix = "" if toolchain_prefix is None else toolchain_prefix
 
     ar: str = None
@@ -73,6 +75,8 @@ def detect_toolchain(architecture: Arch,
     if all([exe is not None for exe in (ar, cc, cxx, ld)]):
         id = detect_compiler_from_exe(cc)
         if id is not None:
+            if whitelist is not None and not id in whitelist:
+                raise Exception(f"Toolchain not allowed: {id.value}")
             return toolchain_types[id](
                 id=id,
                 architecture=architecture,
@@ -109,6 +113,8 @@ def detect_toolchain(architecture: Arch,
         ar, cc, cxx, ld = found
         id = detect_compiler_from_exe(cc)
         if id is not None:
+            if whitelist is not None and not id in whitelist:
+                continue
             return toolchain_types[id](
                 id=id,
                 architecture=architecture,
