@@ -2,8 +2,9 @@ from internal.workspace import Workspace
 from internal.task import Task, TaskPhase, TaskRunner
 from internal.test import Test
 
-from internal.build import FileType, find_sources, Language
+from internal.build import FileType, find_sources, Language, PropertyScope
 from internal.common import Arch
+from internal.go import go_version_supports_quoted_params, parse_go_version_string, to_go_architecture
 from internal.target import get_file_extension_for_target_type, TargetType
 from internal.toolchain.common import Toolchain, ToolchainId
 from internal.toolchain.toolchain import activate_toolchain, detect_toolchain
@@ -11,26 +12,44 @@ from internal.utility import execute_program, get_host_arch
 
 import os
 import platform
-import subprocess
 from typing import Iterable, Mapping
 
 
-def get_env(arch: Arch, toolchain: Toolchain):
+def get_env(workspace: Workspace, toolchain: Toolchain):
+    # Argument quoting only works for Go 1.18 and later.
+    # We therefore conditionally quote arguments in e.g. CGO_CXXFLAGS
+    # and CGO_LDFLAGS based on the version of Go.
+    go_version_string = execute_program(
+        ("go", "version"), pipe_output=True).get_output_string()
+    go_version = parse_go_version_string(go_version_string)
+    use_quotes = go_version_supports_quoted_params(go_version)
+    quote = '"' if use_quotes else ""
+
+    arch = toolchain.get_architecture()
+    includes = []
+    exe_search_paths = []
+
+    if platform.system() == "Windows":
+        mswebview2 = workspace.get_target("mswebview2")
+        includes += mswebview2.get_include_dirs(PropertyScope.EXTERNAL)
+        exe_search_paths.append(workspace.get_lib_dir())
+
+    cxxflags = []
+    cxxflags += tuple(f"{quote}-I{s}{quote}" for s in includes)
+
     env = {}
     env.update(os.environ)
     env.update({
         "CGO_ENABLED": "1",
         "CC": toolchain.get_compile_exe(Language.C),
-        "CXX": toolchain.get_compile_exe(Language.CXX)
+        "CXX": toolchain.get_compile_exe(Language.CXX),
     })
     if arch != Arch.NATIVE:
-        go_arch = {
-            Arch.ARM64: "arm64",
-            Arch.ARM32: "arm",
-            Arch.X64: "amd64",
-            Arch.X86: "x86"
-        }[arch]
-        env["GOARCH"] = go_arch
+        env["GOARCH"] = to_go_architecture(arch)
+    if len(cxxflags) > 0:
+        env["CGO_CXXFLAGS"] = " ".join(cxxflags)
+    if len(exe_search_paths) > 0:
+        env["PATH"] = os.pathsep.join((*env["PATH"].split(os.pathsep), *exe_search_paths))
     return env
 
 
@@ -56,7 +75,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
 
     toolchain = workspace.get_toolchain()
     source_dir = workspace.get_source_dir()
-    env = get_env(toolchain.get_architecture(), toolchain)
+    env = get_env(workspace, toolchain)
 
     # Examples
     examples_dir = os.path.join(source_dir, "examples")
