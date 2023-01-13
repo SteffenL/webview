@@ -130,7 +130,7 @@ def main(args):
     if toolchain_env is not None:
         activate_toolchain(toolchain_env, architecture)
 
-    toolchain = detect_toolchain(architecture=architecture,
+    toolchain = detect_toolchain(architecture,
                                  toolchain_prefix=options.toolchain_prefix.get_value(),
                                  ar_override=options.ar.get_value(),
                                  cc_override=options.cc.get_value(),

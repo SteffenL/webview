@@ -35,10 +35,12 @@ def get_env(workspace: Workspace, toolchain: Toolchain):
         exe_search_paths.append(workspace.get_lib_dir())
 
     cxxflags = []
-    cxxflags += tuple(quote_string(f"-I{s}", quote_char=quote) for s in includes)
+    cxxflags += tuple(quote_string(f"-I{s}",
+                      quote_char=quote) for s in includes)
 
     cc = quote_string(toolchain.get_compile_exe(Language.C), quote_char=quote)
-    cxx = quote_string(toolchain.get_compile_exe(Language.CXX), quote_char=quote)
+    cxx = quote_string(toolchain.get_compile_exe(
+        Language.CXX), quote_char=quote)
 
     env = {}
     env.update(os.environ)
@@ -52,7 +54,8 @@ def get_env(workspace: Workspace, toolchain: Toolchain):
     if len(cxxflags) > 0:
         env["CGO_CXXFLAGS"] = " ".join(cxxflags)
     if len(exe_search_paths) > 0:
-        env["PATH"] = os.pathsep.join((*env["PATH"].split(os.pathsep), *exe_search_paths))
+        env["PATH"] = os.pathsep.join(
+            (*env["PATH"].split(os.pathsep), *exe_search_paths))
     return env
 
 
