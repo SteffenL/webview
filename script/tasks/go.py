@@ -84,6 +84,11 @@ def test_condition(workspace: Workspace):
 
 
 def register(task_runner: TaskRunner, workspace: Workspace):
+    options = workspace.get_options()
+
+    if not options.go_build_examples.get_value() and not options.go_test.get_value():
+        return
+
     build_tasks = task_runner.create_task_collection(
         TaskPhase.COMPILE, concurrent=True)
 
