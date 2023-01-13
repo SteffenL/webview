@@ -21,8 +21,8 @@ ARCH_TO_MSVC_COMPONENT_ARCH_MAP = {
 ARCH_TO_DEV_CMD_ARCH_MAP = {
     Arch.X64: "x64",
     Arch.X86: "x86",
-    Arch.ARM64: "ARM64",
-    Arch.ARM32: "ARM"
+    Arch.ARM64: "arm64",
+    Arch.ARM32: "arm"
 }
 
 
