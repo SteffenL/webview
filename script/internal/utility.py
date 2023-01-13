@@ -45,7 +45,7 @@ def find_executable(name: str, required: bool=False) -> Union[str, None]:
         if not name.endswith(".exe"):
             name += ".exe"
     if os.path.isabs(name):
-        return name if os.path.exists(name) else None
+        return name if os.path.isfile(name) and os.access(name, os.X_OK) else None
     which_exe = "where" if platform.system() == "Windows" else "which"
     with subprocess.Popen((which_exe, name), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
         output, _ = p.communicate()
