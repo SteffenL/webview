@@ -8,6 +8,7 @@ from typing import Callable
 def find_mingw_path(hint: str, arch: Arch):
     mingw64_path = os.path.join(hint, "mingw64")
     mingw32_path = os.path.join(hint, "mingw32")
+    mingw_path = os.path.join(hint, "mingw")
     test_sub_path = os.path.join("bin", "g++.exe")
     if arch == Arch.X86:
         if os.path.exists(os.path.join(mingw32_path, test_sub_path)):
@@ -15,6 +16,8 @@ def find_mingw_path(hint: str, arch: Arch):
     if arch in (Arch.X86, Arch.X64):
         if os.path.exists(os.path.join(mingw64_path, test_sub_path)):
             return mingw64_path
+    if os.path.exists(os.path.join(mingw_path, test_sub_path)):
+        return mingw_path
     return None
 
 

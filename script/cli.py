@@ -17,7 +17,7 @@ def create_arg_parser():
 Unless your MinGW-w64 toolchain has multilib support then you need to
 install both the 64-bit- and 32-bit toolchains for cross-compilation.
 MinGW-w64 is expected to be found in one of the following locations:
- - !SystemDrive!\mingw64 or !SystemDrive!\mingw32
+ - !SystemDrive!\mingw64, !SystemDrive!\mingw32 or !SystemDrive!\mingw
  - !SystemDrive!\msys64\mingw64 or !SystemDrive!\msys64\mingw32
  - Chocolatey
 """ if system == "Windows" else r"""
