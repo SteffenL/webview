@@ -332,7 +332,7 @@ def find_msvc_dev_cmd(target_arch: Arch):
     vswhere_args = (vswhere_path, "-latest", "-products", "*", "-requires",
                     "Microsoft.VisualStudio.Component.VC.Tools." + msvc_arch_component_suffix,
                     "-property", "installationPath")
-    vs_dir = subprocess.check_output(vswhere_args).decode("utf8").strip()
+    vs_dir = subprocess.check_output(vswhere_args, encoding="utf8").strip()
     vsdevcmd_path = os.path.join(vs_dir, "Common7", "Tools", "vsdevcmd.bat")
     if not os.path.exists(vsdevcmd_path):
         raise Exception("Unable to find vsdevcmd.bat")
@@ -347,7 +347,7 @@ def activate_msvc_toolchain(architecture: Arch):
     dev_cmd_args = ("cmd.exe", "/C", "call", dev_cmd_path, "-no_logo", "-arch=" +
                     dev_cmd_target_arch, "-host_arch=" + dev_cmd_host_arch, "&&", "set")
     dev_cmd_output = subprocess.check_output(
-        dev_cmd_args).decode("utf8").strip()
+        dev_cmd_args, encoding="utf8").strip()
     dev_cmd_env = tuple(kv.split("=", 1)
                         for kv in dev_cmd_output.splitlines())
     # Temporarily update the current environment with the variables extracted from dev cmd.

@@ -12,11 +12,10 @@ def check_file(task: Task, exe: str, file_path: str):
     pipe = subprocess.PIPE
     with subprocess.Popen(clang_format_args, stdout=pipe, stderr=pipe) as clang_format:
         git_diff_args = ["git", "diff", "--no-index", "--", file_path, "-"]
-        with subprocess.Popen(git_diff_args, stdin=clang_format.stdout, stdout=pipe, stderr=pipe) as git_diff:
+        with subprocess.Popen(git_diff_args, stdin=clang_format.stdout, stdout=pipe, stderr=pipe, encoding="utf8") as git_diff:
             clang_format.stdout.close()
             output = git_diff.communicate()[0]
             if output:
-                output = output.decode("utf8")
                 task.set_result(output)
                 raise Exception("Code style violation:\n" + output)
 

@@ -136,9 +136,8 @@ def detect_compiler_from_exe(exe_path: str) -> ToolchainId:
     #   -x <language>           Treat subsequent input files as having type <language>
     input_file_path = "nul" if system == "Windows" else "/dev/null"
     args = (exe_path, "-E", "-dM", "-x", "c", input_file_path)
-    with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+    with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf8") as p:
         output, _ = p.communicate()
-        output = output.decode("utf8")
         if "__clang__ " in output:
             return ToolchainId.CLANG
         # Other compilers may also define __GNUC__
