@@ -33,6 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        arch: [x64]
         compiler:
           - { id: gcc, ar: ar, cc: gcc, cxx: g++, ld: ld }
           - { id: clang, ar: llvm-ar, cc: clang, cxx: clang++, ld: ld.lld }
