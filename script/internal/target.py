@@ -43,6 +43,7 @@ class Target():
     _bin_dir: str
     _lib_dir: str
     _obj_dir: str
+    _uses_threads: MutableMapping[PropertyScope, bool]
 
     def __init__(self, workspace: "Workspace", type: TargetType, name: str, language: Language = None):
         self._type = type
@@ -74,6 +75,8 @@ class Target():
         self._bin_dir = None
         self._lib_dir = None
         self._obj_dir = None
+        self._uses_threads = {PropertyScope.INTERNAL: False,
+                              PropertyScope.EXTERNAL: False}
 
     def __hash__(self) -> int:
         return hash((self._type, self._name))
@@ -184,6 +187,11 @@ class Target():
                     self._macos_frameworks[I] + lib._macos_frameworks[E]))
                 self._macos_frameworks[E] = list(dict.fromkeys(
                     self._macos_frameworks[E] + lib._macos_frameworks[E]))
+
+                # Use threads if library uses threads
+                if lib._uses_threads[E]:
+                    self._uses_threads[I] = True
+                    self._uses_threads[E] = True
 
     def get_sources(self) -> Iterable[str]:
         return tuple(self._sources)
@@ -318,6 +326,14 @@ class Target():
 
     def is_condition_met(self):
         return self._condition()
+
+    def is_using_threads(self, scope: PropertyScope):
+        return self._uses_threads[scope]
+
+    def set_uses_threads(self, scope: Union[PropertyScope, Iterable[PropertyScope]] = None):
+        scope = self._normalize_property_scope_list(scope)
+        for s in scope:
+            self._uses_threads[s] = True
 
     def _detect_language_from_sources(self, sources: Iterable[str]) -> Language:
         extensions = {

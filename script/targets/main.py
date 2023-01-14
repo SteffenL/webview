@@ -39,6 +39,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         # Add link libraries to help compilers other than MSVC.
         header_library.add_link_libraries(
             "ole32", "shell32", "shlwapi", "user32")
+        header_library.set_uses_threads()
 
     # Shared library target
     shared_library = workspace.add_target(

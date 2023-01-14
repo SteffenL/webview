@@ -147,6 +147,10 @@ class GccLikeToolchain(Toolchain):
         if system == "Linux" and len(pkgconfig_libs) > 0:
             cflags += pkgconfig_cflags
 
+        # Adding -pthread might be needed with Clang
+        if target.is_using_threads(scope=PropertyScope.INTERNAL):
+            cflags.append("-pthread")
+
         result = []
         for source in target.get_sources():
             params = CompileParams()
@@ -210,6 +214,10 @@ class GccLikeToolchain(Toolchain):
             if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
                 for framework in target.get_macos_frameworks(PropertyScope.INTERNAL):
                     ldflags += ("-framework", framework)
+
+        # Adding -pthread might be needed with Clang
+        if target.is_using_threads(scope=PropertyScope.INTERNAL):
+            ldflags.append("-pthread")
 
         if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
             # Link library directories
