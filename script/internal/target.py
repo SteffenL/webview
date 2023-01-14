@@ -8,7 +8,10 @@ from enum import Enum
 import os
 import platform
 import shutil
-from typing import Callable, Iterable, List, Mapping, MutableMapping, MutableSequence, Sequence, Tuple, Union
+from typing import Callable, Iterable, List, Mapping, MutableMapping, MutableSequence, Sequence, Tuple, TypeVar, Union
+
+
+T = TypeVar("T")
 
 
 class TargetType(Enum):
@@ -50,19 +53,13 @@ class Target():
         self._name = name
         self._language = language
         self._language_standards = dict((k, None) for k in Language)
-        self._include_dirs = {PropertyScope.INTERNAL: [],
-                              PropertyScope.EXTERNAL: []}
-        self._lib_dirs = {PropertyScope.INTERNAL: [],
-                          PropertyScope.EXTERNAL: []}
-        self._link_libs = {PropertyScope.INTERNAL: [],
-                           PropertyScope.EXTERNAL: []}
+        self._include_dirs = self._initialize_scoped([])
+        self._lib_dirs = self._initialize_scoped([])
+        self._link_libs = self._initialize_scoped([])
         self._sources = []
-        self._definitions = {PropertyScope.INTERNAL: {},
-                             PropertyScope.EXTERNAL: {}}
-        self._macos_frameworks = {PropertyScope.INTERNAL: [],
-                                  PropertyScope.EXTERNAL: []}
-        self._pkgconfig_libs = {PropertyScope.INTERNAL: [],
-                                PropertyScope.EXTERNAL: []}
+        self._definitions = self._initialize_scoped({})
+        self._macos_frameworks = self._initialize_scoped([])
+        self._pkgconfig_libs = self._initialize_scoped([])
         self._output_name = None
         self._link_output_name = None
         self._enabled = True
@@ -75,11 +72,14 @@ class Target():
         self._bin_dir = None
         self._lib_dir = None
         self._obj_dir = None
-        self._uses_threads = {PropertyScope.INTERNAL: False,
-                              PropertyScope.EXTERNAL: False}
+        self._uses_threads = self._initialize_scoped(False)
 
     def __hash__(self) -> int:
         return hash((self._type, self._name))
+
+    @staticmethod
+    def _initialize_scoped(default: T) -> MutableMapping[PropertyScope, T]:
+        return {PropertyScope.INTERNAL: default, PropertyScope.EXTERNAL: default}
 
     def get_type(self):
         return self._type
