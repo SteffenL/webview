@@ -1,6 +1,6 @@
 from internal.common import Arch
 from internal.utility import find_executable
-from internal.toolchain.gcc_like import GccLikeToolchain
+from internal.toolchain.gcc_like import arch_to_gcc_machine, gcc_get_machine, GccLikeToolchain
 from internal.toolchain.common import Toolchain, ToolchainBinaries, ToolchainEnvironmentId, ToolchainId
 from internal.toolchain.mingw import activate_mingw_toolchain
 from internal.toolchain.msvc import activate_msvc_toolchain, MsvcToolchain
@@ -100,16 +100,18 @@ def detect_toolchain(architecture: Arch,
 
     for chain_hints in all_chain_hints:
         found = []
-        for exe_hints in chain_hints:
+        for exe_hints_index, exe_hints in enumerate(chain_hints):
             for exe_hint in exe_hints:
                 exe = find_executable(toolchain_prefix + exe_hint)
                 if exe:
                     found.append(exe)
                     break
-                exe = find_executable(exe_hint)
-                if exe:
-                    found.append(exe)
-                    break
+                # Only try non-prefixed exe name if archiver and linker
+                if exe_hints_index in (0, 3):
+                    exe = find_executable(exe_hint)
+                    if exe:
+                        found.append(exe)
+                        break
         if len(found) != len(chain_hints):
             continue
         if any([exe is None for exe in found]):
@@ -119,6 +121,13 @@ def detect_toolchain(architecture: Arch,
         if id is not None:
             if whitelist is not None and not id in whitelist:
                 continue
+            if id != ToolchainId.MSVC:
+                arch_as_gcc_machine = arch_to_gcc_machine(architecture)
+                exe_gcc_machine = gcc_get_machine(cc)
+                if not exe_gcc_machine in arch_as_gcc_machine:
+                    raise Exception("Expected machine reported by executable ({}) to be one of [{}] but it was {}".format(
+                        cc, ", ".join(arch_as_gcc_machine), exe_gcc_machine
+                    ))
             return toolchain_types[id](
                 id=id,
                 architecture=architecture,

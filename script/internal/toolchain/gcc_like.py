@@ -11,6 +11,32 @@ import subprocess
 from typing import List, Sequence
 
 
+ARCH_TO_GCC_MACHINE_MAP = {Arch.ARM32: ("armv7",),
+                           Arch.ARM64: ("aarch64",),
+                           Arch.X64: ("x86_64",),
+                           Arch.X86: ("i686", "x86_64")}
+
+
+GCC_MACHINE_TO_ARCH_MAP = {"armv7": (Arch.ARM32,),
+                           "aarch64": (Arch.ARM64,),
+                           "x86_64": (Arch.X64, Arch.X86),
+                           "i686": (Arch.X86,)}
+
+
+def gcc_get_machine(exe: str) -> str:
+    output = subprocess.check_output((exe, "-dumpmachine"), encoding="utf8")
+    machine = output.strip().split("-")[0]
+    return machine
+
+
+def arch_to_gcc_machine(arch: Arch) -> Sequence[str]:
+    return ARCH_TO_GCC_MACHINE_MAP[arch]
+
+
+def gcc_machine_to_arch(machine: str) -> Sequence[Arch]:
+    return GCC_MACHINE_TO_ARCH_MAP[machine]
+
+
 class GccLikeToolchain(Toolchain):
     _MACOS_TARGET_VERSION = "10.9"
 
