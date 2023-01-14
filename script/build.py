@@ -16,7 +16,7 @@ else:
     from internal.toolchain.toolchain import activate_toolchain, detect_toolchain, Toolchain
     from internal.utility import get_host_arch
     from internal.workspace import Workspace
-    import targets.deps.main
+    import targets.deps
     import targets.main
     import tasks.checks.lint
     import tasks.checks.style
@@ -144,7 +144,7 @@ def main(args):
 
     task_runner = TaskRunner()
 
-    targets.deps.main.register(task_runner, workspace)
+    targets.deps.register(task_runner, workspace)
     targets.main.register(task_runner, workspace)
 
     tasks.go.register(task_runner, workspace)

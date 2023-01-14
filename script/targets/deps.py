@@ -1,6 +1,6 @@
 from internal.build import Language, LanguageStandards, PropertyScope
 from internal.target import TargetType
-from internal.task import Task, TaskPhase, TaskRunner
+from internal.task import Task, TaskCollection, TaskPhase, TaskRunner
 from internal.utility import extract_file, download_file
 from internal.workspace import Workspace
 
@@ -8,7 +8,7 @@ import os
 import platform
 
 
-def register(task_runner: TaskRunner, workspace: Workspace):
+def register_mswebview2(tasks: TaskCollection, workspace: Workspace):
     """Registers the MS WebView2 dependency."""
 
     toolchain = workspace.get_toolchain()
@@ -22,7 +22,8 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     target = workspace.add_target(
         TargetType.SHARED_LIBRARY, "mswebview2")
     target.set_language(Language.CXX, standard=LanguageStandards.CXX17)
-    target.add_include_dirs(os.path.join(root_dir, "build", "native", "include"), scope=PropertyScope.EXTERNAL)
+    target.add_include_dirs(os.path.join(
+        root_dir, "build", "native", "include"), scope=PropertyScope.EXTERNAL)
     target.add_library_dirs(lib_dir, scope=PropertyScope.EXTERNAL)
     target.set_output_name("WebView2Loader")
     target.set_bin_dir(lib_dir)
@@ -45,8 +46,17 @@ def register(task_runner: TaskRunner, workspace: Workspace):
             return False
         return True
 
+    tasks.add_task(Task(fetch,
+                        description="Fetch MS WebView2",
+                        condition=should_fetch))
+
+
+def register(task_runner: TaskRunner, workspace: Workspace):
+    """Registers all dependencies."""
+
     fetch_tasks = task_runner.create_task_collection(
         TaskPhase.FETCH, concurrent=True)
-    fetch_tasks.add_task(Task(fetch,
-                              description="Fetch MS WebView2",
-                              condition=should_fetch))
+
+    system = platform.system()
+    if system == "Windows":
+        register_mswebview2(fetch_tasks, workspace)
