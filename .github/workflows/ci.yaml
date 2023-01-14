@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
+        run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb llvm -y
       - uses: actions/setup-go@v3
         with:
           go-version: '1.13'
