@@ -38,8 +38,8 @@ def get_env(workspace: Workspace, toolchain: Toolchain):
                                  ld_override=options.ld.get_value())
 
     if platform.system() == "Windows":
-        mswebview2 = workspace.get_target("mswebview2")
-        includes += mswebview2.get_include_dirs(PropertyScope.EXTERNAL)
+        header_library = workspace.get_target("library_header")
+        includes += header_library.get_include_dirs(PropertyScope.EXTERNAL)
         exe_search_paths.append(workspace.get_lib_dir())
 
     cxxflags = []
