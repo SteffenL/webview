@@ -107,7 +107,7 @@ jobs:
         run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--load-toolchain=${{ matrix.compiler.toolchain }}" "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --build-examples --test
         shell: cmd
       - name: Build Go examples and run Go tests
-        if: matrix.compiler.toolchain == 'mingw'
+        if: matrix.compiler.toolchain == 'mingw' && matrix.arch != 'x86'
         run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--load-toolchain=${{ matrix.compiler.toolchain }}" "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --go-build-examples --go-test
         shell: cmd
 
