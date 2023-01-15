@@ -11,22 +11,35 @@ import platform
 def create_arg_parser():
     system = platform.system()
 
-    epilog = r"""Compilation with MinGW-w64
-==========================
-
-Unless your MinGW-w64 toolchain has multilib support then you need to
-install both the 64-bit- and 32-bit toolchains for cross-compilation.
-MinGW-w64 is expected to be found in one of the following locations:
- - !SystemDrive!\mingw64, !SystemDrive!\mingw32 or !SystemDrive!\mingw
- - !SystemDrive!\msys64\mingw64 or !SystemDrive!\msys64\mingw32
- - Chocolatey
-""" if system == "Windows" else r"""
-
-Cross-compilation
+    epilog = r"""Cross-compilation
 =================
 
-Your toolchain must have multilib support. In addition you must install
-dependencies for your target architecture onto your system.
+You must install dependencies for your target architecture onto your system.
+Multilib support for x86-64 should be enough for x86/x64 cross-compilation.
+
+You should set the target CPU architecture as a CLI option, and if needed
+you can set a toolchain prefix which will be appended to executable names.
+
+MinGW-w64 on Windows
+====================
+
+MinGW-w64 distributions may differ in support for compilers, host/target CPU
+architectures, cross-compilation and so on. While this script tries hard to
+find a matching toolchain, it may need some assistance.
+
+MinGW-w64 is expected to be found in one of the following locations:
+ - !SystemDrive!\
+ - !SystemDrive!\msys64\
+ - Chocolatey
+
+One of the following subdirectories should exist depending on the target
+architecture:
+ - clangarm64
+ - clang64
+ - clang32
+ - mingw
+ - mingw32
+ - mingw64
 """
     parser = argparse.ArgumentParser(
         prog="build",
