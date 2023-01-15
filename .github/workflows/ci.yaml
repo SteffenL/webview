@@ -73,6 +73,11 @@ jobs:
           - { id: mingw-clang, toolchain: mingw, ar: ar, cc: clang, cxx: clang++, ld: ld }
     steps:
       - uses: actions/checkout@v3
+      - name: Disable LLVM
+        run: |
+          if (Test-Path -Path "${env:ProgramFiles}\LLVM") {
+            Rename-Item -Path "${env:ProgramFiles}\LLVM" -NewName "LLVM.disabled" -Force
+          }
       - name: Install MinGW-w64 for ${{ matrix.arch }} (Chocolatey)
         if: matrix.arch == matrix.arch
         run: choco install mingw "--${{ matrix.arch }}" --force --confirm
