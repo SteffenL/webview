@@ -40,7 +40,6 @@ def find_mingw_path(hint: str, arch: Arch, toolchain: ToolchainId = None):
             continue
         for test_sub_path in test_sub_paths:
             if os.path.exists(os.path.join(c_path, test_sub_path)):
-                print(f"Found MinGW at {c_path}")
                 return c_path
     return None
 
