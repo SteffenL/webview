@@ -11,14 +11,14 @@ import subprocess
 from typing import Mapping, Sequence, Type
 
 
-def activate_toolchain(id: ToolchainEnvironmentId, arch: Arch):
+def activate_toolchain(id: ToolchainEnvironmentId, arch: Arch, toolchain: ToolchainId = None):
     system = platform.system()
     if system == "Windows":
         if id == ToolchainEnvironmentId.MSVC:
             activate_msvc_toolchain(arch)
             return
         if id == ToolchainEnvironmentId.MINGW:
-            activate_mingw_toolchain(arch)
+            activate_mingw_toolchain(arch, toolchain)
             return
     raise Exception("Invalid toolchain environment: " + id.value)
 
