@@ -70,7 +70,7 @@ jobs:
         compiler:
           - { id: msvc, toolchain: msvc, ar: lib, cc: cl, cxx: cl, ld: link }
           - { id: mingw-gcc, toolchain: mingw, ar: ar, cc: gcc, cxx: g++, ld: ld }
-          - { id: mingw-clang, toolchain: mingw, ar: llvm-ar, cc: clang, cxx: clang++, ld: ld.lld }
+          - { id: mingw-clang, toolchain: mingw, ar: ar, cc: clang, cxx: clang++, ld: ld }
     steps:
       - uses: actions/checkout@v3
       - name: Install MinGW-w64 for ${{ matrix.arch }} (Chocolatey)
