@@ -125,6 +125,7 @@ def main(args):
     source_dir = os.path.dirname(script_dir)
     options = pre_process_options(parse_options(args, create_arg_parser))
     architecture = options.target_arch.get_value()
+    build_dir = options.build_dir.get_value(default="build")
 
     toolchain_env = options.load_toolchain.get_value()
     if toolchain_env is not None:
@@ -140,6 +141,7 @@ def main(args):
     workspace = Workspace(options,
                           toolchain,
                           source_dir=source_dir,
+                          build_dir=build_dir,
                           build_type=options.build_type.get_value())
 
     task_runner = TaskRunner()

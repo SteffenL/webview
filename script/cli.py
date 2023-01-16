@@ -60,6 +60,9 @@ architecture:
     group.add_argument("--build",
                        help="Build everything.",
                        action=BoolArgAction)
+    group.add_argument("--build-dir",
+                       help="Alternative build directory.",
+                       action=StrArgAction)
     group.add_argument("--build-library",
                        help="Build library.",
                        action=BoolArgAction)

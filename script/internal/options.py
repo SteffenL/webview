@@ -28,8 +28,8 @@ class Option(Generic[T]):
     def is_explicit(self):
         return self._explicit
 
-    def get_value(self):
-        return self._value
+    def get_value(self, default: T = None):
+        return default if self._value is None else self._value
 
     def set_value(self, value: T):
         self._value = value
@@ -41,6 +41,7 @@ class Options():
     check_style: Option[bool]
     clean: Option[bool]
     build: Option[bool]
+    build_dir: Option[str]
     build_library: Option[bool]
     build_examples: Option[bool]
     build_tests: Option[bool]
