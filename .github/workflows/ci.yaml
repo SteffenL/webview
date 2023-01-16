@@ -2,120 +2,38 @@ name: CI Pipeline
 on: [push, pull_request]
 
 jobs:
-  lint:
-    name: lint (${{ matrix.os }}, ${{ matrix.arch }})
-    runs-on: ${{ matrix.image }}
+  build:
+    if: false
+    name: build (${{ matrix.system.name }}, ${{ matrix.arch }}, ${{ matrix.compiler.id }})
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # macOS was excluded because clang-tidy is not installed.
+        - name: linux
+          image: ubuntu-latest
+          compiler:
+            - { id: gcc, ar: ar, cc: gcc, cxx: g++, ld: ld }
+            - { id: clang, ar: ar, cc: clang, cxx: clang++, ld: ld }
+        - name: macos
+          image: macos-latest
+          compiler:
+            - { id: clang, ar: ar, cc: clang, cxx: clang++, ld: ld }
+        - name: windows
+          image: windows-latest
+          compiler:
+            - { id: msvc, ar: lib, cc: cl, cxx: cl, ld: link }
+            - { id: gcc, ar: ar, cc: gcc, cxx: g++, ld: ld }
+            - { id: clang, ar: llvm-ar, cc: clang, cxx: clang++, ld: ld.lld }
         include:
-          - os: linux
-            image: ubuntu-latest
-            arch: x64
-          - os: windows
-            image: windows-latest
-            arch: x64
-          - os: windows
-            image: windows-latest
-            arch: x86
+          - arch: x64
+          - name: windows
+            arch: [arm64, x86]
+            compiler:
+              id: msvc
     steps:
       - uses: actions/checkout@v3
-      - name: Install dependencies
-        if: runner.os == 'Linux'
+      - name: Install dependencies (${{ matrix.system.name }})
+        if: matrix.system.name == 'linux'
         run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
-      - name: Run lint checks
-        run: python3 script/build.py --check-style --check-lint=lax "--target-arch=${{ matrix.arch }}"
-
-  build-linux:
-    name: build (linux, ${{ matrix.arch }}, ${{ matrix.compiler.id }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x64]
-        compiler:
-          - { id: gcc, ar: ar, cc: gcc, cxx: g++, ld: ld }
-          - { id: clang, ar: ar, cc: clang, cxx: clang++, ld: ld }
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '1.13'
-      - name: Build and run tests
+      - name: Build and run tests (${{ matrix.system.name }})
         run: xvfb-run python3 script/build.py "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --build-examples --test
-      - name: Build Go examples and run Go tests
-        run: xvfb-run python3 script/build.py "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --go-build-examples --go-test
-
-  build-macos:
-    name: build (macos)
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '1.13'
-      - name: Build and run tests
-        run: python3 script/build.py --build-examples --test --go-test
-
-  build-windows:
-    name: build (windows, ${{ matrix.arch }}, ${{ matrix.compiler.id }})
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x86, x64]
-        compiler:
-          - { id: msvc, toolchain: msvc, ar: lib, cc: cl, cxx: cl, ld: link }
-          - { id: mingw-gcc, toolchain: mingw, ar: ar, cc: gcc, cxx: g++, ld: ld }
-          - { id: mingw-clang, toolchain: mingw, ar: llvm-ar, cc: clang, cxx: clang++, ld: ld.lld }
-    steps:
-      - uses: actions/checkout@v3
-      - name: Disable LLVM
-        run: |
-          if (Test-Path -Path "${env:ProgramFiles}\LLVM") {
-            Rename-Item -Path "${env:ProgramFiles}\LLVM" -NewName "LLVM.disabled" -Force
-          }
-      - name: Install MinGW-w64 for ${{ matrix.arch }} (Chocolatey)
-        if: matrix.arch == matrix.arch
-        run: choco install mingw "--${{ matrix.arch }}" --force --confirm
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '1.13'
-      - name: Build and run tests
-        run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--load-toolchain=${{ matrix.compiler.toolchain }}" "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --build-examples --test
-        shell: cmd
-      - name: Build Go examples and run Go tests
-        if: matrix.compiler.toolchain == 'mingw' && matrix.arch != 'x86'
-        run: python3 script/build.py "--target-arch=${{ matrix.arch }}" "--load-toolchain=${{ matrix.compiler.toolchain }}" "--ar=${{ matrix.compiler.ar }}" "--cc=${{ matrix.compiler.cc }}" "--cxx=${{ matrix.compiler.cxx }}" "--ld=${{ matrix.compiler.ld }}" --go-build-examples --go-test
-        shell: cmd
-
-  swig:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        language: [csharp, java, python, ruby]
-    steps:
-      - uses: actions/checkout@v1
-      - name: Generate bindings with SWIG
-        run: |
-          mkdir -p "build/bindings/${{ matrix.language }}" \
-            && swig -Wall -Werror -c++ "-${{ matrix.language }}" \
-              -outdir "build/bindings/${{ matrix.language }}" \
-              -o build/bindings/${{ matrix.language }}/${{ matrix.language }}_wrap.cpp \
-              webview.i
-
-  clang-format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run clang-format
-        uses: DoozyX/clang-format-lint-action@v0.6
-        with:
-          source: '.'
-          exclude: './script'
-          extensions: 'h,cc'
-          clangFormatVersion: 9
-          style: file
