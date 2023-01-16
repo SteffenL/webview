@@ -86,17 +86,18 @@ def detect_toolchain(architecture: Arch,
 
     all_chain_hints = []
     if system == "Darwin":
-        all_chain_hints.append([["ar"], ["clang"], ["clang++"], ["ld64.lld"]])
+        all_chain_hints.append(
+            [["ar"], ["clang"], ["clang++"], ["ld", "ld64.lld"]])
         all_chain_hints.append([["ar"], ["gcc"], ["g++"], ["ld"]])
     elif system == "Linux":
-        all_chain_hints.append([["ar"], ["gcc"], ["g++"], ["gold", "ld"]])
+        all_chain_hints.append([["ar"], ["gcc"], ["g++"], ["ld", "gold"]])
         all_chain_hints.append(
-            [["llvm-ar", "ar"], ["clang"], ["clang++"], ["ld.lld", "ld"]])
+            [["ar", "llvm-ar"], ["clang"], ["clang++"], ["ld", "ld.lld"]])
     elif system == "Windows":
         all_chain_hints.append([["lib"], ["cl"], ["cl"], ["link"]])
         all_chain_hints.append([["ar"], ["gcc"], ["g++"], ["ld"]])
         all_chain_hints.append(
-            [["llvm-ar", "ar"], ["clang"], ["clang++"], ["ld.lld", "ld"]])
+            [["ar", "llvm-ar"], ["clang"], ["clang++"], ["ld", "ld.lld"]])
 
     for chain_hints in all_chain_hints:
         found = []
