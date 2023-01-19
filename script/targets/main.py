@@ -38,7 +38,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         header_library.add_link_libraries(workspace.get_target("mswebview2"))
         # Add link libraries to help compilers other than MSVC.
         header_library.add_link_libraries(
-            "ole32", "shell32", "shlwapi", "user32")
+            "advapi32", "ole32", "shell32", "shlwapi", "user32", "version")
         header_library.set_uses_threads()
 
     # Shared library target
