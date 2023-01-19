@@ -75,3 +75,31 @@ jobs:
       - name: Test
         if: matrix.config.run-tests
         run: ${{ matrix.config.test-cmd }} python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --build-tests=false --test
+
+  swig:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [csharp, java, python, ruby]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Generate bindings with SWIG
+        run: |
+          mkdir -p "build/bindings/${{ matrix.language }}" \
+            && swig -Wall -Werror -c++ "-${{ matrix.language }}" \
+              -outdir "build/bindings/${{ matrix.language }}" \
+              -o build/bindings/${{ matrix.language }}/${{ matrix.language }}_wrap.cpp \
+              webview.i
+
+  clang-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run clang-format
+        uses: DoozyX/clang-format-lint-action@v0.6
+        with:
+          source: '.'
+          exclude: './script'
+          extensions: 'h,cc'
+          clangFormatVersion: 9
+          style: file
