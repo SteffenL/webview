@@ -149,9 +149,19 @@ class MsvcToolchain(Toolchain):
             input_paths.append(input_path)
 
         # Runtime linking
-        # if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-        #    if target.get_runtime_link_method() == RuntimeLinkMethod.STATIC:
-        #        compile_command.append("-static")
+        if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
+            runtime_type = target.get_runtime_link_method()
+            build_type = target.get_build_type()
+            if runtime_type == RuntimeLinkMethod.SHARED:
+                if build_type == BuildType.DEBUG:
+                   ldflags.append("/MDd")
+                elif build_type == BuildType.RELEASE:
+                   ldflags.append("/MD")
+            elif runtime_type == RuntimeLinkMethod.STATIC:
+                if build_type == BuildType.DEBUG:
+                   ldflags.append("/MTd")
+                elif build_type == BuildType.RELEASE:
+                   ldflags.append("/MT")
 
         ldflags.append("/link")
 

@@ -1,5 +1,5 @@
 from internal.build import FileType, find_c_like_source_files, LanguageStandards, PropertyScopes
-from internal.target import TargetType
+from internal.target import RuntimeLinkMethod, TargetType
 from internal.task import Task, TaskPhase, TaskRunner
 from internal.toolchain.common import ToolchainId
 from internal.workspace import Workspace
@@ -52,6 +52,8 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     shared_library.add_definition(
         "WEBVIEW_SHARED", scope=PropertyScopes.PUBLIC)
     shared_library.add_sources("webview.cc")
+    if system == "Windows":
+        shared_library.set_runtime_link(RuntimeLinkMethod.STATIC)
 
     # Static library target
     static_library = workspace.add_target(

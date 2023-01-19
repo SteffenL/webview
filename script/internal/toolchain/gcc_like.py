@@ -201,9 +201,9 @@ class GccLikeToolchain(Toolchain):
                 ldflags.append("-shared")
 
         # Runtime linking
-        # if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-        #    if target.get_runtime_link_method() == RuntimeLinkMethod.STATIC:
-        #        compile_command.append("-static")
+        if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
+           if target.get_runtime_link_method() == RuntimeLinkMethod.STATIC:
+               ldflags.append("-static")
 
         # Frameworks
         if system == "Darwin":
