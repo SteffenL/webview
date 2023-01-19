@@ -81,7 +81,6 @@ class MsvcToolchain(Toolchain):
         return params
 
     def get_compile_params(self, target: Target) -> Sequence[CompileParams]:
-        system = platform.system()
         cflags: List[str] = []
 
         # "/options:strict"
@@ -133,7 +132,6 @@ class MsvcToolchain(Toolchain):
         return result
 
     def get_link_params(self, target: Target) -> LinkParams:
-        system = platform.system()
         ldflags: List[str] = []
         input_paths: List[str] = []
 

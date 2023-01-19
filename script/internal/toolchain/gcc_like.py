@@ -1,6 +1,5 @@
 from internal.build import BuildType, PropertyScope, RuntimeLinkMethod
 from internal.common import Arch
-from internal.utility import get_host_arch
 from internal.target import Target, TargetType
 from internal.toolchain.common import ArchiveParams, CompileParams, Language, LinkParams, Toolchain
 
