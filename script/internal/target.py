@@ -356,12 +356,3 @@ class Target():
             normalized.append(p if os.path.isabs(p) else os.path.join(
                 self._workspace.get_source_dir(), p))
         return normalized
-
-
-def copy_dependencies(target: Target):
-    libs = target.get_link_libraries(PropertyScope.INTERNAL)
-    libs_to_copy: Tuple[Target] = tuple(lib for lib in libs if type(
-        lib) == Target and lib.get_type() == TargetType.SHARED_LIBRARY and lib.get_output_file_path() != target.get_output_file_path())
-    for lib in libs_to_copy:
-        os.makedirs(target.get_output_dir(), exist_ok=True)
-        shutil.copy(lib.get_output_file_path(), target.get_output_dir())
