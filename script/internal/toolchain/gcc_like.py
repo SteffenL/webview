@@ -200,9 +200,6 @@ class GccLikeToolchain(Toolchain):
                 ldflags.append("-dynamiclib")
             else:
                 ldflags.append("-shared")
-        elif target.get_type() == TargetType.STATIC_LIBRARY:
-            # TODO: is this correct?
-            ldflags.append("-static")
 
         # Runtime linking
         # if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
