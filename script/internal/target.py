@@ -48,6 +48,7 @@ class Target():
     _obj_dir: str
     _uses_threads: MutableMapping[PropertyScope, bool]
     _warning_params: MutableMapping[PropertyScope, str]
+    _uses_gui: bool
 
     def __init__(self, workspace: "Workspace", type: TargetType, name: str, language: Language = None):
         self._type = type
@@ -75,6 +76,7 @@ class Target():
         self._obj_dir = None
         self._uses_threads = self._initialize_scoped(False)
         self._warning_params = self._initialize_scoped([])
+        self._uses_gui = False
 
     def __hash__(self) -> int:
         return hash((self._type, self._name))
@@ -359,6 +361,12 @@ class Target():
             new_params = dict((k, None) for k in self._warning_params[s])
             new_params.update((k, None) for k in params)
             self._warning_params[s] = list(new_params.keys())
+
+    def is_using_gui(self):
+        return self._uses_gui
+
+    def set_uses_gui(self):
+        self._uses_gui = True
 
     def _detect_language_from_sources(self, sources: Iterable[str]) -> Language:
         extensions = {

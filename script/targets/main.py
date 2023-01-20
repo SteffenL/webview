@@ -104,6 +104,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         if toolchain_id == ToolchainId.MSVC and file_type == FileType.C_SOURCE:
             # Suppress warnings related to strcat and sprintf.
             example.add_definition("_CRT_SECURE_NO_WARNINGS")
+        example.set_uses_gui()
 
     # Test target
     library_test_program = workspace.add_target(

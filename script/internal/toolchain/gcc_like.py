@@ -192,12 +192,16 @@ class GccLikeToolchain(Toolchain):
                 pkgconfig_ldflags = subprocess.check_output(
                     ("pkg-config", "--libs", *pkgconfig_libs)).decode("utf-8").strip().split(" ")
 
+        # GUI/Console/Library
         if target.get_type() == TargetType.SHARED_LIBRARY:
             if system == "Darwin":
                 # Make dylib for macOS
                 ldflags.append("-dynamiclib")
             else:
                 ldflags.append("-shared")
+        elif target.get_type() == TargetType.EXE:
+            if system == "Windows":
+                ldflags.append("-m" + ("windows" if target.is_using_gui() else "console"))
 
         # Runtime linking
         if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
