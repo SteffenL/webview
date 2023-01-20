@@ -348,9 +348,9 @@ class Target():
     def set_warning_params(self, params: Iterable[str], scope: Union[PropertyScope, Iterable[PropertyScope]] = None):
         scope = self._normalize_property_scope_list(scope)
         for s in scope:
-            new_params = set(self._warning_params[s])
-            new_params.update(params)
-            self._warning_params[s] = list(new_params)
+            new_params = dict((k, None) for k in self._warning_params[s])
+            new_params.update((k, None) for k in params)
+            self._warning_params[s] = list(new_params.keys())
 
     def _detect_language_from_sources(self, sources: Iterable[str]) -> Language:
         extensions = {

@@ -20,11 +20,10 @@ def get_warning_params(toolchain_id: ToolchainId) -> Iterable[str]:
             "/wd4146"
         )
     else:
-        params += ("-Wall", "-Wextra", "-pedantic")
+        params += ("-Wall", "-Wextra", "-pedantic", "-Wno-unused-parameter")
         if platform.system() == "Windows":
             # These warnings are emitted because of WebView2 so suppress them.
-            params += ("-Wno-unknown-pragmas",
-                       "-Wno-unused-parameter", "-Wno-cast-function-type")
+            params += ("-Wno-unknown-pragmas", "-Wno-cast-function-type")
     return params
 
 
