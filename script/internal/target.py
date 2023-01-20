@@ -47,6 +47,7 @@ class Target():
     _lib_dir: str
     _obj_dir: str
     _uses_threads: MutableMapping[PropertyScope, bool]
+    _warning_params: MutableMapping[PropertyScope, str]
 
     def __init__(self, workspace: "Workspace", type: TargetType, name: str, language: Language = None):
         self._type = type
