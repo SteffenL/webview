@@ -73,6 +73,7 @@ class Target():
         self._lib_dir = None
         self._obj_dir = None
         self._uses_threads = self._initialize_scoped(False)
+        self._warning_params = self._initialize_scoped([])
 
     def __hash__(self) -> int:
         return hash((self._type, self._name))
@@ -192,6 +193,12 @@ class Target():
                 if lib._uses_threads[E]:
                     self._uses_threads[I] = True
                     self._uses_threads[E] = True
+
+                # Add internal and external warning parameters from dependency.
+                self._warning_params[I] = list(dict.fromkeys(
+                    self._warning_params[I] + lib._warning_params[E]))
+                self._warning_params[E] = list(dict.fromkeys(
+                    self._warning_params[E] + lib._warning_params[E]))
 
     def get_sources(self) -> Iterable[str]:
         return tuple(self._sources)
@@ -334,6 +341,16 @@ class Target():
         scope = self._normalize_property_scope_list(scope)
         for s in scope:
             self._uses_threads[s] = True
+
+    def get_warning_params(self, scope: PropertyScope) -> Iterable[str]:
+        return self._warning_params[scope]
+
+    def set_warning_params(self, params: Iterable[str], scope: Union[PropertyScope, Iterable[PropertyScope]] = None):
+        scope = self._normalize_property_scope_list(scope)
+        for s in scope:
+            new_params = set(self._warning_params[s])
+            new_params.update(params)
+            self._warning_params[s] = list(new_params)
 
     def _detect_language_from_sources(self, sources: Iterable[str]) -> Language:
         extensions = {

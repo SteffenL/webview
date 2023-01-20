@@ -101,6 +101,9 @@ class GccLikeToolchain(Toolchain):
             pkgconfig_cflags = subprocess.check_output(
                 ("pkg-config", "--cflags", *pkgconfig_libs)).decode("utf-8").strip().split(" ")
 
+        # Warnings
+        cflags += tuple(param for param in target.get_warning_params(PropertyScope.INTERNAL))
+
         # Optimization
         build_type = target.get_build_type()
         if build_type == BuildType.DEBUG:
@@ -123,13 +126,6 @@ class GccLikeToolchain(Toolchain):
         elif arch != Arch.NATIVE:
             if arch in (Arch.X64, Arch.X86):
                 cflags.append({Arch.X64: "-m64", Arch.X86: "-m32"}[arch])
-
-        # Warnings
-        #args += ("-Wall", "-Wextra", "-pedantic")
-        # if system == "Windows":
-        #    # These warnings are emitted because of WebView2 so suppress them.
-        #    args += ("-Wno-unknown-pragmas",
-        #             "-Wno-unused-parameter", "-Wno-cast-function-type")
 
         # Shared libraries need PIC
         if target.get_type() == TargetType.SHARED_LIBRARY:
@@ -169,6 +165,9 @@ class GccLikeToolchain(Toolchain):
         system = platform.system()
         ldflags: List[str] = []
         input_paths: List[str] = []
+
+        # Warnings
+        ldflags += tuple(param for param in target.get_warning_params(PropertyScope.INTERNAL))
 
         # Target platform
         arch = self.get_architecture()

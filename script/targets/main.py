@@ -6,6 +6,20 @@ from internal.workspace import Workspace
 
 import os
 import platform
+from typing import Iterable
+
+
+def get_warning_params(toolchain_id: ToolchainId) -> Iterable[str]:
+    params = []
+    if toolchain_id == ToolchainId.MSVC:
+        params += ("/W4", "/wd4100")
+    else:
+        params += ("-Wall", "-Wextra", "-pedantic")
+        if platform.system() == "Windows":
+            # These warnings are emitted because of WebView2 so suppress them.
+            params += ("-Wno-unknown-pragmas",
+                       "-Wno-unused-parameter", "-Wno-cast-function-type")
+    return params
 
 
 def register(task_runner: TaskRunner, workspace: Workspace):
@@ -27,6 +41,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     header_library.add_include_dirs(source_dir)
     header_library.set_language_standard(c_standard)
     header_library.set_language_standard(cxx_standard)
+    header_library.set_warning_params(get_warning_params(toolchain_id))
     if system == "Darwin":
         header_library.add_definition("WEBVIEW_COCOA")
         header_library.add_macos_frameworks("WebKit")

@@ -86,6 +86,9 @@ class MsvcToolchain(Toolchain):
         # "/options:strict"
         cflags += ("/nologo", "/utf-8")
 
+        # Warnings
+        cflags += tuple(param for param in target.get_warning_params(PropertyScope.INTERNAL))
+
         # Optimization
         build_type = target.get_build_type()
         if build_type == BuildType.DEBUG:
@@ -142,6 +145,9 @@ class MsvcToolchain(Toolchain):
         input_paths: List[str] = []
 
         ldflags += ("/nologo", "/utf-8")
+
+        # Warnings
+        ldflags += tuple(param for param in target.get_warning_params(PropertyScope.INTERNAL))
 
         # Note: Architecture is dictated by toolchain environment.
 
