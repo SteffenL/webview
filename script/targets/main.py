@@ -97,6 +97,9 @@ def register(task_runner: TaskRunner, workspace: Workspace):
             # Use static library for C examples.
             example.add_link_libraries(static_library)
         example.add_sources(source_path)
+        if toolchain_id == ToolchainId.MSVC and file_type == FileType.C_SOURCE:
+            # Suppress warnings related to strcat and sprintf.
+            example.add_definition("_CRT_SECURE_NO_WARNINGS")
 
     # Test target
     library_test_program = workspace.add_target(
