@@ -283,6 +283,7 @@ def activate_msvc_toolchain(architecture: Arch):
     # Temporarily update the current environment with the variables extracted from dev cmd.
     os.environ.update(dev_cmd_env)
 
+
 def get_target_msvc_runtime_link_param(target: Target):
     runtime_type = target.get_runtime_link_method()
     build_type = target.get_build_type()
@@ -296,4 +297,5 @@ def get_target_msvc_runtime_link_param(target: Target):
             return "/MTd"
         elif build_type == BuildType.RELEASE:
             return "/MT"
-    raise Exception("Should not happen: Unable to determine MSVC runtime linking")
+    raise Exception(
+        "Should not happen: Unable to determine MSVC runtime linking")
