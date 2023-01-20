@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: build (${{ matrix.config.os }}, ${{ matrix.config.arch }}, ${{ matrix.config.compiler.id }})
+    name: build (${{ matrix.config.os }}, ${{ matrix.config.arch }}, ${{ matrix.config.compiler.id }}, ${{ matrix.config.runtime-link }}-rt)
     runs-on: ${{ matrix.config.image }}
     strategy:
       fail-fast: false
