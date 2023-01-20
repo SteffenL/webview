@@ -96,11 +96,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Generate bindings with SWIG
-        run: >
-          mkdir -p "build/bindings/${{ matrix.language }}"
-            && swig -Wall -Werror -c++ "-${{ matrix.language }}"
-              -outdir "build/bindings/${{ matrix.language }}"
-              -o build/bindings/${{ matrix.language }}/${{ matrix.language }}_wrap.cpp
+        run: |
+          mkdir -p "build/bindings/${{ matrix.language }}" \
+            && swig -Wall -Werror -c++ "-${{ matrix.language }}" \
+              -outdir "build/bindings/${{ matrix.language }}" \
+              -o build/bindings/${{ matrix.language }}/${{ matrix.language }}_wrap.cpp \
               webview.i
 
   clang-format:
