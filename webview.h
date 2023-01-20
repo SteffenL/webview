@@ -1061,10 +1061,6 @@ using browser_engine = detail::cocoa_wkwebview_engine;
 // ====================================================================
 //
 
-#ifndef WINVER
-#define WINVER 0x0600
-#endif
-
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
