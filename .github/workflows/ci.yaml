@@ -59,7 +59,16 @@ jobs:
           Write-Output "PATH=${env:SystemDrive}\mingw64\bin;${env:PATH}" | Out-File -FilePath $env:GITHUB_ENV -Encoding UTF8 -Append
 
       - name: Build
-        run: python3 script/build.py ${{ matrix.config.load-toolchain-param }} "--ar=${{ matrix.config.compiler.ar }}" "--cc=${{ matrix.config.compiler.cc }}" "--cxx=${{ matrix.config.compiler.cxx }}" "--ld=${{ matrix.config.compiler.ld }}" "--target-arch=${{ matrix.config.arch }}" "--runtime-link=${{ matrix.config.runtime-link }}" --build
+        run: >
+          python3 script/build.py
+          ${{ matrix.config.load-toolchain-param }}
+          "--ar=${{ matrix.config.compiler.ar }}"
+          "--cc=${{ matrix.config.compiler.cc }}"
+          "--cxx=${{ matrix.config.compiler.cxx }}"
+          "--ld=${{ matrix.config.compiler.ld }}"
+          "--target-arch=${{ matrix.config.arch }}"
+          "--runtime-link=${{ matrix.config.runtime-link }}"
+          --build
 
       - name: Upload artifacts (bin)
         uses: actions/upload-artifact@v3
@@ -87,11 +96,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Generate bindings with SWIG
-        run: |
-          mkdir -p "build/bindings/${{ matrix.language }}" \
-            && swig -Wall -Werror -c++ "-${{ matrix.language }}" \
-              -outdir "build/bindings/${{ matrix.language }}" \
-              -o build/bindings/${{ matrix.language }}/${{ matrix.language }}_wrap.cpp \
+        run: >
+          mkdir -p "build/bindings/${{ matrix.language }}"
+            && swig -Wall -Werror -c++ "-${{ matrix.language }}"
+              -outdir "build/bindings/${{ matrix.language }}"
+              -o build/bindings/${{ matrix.language }}/${{ matrix.language }}_wrap.cpp
               webview.i
 
   clang-format:
