@@ -1,4 +1,4 @@
-from internal.build import BuildType
+from internal.build import BuildType, RuntimeLinkType
 from internal.common import Arch
 from internal.cli import BoolArgAction, HelpFormatter, StrArgAction
 from internal.options import LintMode

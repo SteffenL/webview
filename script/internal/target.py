@@ -1,4 +1,4 @@
-from internal.build import BuildType, Language, LanguageStandard, PropertyScope, RuntimeLinkMethod
+from internal.build import BuildType, Language, LanguageStandard, PropertyScope, RuntimeLinkType
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ class Target():
     _output_name: str
     _link_output_name: str
     _enabled: bool
-    _runtime_link_method: RuntimeLinkMethod
+    _runtime_link_method: RuntimeLinkType
     _build_type: BuildType
     _output_name_prefix: str
     _default_scope: Union[PropertyScope, Iterable[PropertyScope]]
@@ -63,7 +63,7 @@ class Target():
         self._output_name = None
         self._link_output_name = None
         self._enabled = True
-        self._runtime_link_method = RuntimeLinkMethod.SHARED
+        self._runtime_link_method = RuntimeLinkType.SHARED
         self._build_type = None
         self._output_name_prefix = None
         self._default_scope = PropertyScope.EXTERNAL if type == TargetType.INTERFACE else PropertyScope.INTERNAL
@@ -296,7 +296,7 @@ class Target():
     def get_runtime_link_method(self):
         return self._runtime_link_method
 
-    def set_runtime_link(self, method: RuntimeLinkMethod):
+    def set_runtime_link(self, method: RuntimeLinkType):
         self._runtime_link_method = method
 
     def get_build_type(self):

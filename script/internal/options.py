@@ -1,4 +1,4 @@
-from internal.build import BuildType
+from internal.build import BuildType, RuntimeLinkType
 from internal.common import Arch
 from internal.toolchain.common import ToolchainEnvironmentId, ToolchainId
 

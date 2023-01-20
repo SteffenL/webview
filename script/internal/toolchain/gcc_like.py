@@ -1,4 +1,4 @@
-from internal.build import BuildType, PropertyScope, RuntimeLinkMethod
+from internal.build import BuildType, PropertyScope, RuntimeLinkType
 from internal.common import Arch
 from internal.target import Target, TargetType
 from internal.toolchain.common import ArchiveParams, CompileParams, Language, LinkParams, Toolchain
@@ -202,7 +202,7 @@ class GccLikeToolchain(Toolchain):
 
         # Runtime linking
         if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-           if target.get_runtime_link_method() == RuntimeLinkMethod.STATIC:
+           if target.get_runtime_link_method() == RuntimeLinkType.STATIC:
                ldflags.append("-static")
 
         # Frameworks

@@ -1,4 +1,4 @@
-from internal.build import BuildType, PropertyScope, RuntimeLinkMethod
+from internal.build import BuildType, PropertyScope, RuntimeLinkType
 from internal.common import Arch
 from internal.utility import get_host_arch
 from internal.target import Target, TargetType
@@ -109,6 +109,12 @@ class MsvcToolchain(Toolchain):
 
         # Warnings
 
+        # Runtime linking
+        runtime_link_param = get_target_msvc_runtime_link_param(target)
+        print("runtime", runtime_link_param)
+        if runtime_link_param is not None:
+            cflags.append(runtime_link_param)
+
         # Definitions
         cflags += tuple("/D" + k if v is None else "/D{}={}".format(k, v)
                         for k, v in target.get_definitions(PropertyScope.INTERNAL).items())
@@ -147,21 +153,6 @@ class MsvcToolchain(Toolchain):
             input_path = os.path.join(
                 target.get_obj_dir(), rel_source_path + ".obj")
             input_paths.append(input_path)
-
-        # Runtime linking
-        if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
-            runtime_type = target.get_runtime_link_method()
-            build_type = target.get_build_type()
-            if runtime_type == RuntimeLinkMethod.SHARED:
-                if build_type == BuildType.DEBUG:
-                   ldflags.append("/MDd")
-                elif build_type == BuildType.RELEASE:
-                   ldflags.append("/MD")
-            elif runtime_type == RuntimeLinkMethod.STATIC:
-                if build_type == BuildType.DEBUG:
-                   ldflags.append("/MTd")
-                elif build_type == BuildType.RELEASE:
-                   ldflags.append("/MT")
 
         ldflags.append("/link")
 
@@ -360,3 +351,18 @@ def activate_msvc_toolchain(architecture: Arch):
                         for kv in dev_cmd_output.splitlines())
     # Temporarily update the current environment with the variables extracted from dev cmd.
     os.environ.update(dev_cmd_env)
+
+def get_target_msvc_runtime_link_param(target: Target):
+    runtime_type = target.get_runtime_link_method()
+    build_type = target.get_build_type()
+    if runtime_type == RuntimeLinkType.SHARED:
+        if build_type == BuildType.DEBUG:
+            return "/MDd"
+        elif build_type == BuildType.RELEASE:
+            return "/MD"
+    elif runtime_type == RuntimeLinkType.STATIC:
+        if build_type == BuildType.DEBUG:
+            return "/MTd"
+        elif build_type == BuildType.RELEASE:
+            return "/MT"
+    raise Exception("Should not happen: Unable to determine MSVC runtime linking")

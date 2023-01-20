@@ -44,7 +44,7 @@ class LanguageStandards:
     CXX20 = LanguageStandard(Language.CXX, 202002)
 
 
-class RuntimeLinkMethod(Enum):
+class RuntimeLinkType(Enum):
     STATIC = "static",
     SHARED = "shared"
 
