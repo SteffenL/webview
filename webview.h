@@ -1065,7 +1065,10 @@ using browser_engine = detail::cocoa_wkwebview_engine;
 #define WINVER 0x0600
 #endif
 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <stdlib.h>
