@@ -300,7 +300,7 @@ static void test_parse_version() {
   v = parse_version("0.0.0.0");
   assert(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
   v = parse_version("-1.-2.-3.-4");
-  assert(v[0] == -1 && v[1] == -2 && v[2] == -3 && v[3] == -4);
+  assert(v[0] == -1U && v[1] == -2U && v[2] == -3U && v[3] == -4U);
   v = parse_version("a.b.c.d");
   assert(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
   v = parse_version("...");
