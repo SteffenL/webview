@@ -12,7 +12,13 @@ from typing import Iterable
 def get_warning_params(toolchain_id: ToolchainId) -> Iterable[str]:
     params = []
     if toolchain_id == ToolchainId.MSVC:
-        params += ("/W4", "/wd4100")
+        params += (
+            "/W4",
+            # warning C4100: '[...]': unreferenced formal parameter
+            "/wd4100",
+            # warning C4146: unary minus operator applied to unsigned type, result still unsigned
+            "/wd4146"
+        )
     else:
         params += ("-Wall", "-Wextra", "-pedantic")
         if platform.system() == "Windows":
