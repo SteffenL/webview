@@ -195,7 +195,7 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
 
 // Get the library's version information.
 // @since 0.10
-WEBVIEW_API const webview_version_info_t *webview_version();
+WEBVIEW_API const webview_version_info_t *webview_version(void);
 
 #ifdef __cplusplus
 }
