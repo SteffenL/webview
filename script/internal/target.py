@@ -203,8 +203,8 @@ class Target():
                 self._warning_params[E] = list(dict.fromkeys(
                     self._warning_params[E] + lib._warning_params[E]))
 
-                # Runtime linking
-                if lib._runtime_link_type[E] is not None:
+                # Set runtime linking from dependency only if not already set.
+                if self._runtime_link_type[I] is None and lib._runtime_link_type[E] is not None:
                     self._runtime_link_type[I] = lib._runtime_link_type[E]
                     self._runtime_link_type[E] = lib._runtime_link_type[E]
 
@@ -309,7 +309,9 @@ class Target():
         return os.path.join(dir, self.get_output_file_name())
 
     def get_runtime_link_method(self, scope: PropertyScope):
-        return self._runtime_link_type.get(scope, RuntimeLinkType.SHARED)
+        result = self._runtime_link_type[scope]
+        result = RuntimeLinkType.SHARED if result is None else result
+        return result
 
     def set_runtime_link(self, method: RuntimeLinkType, scope: Union[PropertyScope, Iterable[PropertyScope]] = None):
         scope = self._normalize_property_scope_list(scope)
