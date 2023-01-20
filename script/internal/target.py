@@ -37,7 +37,7 @@ class Target():
     _output_name: str
     _link_output_name: str
     _enabled: bool
-    _runtime_link_method: RuntimeLinkType
+    _runtime_link_type: MutableMapping[PropertyScope, Union[RuntimeLinkType, None]]
     _build_type: BuildType
     _output_name_prefix: str
     _default_scope: Union[PropertyScope, Iterable[PropertyScope]]
@@ -63,7 +63,7 @@ class Target():
         self._output_name = None
         self._link_output_name = None
         self._enabled = True
-        self._runtime_link_method = RuntimeLinkType.SHARED
+        self._runtime_link_type = self._initialize_scoped(None)
         self._build_type = None
         self._output_name_prefix = None
         self._default_scope = PropertyScope.EXTERNAL if type == TargetType.INTERFACE else PropertyScope.INTERNAL
@@ -200,6 +200,11 @@ class Target():
                 self._warning_params[E] = list(dict.fromkeys(
                     self._warning_params[E] + lib._warning_params[E]))
 
+                # Runtime linking
+                if lib._runtime_link_type[E] is not None:
+                    self._runtime_link_type[I] = lib._runtime_link_type[E]
+                    self._runtime_link_type[E] = lib._runtime_link_type[E]
+
     def get_sources(self) -> Iterable[str]:
         return tuple(self._sources)
 
@@ -300,11 +305,13 @@ class Target():
         dir = self.get_output_dir()
         return os.path.join(dir, self.get_output_file_name())
 
-    def get_runtime_link_method(self):
-        return self._runtime_link_method
+    def get_runtime_link_method(self, scope: PropertyScope):
+        return self._runtime_link_type.get(scope, RuntimeLinkType.SHARED)
 
-    def set_runtime_link(self, method: RuntimeLinkType):
-        self._runtime_link_method = method
+    def set_runtime_link(self, method: RuntimeLinkType, scope: Union[PropertyScope, Iterable[PropertyScope]] = None):
+        scope = self._normalize_property_scope_list(scope)
+        for s in scope:
+            self._runtime_link_type[s] = method
 
     def get_build_type(self):
         return self._workspace.get_build_type() if self._build_type is None else self._build_type

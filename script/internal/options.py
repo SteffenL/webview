@@ -46,6 +46,7 @@ class Options():
     build_examples: Option[bool]
     build_tests: Option[bool]
     build_type: Option[BuildType]
+    runtime_link: Option[RuntimeLinkType]
     test: Option[bool]
     target_arch: Option[Arch]
     toolchain_prefix: Option[str]

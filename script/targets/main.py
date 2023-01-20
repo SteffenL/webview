@@ -47,6 +47,7 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     header_library.set_language_standard(c_standard)
     header_library.set_language_standard(cxx_standard)
     header_library.set_warning_params(get_warning_params(toolchain_id))
+    header_library.set_runtime_link(options.runtime_link.get_value())
     if system == "Darwin":
         header_library.add_definition("WEBVIEW_COCOA")
         header_library.add_macos_frameworks("WebKit")
@@ -72,8 +73,6 @@ def register(task_runner: TaskRunner, workspace: Workspace):
     shared_library.add_definition(
         "WEBVIEW_SHARED", scope=PropertyScopes.PUBLIC)
     shared_library.add_sources("webview.cc")
-    if system == "Windows":
-        shared_library.set_runtime_link(RuntimeLinkType.STATIC)
 
     # Static library target
     static_library = workspace.add_target(

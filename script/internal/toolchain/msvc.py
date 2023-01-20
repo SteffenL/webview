@@ -285,7 +285,7 @@ def activate_msvc_toolchain(architecture: Arch):
 
 
 def get_target_msvc_runtime_link_param(target: Target):
-    runtime_type = target.get_runtime_link_method()
+    runtime_type = target.get_runtime_link_method(scope=PropertyScope.INTERNAL)
     build_type = target.get_build_type()
     if runtime_type == RuntimeLinkType.SHARED:
         if build_type == BuildType.DEBUG:

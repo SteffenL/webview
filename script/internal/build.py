@@ -45,7 +45,7 @@ class LanguageStandards:
 
 
 class RuntimeLinkType(Enum):
-    STATIC = "static",
+    STATIC = "static"
     SHARED = "shared"
 
 

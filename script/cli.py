@@ -80,6 +80,11 @@ architecture:
                        choices=tuple(v.value for v in BuildType),
                        default=BuildType.RELEASE.value,
                        action=StrArgAction)
+    group.add_argument("--runtime-link",
+                       help="Runtime library linking.",
+                       choices=tuple(v.value for v in RuntimeLinkType),
+                       default=RuntimeLinkType.SHARED.value,
+                       action=StrArgAction)
     group.add_argument("--target-arch",
                        help="Build for the target CPU architecture.",
                        choices=(tuple(v.value for v in Arch)),
