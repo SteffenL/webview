@@ -226,9 +226,14 @@ class GccLikeToolchain(Toolchain):
                     if lib.get_type() == TargetType.OBJECT:
                         input_paths.append(lib.get_output_file_path())
                     elif lib.get_type() in (TargetType.SHARED_LIBRARY, TargetType.STATIC_LIBRARY):
-                        # Allow us to take advantage of rpath
-                        ldflags.append("-L" + lib.get_lib_dir())
-                        ldflags.append("-l" + lib.get_link_output_name())
+                        if system == "Windows":
+                            # Add library with its full path on Windows.
+                            # Avoids Clang not finding libraries when using the -L/-l parameters.
+                            input_paths.append(lib.get_output_file_path())
+                        else:
+                            # Allow us to take advantage of rpath on Unix-based systems.
+                            ldflags.append("-L" + lib.get_lib_dir())
+                            ldflags.append("-l" + lib.get_link_output_name())
                     if lib.get_type() in (lib.get_type() == TargetType.OBJECT, TargetType.STATIC_LIBRARY):
                         if target.get_language() == Language.C and lib.get_language() == Language.CXX:
                             ldflags.append("-lc++" if system ==
