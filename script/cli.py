@@ -77,7 +77,7 @@ architecture:
                        action=BoolArgAction)
     group.add_argument("--build-type",
                        help="Build type dictates code optimization.",
-                       choices=(tuple(v.value for v in BuildType)),
+                       choices=tuple(v.value for v in BuildType),
                        default=BuildType.RELEASE.value,
                        action=StrArgAction)
     group.add_argument("--target-arch",
@@ -99,7 +99,7 @@ architecture:
                        action=BoolArgAction)
     group.add_argument("--check-lint",
                        help="Run lint checks (requires clang-tidy).",
-                       choices=(tuple(v.value for v in LintMode)),
+                       choices=tuple(v.value for v in LintMode),
                        nargs="?",
                        default=LintMode.FALSE.value,
                        const=LintMode.STRICT.value,
@@ -129,7 +129,7 @@ architecture:
                            action=BoolArgAction)
         group.add_argument("--load-toolchain",
                            help="Attempt to load a C/C++ toolchain environment.",
-                           choices=(tuple(v.value for v in ToolchainEnvironmentId)))
+                           choices=tuple(v.value for v in ToolchainEnvironmentId))
         group.add_argument("--mswebview2-version",
                            help="MS WebView2 version to use.",
                            default="1.0.1150.38")
