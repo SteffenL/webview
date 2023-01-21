@@ -6,6 +6,7 @@ jobs:
     name: build (${{ matrix.config.os }}, ${{ matrix.config.arch }}, ${{ matrix.config.compiler.id }}, ${{ matrix.config.runtime-link }}-rt)
     runs-on: ${{ matrix.config.image }}
     strategy:
+      fail-fast: false
       matrix:
         config:
           - { os: linux,   image: ubuntu-latest,  compiler: { id: gcc,   ar: ar,  cc: gcc,   cxx: g++,     ld: ld,   toolchain: ''    }, arch: x64,   test-cmd: xvfb-run, run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
@@ -65,6 +66,7 @@ jobs:
     name: go (${{ matrix.config.os }}, ${{ matrix.config.arch }})
     runs-on: ${{ matrix.config.image }}
     strategy:
+      fail-fast: false
       matrix:
         config:
           - { os: linux,   image: ubuntu-latest,  arch: x64,   run-tests: true , test-cmd: xvfb-run }
