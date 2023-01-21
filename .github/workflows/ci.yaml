@@ -64,7 +64,6 @@ jobs:
   go:
     name: go (${{ matrix.config.os }}, ${{ matrix.config.arch }})
     runs-on: ${{ matrix.config.image }}
-    needs: library
     strategy:
       matrix:
         config:
