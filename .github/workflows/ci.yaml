@@ -92,7 +92,6 @@ jobs:
         run: python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --go-build
 
       - name: Test
-        if: matrix.config.run-tests
         run: ${{ matrix.config.test-cmd }} python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --go-build=false --go-test
 
   swig:
