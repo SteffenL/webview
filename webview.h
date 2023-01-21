@@ -1061,6 +1061,12 @@ using browser_engine = detail::cocoa_wkwebview_engine;
 // ====================================================================
 //
 
+#ifdef WINVER
+#error WINVER is already defined
+#else
+#error WINVER is not defined
+#endif
+
 #ifndef WINVER
 #define WINVER 0x0600
 #endif
