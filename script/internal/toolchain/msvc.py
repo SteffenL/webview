@@ -114,7 +114,6 @@ class MsvcToolchain(Toolchain):
 
         # Runtime linking
         runtime_link_param = get_target_msvc_runtime_link_param(target)
-        print("runtime", runtime_link_param)
         if runtime_link_param is not None:
             cflags.append(runtime_link_param)
 
