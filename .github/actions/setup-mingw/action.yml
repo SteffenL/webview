@@ -1,0 +1,38 @@
+name: Set up MinGW-w64
+description: Installs MinGW-w64 on Windows from WinLibs and sets it up for use.
+inputs:
+  arch:
+    description: Architecture
+    required: true
+    default: x64
+runs:
+  using: composite
+  steps:
+      # The MinGW-w64 distribution from https://winlibs.com/ is known to have good compatibility
+      # with the webview library.
+      # The MSVCRT runtime was chosen over UCRT because MSVCRT is available on old versions of Windows
+      # while UCRT has only been shipped with Windows since Windows 10.
+    - run: |
+        $ProgressPreference = "SilentlyContinue"
+        $mingw_urls = @{
+          x64 = "https://github.com/brechtsanders/winlibs_mingw/releases/download/12.2.0-15.0.6-10.0.0-msvcrt-r3/winlibs-x86_64-posix-seh-gcc-12.2.0-llvm-15.0.6-mingw-w64msvcrt-10.0.0-r3.zip";
+          x86 = "https://github.com/brechtsanders/winlibs_mingw/releases/download/12.2.0-15.0.6-10.0.0-msvcrt-r3/winlibs-i686-posix-dwarf-gcc-12.2.0-llvm-15.0.6-mingw-w64msvcrt-10.0.0-r3.zip"
+        }
+        # sha256
+        $mingw_hashes = @{
+          x64 = "183a0f121c63e807d3431abe1ebb701ca91ced10289ef6b59938649239732b45";
+          x86 = "917b496a2871b7d3d6202d81db6e929384874f1018b1f394013f91a3a6a9ff2d"
+        }
+        $arch = "${{ inputs.arch }}"
+        $temp_dir = [System.IO.Path]::GetTempPath()
+        $zip_path = Join-Path $temp_dir ([System.IO.Path]::GetRandomFileName() + ".zip")
+        Invoke-WebRequest -Uri $mingw_urls[$arch] -OutFile $zip_path
+        $expected_hash = $mingw_hashes[$arch]
+        $real_hash = (Get-FileHash -Path $zip_path -Algorithm SHA256).Hash
+        if (-not $expected_hash -ieq $real_hash) {
+          throw "Expected hash of file `"$zip_path`" to be $expected_hash but it was $real_hash."
+        }
+        Expand-Archive -LiteralPath $zip_path -DestinationPath "${env:SystemDrive}\"
+        Write-Output "PATH=${env:SystemDrive}\mingw32\bin;${env:PATH}" | Out-File -FilePath $env:GITHUB_ENV -Encoding UTF8 -Append
+        Write-Output "PATH=${env:SystemDrive}\mingw64\bin;${env:PATH}" | Out-File -FilePath $env:GITHUB_ENV -Encoding UTF8 -Append
+      shell: pwsh
