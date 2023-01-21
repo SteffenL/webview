@@ -2,7 +2,7 @@ name: CI Pipeline
 on: [push, pull_request]
 
 jobs:
-  build:
+  library:
     name: build (${{ matrix.config.os }}, ${{ matrix.config.arch }}, ${{ matrix.config.compiler.id }}, ${{ matrix.config.runtime-link }}-rt)
     runs-on: ${{ matrix.config.image }}
     strategy:
