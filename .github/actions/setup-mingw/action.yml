@@ -33,5 +33,6 @@ runs:
           throw "Expected hash of file `"$zip_path`" to be $expected_hash but it was $real_hash."
         }
         Expand-Archive -LiteralPath $zip_path -DestinationPath "${env:SystemDrive}\"
-        Write-Output "PATH=${env:SystemDrive}\mingw64\bin;${env:SystemDrive}\mingw32\bin;${env:PATH}" | Out-File -FilePath $env:GITHUB_ENV -Encoding UTF8
+        Write-Output "${env:SystemDrive}\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding UTF8
+        Write-Output "${env:SystemDrive}\mingw32\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding UTF8
       shell: pwsh
