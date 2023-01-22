@@ -8,6 +8,7 @@ jobs:
     runs-on: ${{ matrix.config.image }}
     strategy:
       matrix:
+        build-type: [debug, release]
         config:
           - { os: linux,   image: ubuntu-latest,  compiler: { id: gcc,   ar: ar,  cc: gcc,   cxx: g++,     ld: ld,   toolchain: ''    }, arch: x64,   test-cmd: xvfb-run, run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
           - { os: linux,   image: ubuntu-latest,  compiler: { id: clang, ar: ar,  cc: clang, cxx: clang++, ld: ld,   toolchain: ''    }, arch: x64,   test-cmd: xvfb-run, run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
@@ -38,6 +39,7 @@ jobs:
           "--ld=${{ matrix.config.compiler.ld }}"
           "--target-arch=${{ matrix.config.arch }}"
           "--runtime-link=${{ matrix.config.runtime-link }}"
+          "--build-type=${{ matrix.build-type }}"
           --build
 
       - name: Upload artifacts (bin)
@@ -64,6 +66,7 @@ jobs:
     runs-on: ${{ matrix.config.image }}
     strategy:
       matrix:
+        build-type: [debug, release]
         config:
           - { os: macos,   image: macos-latest,   compiler: { id: clang, ar: ar,  cc: clang, cxx: clang++, ld: ld,   toolchain: ''    }, arch: arm64, test-cmd: ''      , run-tests: false, load-toolchain-param: ''                     , runtime-link: 'shared' }
           - { os: windows, image: windows-latest, compiler: { id: msvc,  ar: lib, cc: cl,    cxx: cl,      ld: link, toolchain: msvc  }, arch: arm64, test-cmd: ''      , run-tests: false, load-toolchain-param: '--load-toolchain=msvc', runtime-link: 'shared' }
@@ -96,19 +99,20 @@ jobs:
           "--ld=${{ matrix.config.compiler.ld }}"
           "--target-arch=${{ matrix.config.arch }}"
           "--runtime-link=${{ matrix.config.runtime-link }}"
+          "--build-type=${{ matrix.build-type }}"
           --build
 
       - name: Upload artifacts (bin)
         uses: actions/upload-artifact@v3
         with:
-          name: artifacts-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.compiler.id }}-bin-${{ matrix.config.runtime-link }}-runtime
+          name: artifacts-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.compiler.id }}-bin-${{ matrix.config.runtime-link }}-${{ matrix.config.build-type }}"
           path: build/${{ matrix.config.arch }}/bin
           retention-days: 1
 
       - name: Upload artifacts (lib)
         uses: actions/upload-artifact@v3
         with:
-          name: artifacts-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.compiler.id }}-lib-${{ matrix.config.runtime-link }}-runtime
+          name: artifacts-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.compiler.id }}-lib-${{ matrix.config.runtime-link }}-${{ matrix.config.build-type }}"
           path: build/${{ matrix.config.arch }}/lib
           retention-days: 1
 
