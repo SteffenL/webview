@@ -3,6 +3,7 @@ on: [push, pull_request]
 
 jobs:
   library:
+    needs: clang-format
     name: library (${{ matrix.config.os }}, ${{ matrix.config.arch }}, ${{ matrix.config.compiler.id }}, ${{ matrix.config.runtime-link }}-rt)
     runs-on: ${{ matrix.config.image }}
     strategy:
