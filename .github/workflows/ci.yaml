@@ -116,6 +116,7 @@ jobs:
         run: ${{ matrix.config.test-cmd }} python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --build-tests=false --test
 
   go:
+    needs: library
     name: go (${{ matrix.config.os }}, ${{ matrix.config.arch }})
     runs-on: ${{ matrix.config.image }}
     strategy:
