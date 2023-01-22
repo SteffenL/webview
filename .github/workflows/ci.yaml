@@ -32,6 +32,8 @@ jobs:
       - name: Set up MinGW-w64 (windows)
         if: matrix.config.os == 'windows' && matrix.config.compiler.toolchain == 'mingw'
         uses: ./.github/actions/setup-mingw
+        with:
+          arch: ${{ matrix.config.arch }}
 
       - name: Build
         run: >
