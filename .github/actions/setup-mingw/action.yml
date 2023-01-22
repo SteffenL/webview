@@ -23,6 +23,10 @@ runs:
           x64 = "183a0f121c63e807d3431abe1ebb701ca91ced10289ef6b59938649239732b45";
           x86 = "917b496a2871b7d3d6202d81db6e929384874f1018b1f394013f91a3a6a9ff2d"
         }
+        $mingw_dir_names = @{
+          x64 = "mingw64";
+          x86 = "mingw32"
+        }
         $arch = "${{ inputs.arch }}"
         $temp_dir = [System.IO.Path]::GetTempPath()
         $zip_path = Join-Path $temp_dir ([System.IO.Path]::GetRandomFileName() + ".zip")
@@ -32,7 +36,11 @@ runs:
         if (-not $expected_hash -ieq $real_hash) {
           throw "Expected hash of file `"$zip_path`" to be $expected_hash but it was $real_hash."
         }
+        $mingw_dir_name = $mingw_dir_names[$arch]
+        $mingw_path = "${env:SystemDrive}\${mingw_dir_name}"
+        if (Test-Path -Path $mingw_path) {
+          Remove-Item -Path $mingw_path -Recurse -Force
+        }
         Expand-Archive -LiteralPath $zip_path -DestinationPath "${env:SystemDrive}\"
-        Write-Output "${env:SystemDrive}\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding UTF8
-        Write-Output "${env:SystemDrive}\mingw32\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding UTF8
+        Write-Output "${mingw_path}\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding UTF8
       shell: pwsh
