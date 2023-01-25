@@ -62,8 +62,8 @@ static void test_c_api_bind() {
         +[](const char * /*seq*/, const char * /*req*/, void *arg) {
           ++static_cast<context_t *>(arg)->number;
         };
-    auto context = static_cast<context_t *>(arg);
-    std::string req_(req);
+    const auto *context = static_cast<context_t *>(arg);
+    const std::string req_(req);
     // Bind and increment number.
     if (req_ == "[0]") {
       assert(context->number == 0);
@@ -362,7 +362,8 @@ int main(int argc, char *argv[]) {
     int failed = 0;
     for (const auto &test : all_tests) {
       std::cout << "TEST: " << test.first << std::endl;
-      int status = system((std::string(argv[0]) + " " + test.first).c_str());
+      const int status =
+          system((std::string(argv[0]) + " " + test.first).c_str());
       if (status == 0) {
         std::cout << "  PASS " << std::endl;
       } else {

@@ -16,6 +16,7 @@ Checks: >
     -bugprone-branch-clone,
     -cert-env33-c,
     -clang-analyzer-core.CallAndMessage,
+    -clang-analyzer-nullability.NullablePassedToNonnull,
     -clang-analyzer-optin.cplusplus.UninitializedObject,
     -clang-analyzer-security.insecureAPI.strcpy,
     -clang-diagnostic-unused-parameter,
