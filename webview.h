@@ -719,13 +719,13 @@ enum WKUserScriptInjectionTime : NSInteger {
 enum NSModalResponse : NSInteger { NSModalResponseOK = 1 };
 
 // Convenient conversion of string literals.
-inline id operator"" _cls(const char *s, std::size_t) {
+inline id operator"" _cls(const char *s, std::size_t /*unused*/) {
   return (id)objc_getClass(s);
 }
-inline SEL operator"" _sel(const char *s, std::size_t) {
+inline SEL operator"" _sel(const char *s, std::size_t /*unused*/) {
   return sel_registerName(s);
 }
-inline id operator"" _str(const char *s, std::size_t) {
+inline id operator"" _str(const char *s, std::size_t /*unused*/) {
   return objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel, s);
 }
 
@@ -1037,11 +1037,11 @@ private:
     objc::msg_send<void>(m_window, "setContentView:"_sel, m_webview);
     objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
   }
-  bool m_debug;
-  void *m_parent_window;
-  id m_window;
-  id m_webview;
-  id m_manager;
+  bool m_debug{};
+  void *m_parent_window{};
+  id m_window{};
+  id m_webview{};
+  id m_manager{};
 };
 
 } // namespace detail
