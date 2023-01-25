@@ -2,157 +2,189 @@ name: CI Pipeline
 on: [push, pull_request]
 
 jobs:
+  dependencies:
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        # Add other operating systems here if needed
+        image: [windows-latest]
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: build/.deps
+          key: ${{ runner.os }}-deps
+
+      - name: Fetch dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: python3 script/build.py --fetch-deps
+
+  check-style:
+    needs: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check
+        run: python3 script/build.py --check-style
+
+  check-lint:
+    needs: dependencies
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        image: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies (linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libwebkit2gtk-4.0-dev
+
+      - uses: actions/cache/restore@v3
+        with:
+          path: build/.deps
+          key: ${{ runner.os }}-deps
+
+      - name: Check
+        run: python3 script/build.py --check-lint
+
   library:
-    needs: clang-format
-    name: library (${{ matrix.config.os }}, ${{ matrix.config.arch }}, ${{ matrix.config.compiler.id }}, ${{ matrix.config.runtime-link }}-rt)
+    needs: [check-style, check-lint]
+    name: library (${{ matrix.config.image }}, ${{ matrix.config.arch }}, ${{ matrix.config.compiler }}, ${{ matrix.config.runtime-link }}-rt, ${{ matrix.config.build-type }})
     runs-on: ${{ matrix.config.image }}
     strategy:
       matrix:
-        build-type: [debug, release]
         config:
-          - { os: linux,   image: ubuntu-latest,  compiler: { id: gcc,   ar: ar,  cc: gcc,   cxx: g++,     ld: ld,   toolchain: ''    }, arch: x64,   test-cmd: xvfb-run, run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
-          - { os: linux,   image: ubuntu-latest,  compiler: { id: clang, ar: ar,  cc: clang, cxx: clang++, ld: ld,   toolchain: ''    }, arch: x64,   test-cmd: xvfb-run, run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
-          - { os: macos,   image: macos-latest,   compiler: { id: clang, ar: ar,  cc: clang, cxx: clang++, ld: ld,   toolchain: ''    }, arch: x64,   test-cmd: ''      , run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
-          - { os: windows, image: windows-latest, compiler: { id: msvc,  ar: lib, cc: cl,    cxx: cl,      ld: link, toolchain: msvc  }, arch: x64,   test-cmd: ''      , run-tests: true , load-toolchain-param: '--load-toolchain=msvc', runtime-link: 'shared' }
-          - { os: windows, image: windows-latest, compiler: { id: gcc,   ar: ar,  cc: gcc,   cxx: g++,     ld: ld,   toolchain: mingw }, arch: x64,   test-cmd: ''      , run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
-          - { os: windows, image: windows-latest, compiler: { id: clang, ar: ar,  cc: clang, cxx: clang++, ld: ld,   toolchain: mingw }, arch: x64,   test-cmd: ''      , run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
+          - { os: linux  , image: ubuntu-latest , arch: x64  , compiler: clang, runtime-link: shared, build-type: release, test: true , deliver: false }
+          - { os: linux  , image: ubuntu-latest , arch: x64  , compiler: gcc  , runtime-link: shared, build-type: release, test: true , deliver: false }
+          - { os: macos  , image: macos-latest  , arch: arm64, compiler: clang, runtime-link: shared, build-type: release, test: false, deliver: true  }
+          - { os: macos  , image: macos-latest  , arch: x64  , compiler: clang, runtime-link: shared, build-type: release, test: true , deliver: true  }
+          - { os: windows, image: windows-latest, arch: x64  , compiler: clang, runtime-link: static, build-type: release, test: true , deliver: false }
+          - { os: windows, image: windows-latest, arch: x64  , compiler: gcc  , runtime-link: static, build-type: release, test: true , deliver: false }
+          - { os: windows, image: windows-latest, arch: arm64, compiler: msvc , runtime-link: shared, build-type: debug  , test: false, deliver: true  }
+          - { os: windows, image: windows-latest, arch: arm64, compiler: msvc , runtime-link: shared, build-type: release, test: false, deliver: true  }
+          - { os: windows, image: windows-latest, arch: arm64, compiler: msvc , runtime-link: static, build-type: debug  , test: false, deliver: true  }
+          - { os: windows, image: windows-latest, arch: arm64, compiler: msvc , runtime-link: static, build-type: release, test: false, deliver: true  }
+          - { os: windows, image: windows-latest, arch: x64  , compiler: msvc , runtime-link: shared, build-type: debug  , test: true , deliver: true  }
+          - { os: windows, image: windows-latest, arch: x64  , compiler: msvc , runtime-link: shared, build-type: release, test: true , deliver: true  }
+          - { os: windows, image: windows-latest, arch: x64  , compiler: msvc , runtime-link: static, build-type: debug  , test: true , deliver: true  }
+          - { os: windows, image: windows-latest, arch: x64  , compiler: msvc , runtime-link: static, build-type: release, test: true , deliver: true  }
+          - { os: windows, image: windows-latest, arch: x86  , compiler: msvc , runtime-link: shared, build-type: debug  , test: true , deliver: true  }
+          - { os: windows, image: windows-latest, arch: x86  , compiler: msvc , runtime-link: shared, build-type: release, test: true , deliver: true  }
+          - { os: windows, image: windows-latest, arch: x86  , compiler: msvc , runtime-link: static, build-type: debug  , test: true , deliver: true  }
+          - { os: windows, image: windows-latest, arch: x86  , compiler: msvc , runtime-link: static, build-type: release, test: true , deliver: true  }
+        include:
+          - config: { os: linux }
+            test-cmd: xvfb-run
+          - config: { compiler: gcc }
+            binaries: { ar: ar, cc: gcc, cxx: g++, ld: ld }
+          - config: { compiler: clang }
+            binaries: { ar: ar, cc: clang, cxx: clang++, ld: ld }
+          - config: { os: windows, compiler: clang }
+            binaries: { ar: llvm-ar, cc: clang, cxx: clang++, ld: ld.lld }
+          - config: { compiler: msvc }
+            binaries: { ar: lib, cc: cl, cxx: cl, ld: link }
+            toolchain: msvc
+            load-toolchain-param: --load-toolchain=msvc
+          - config: { os: windows, compiler: clang }
+            toolchain: mingw
+            load-toolchain-param: --load-toolchain=mingw
+          - config: { os: windows, compiler: gcc }
+            toolchain: mingw
+            load-toolchain-param: --load-toolchain=mingw
     steps:
       - uses: actions/checkout@v3
 
       - name: Install dependencies (linux)
-        if: matrix.config.os == 'linux'
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y xvfb libwebkit2gtk-4.0-dev
 
-      - name: Set up MinGW-w64 (windows)
-        if: matrix.config.os == 'windows' && matrix.config.compiler.toolchain == 'mingw'
-        uses: ./.github/actions/setup-mingw
+#      - name: Set up MinGW-w64 (windows)
+#        if: runner.os == 'Windows' && matrix.toolchain == 'mingw'
+#        uses: ./.github/actions/setup-mingw
+#        with:
+#          arch: ${{ matrix.config.arch }}
+
+      - uses: actions/cache/restore@v3
         with:
-          arch: ${{ matrix.config.arch }}
+          path: build/.deps
+          key: ${{ runner.os }}-deps
 
       - name: Build
         run: >
           python3 script/build.py
-          ${{ matrix.config.load-toolchain-param }}
-          "--ar=${{ matrix.config.compiler.ar }}"
-          "--cc=${{ matrix.config.compiler.cc }}"
-          "--cxx=${{ matrix.config.compiler.cxx }}"
-          "--ld=${{ matrix.config.compiler.ld }}"
+          ${{ matrix.load-toolchain-param }}
+          "--ar=${{ matrix.binaries.ar }}"
+          "--cc=${{ matrix.binaries.cc }}"
+          "--cxx=${{ matrix.binaries.cxx }}"
+          "--ld=${{ matrix.binaries.ld }}"
           "--target-arch=${{ matrix.config.arch }}"
           "--runtime-link=${{ matrix.config.runtime-link }}"
-          "--build-type=${{ matrix.build-type }}"
+          "--build-type=${{ matrix.config.build-type }}"
           --build
 
-      - name: Upload artifacts (bin)
-        uses: actions/upload-artifact@v3
-        with:
-          name: artifacts-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.compiler.id }}-bin-${{ matrix.config.runtime-link }}-runtime
-          path: build/${{ matrix.config.arch }}/bin
-          retention-days: 1
-
-      - name: Upload artifacts (lib)
-        uses: actions/upload-artifact@v3
-        with:
-          name: artifacts-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.compiler.id }}-lib-${{ matrix.config.runtime-link }}-runtime
-          path: build/${{ matrix.config.arch }}/lib
-          retention-days: 1
-
       - name: Test
-        if: matrix.config.run-tests
-        run: ${{ matrix.config.test-cmd }} python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --build-tests=false --test
-
-  library-extended:
-    needs: library
-    name: library (${{ matrix.config.os }}, ${{ matrix.config.arch }}, ${{ matrix.config.compiler.id }}, ${{ matrix.config.runtime-link }}-rt)
-    runs-on: ${{ matrix.config.image }}
-    strategy:
-      matrix:
-        build-type: [debug, release]
-        config:
-          - { os: macos,   image: macos-latest,   compiler: { id: clang, ar: ar,  cc: clang, cxx: clang++, ld: ld,   toolchain: ''    }, arch: arm64, test-cmd: ''      , run-tests: false, load-toolchain-param: ''                     , runtime-link: 'shared' }
-          - { os: windows, image: windows-latest, compiler: { id: msvc,  ar: lib, cc: cl,    cxx: cl,      ld: link, toolchain: msvc  }, arch: arm64, test-cmd: ''      , run-tests: false, load-toolchain-param: '--load-toolchain=msvc', runtime-link: 'shared' }
-          - { os: windows, image: windows-latest, compiler: { id: msvc,  ar: lib, cc: cl,    cxx: cl,      ld: link, toolchain: msvc  }, arch: arm64, test-cmd: ''      , run-tests: false, load-toolchain-param: '--load-toolchain=msvc', runtime-link: 'static' }
-          - { os: windows, image: windows-latest, compiler: { id: msvc,  ar: lib, cc: cl,    cxx: cl,      ld: link, toolchain: msvc  }, arch: x64,   test-cmd: ''      , run-tests: true , load-toolchain-param: '--load-toolchain=msvc', runtime-link: 'static' }
-          - { os: windows, image: windows-latest, compiler: { id: msvc,  ar: lib, cc: cl,    cxx: cl,      ld: link, toolchain: msvc  }, arch: x86,   test-cmd: ''      , run-tests: true , load-toolchain-param: '--load-toolchain=msvc', runtime-link: 'shared' }
-          - { os: windows, image: windows-latest, compiler: { id: msvc,  ar: lib, cc: cl,    cxx: cl,      ld: link, toolchain: msvc  }, arch: x86,   test-cmd: ''      , run-tests: true , load-toolchain-param: '--load-toolchain=msvc', runtime-link: 'static' }
-          - { os: windows, image: windows-latest, compiler: { id: gcc,   ar: ar,  cc: gcc,   cxx: g++,     ld: ld,   toolchain: mingw }, arch: x86,   test-cmd: ''      , run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
-          - { os: windows, image: windows-latest, compiler: { id: clang, ar: ar,  cc: clang, cxx: clang++, ld: ld,   toolchain: mingw }, arch: x86,   test-cmd: ''      , run-tests: true , load-toolchain-param: ''                     , runtime-link: 'shared' }
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install dependencies (linux)
-        if: matrix.config.os == 'linux'
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y xvfb libwebkit2gtk-4.0-dev
-
-      - name: Set up MinGW-w64 (windows)
-        if: matrix.config.os == 'windows' && matrix.config.compiler.toolchain == 'mingw'
-        uses: ./.github/actions/setup-mingw
-        with:
-          arch: ${{ matrix.config.arch }}
-
-      - name: Build
+        if: matrix.config.test
         run: >
+          ${{ matrix.test-cmd }}
           python3 script/build.py
-          ${{ matrix.config.load-toolchain-param }}
-          "--ar=${{ matrix.config.compiler.ar }}"
-          "--cc=${{ matrix.config.compiler.cc }}"
-          "--cxx=${{ matrix.config.compiler.cxx }}"
-          "--ld=${{ matrix.config.compiler.ld }}"
           "--target-arch=${{ matrix.config.arch }}"
-          "--runtime-link=${{ matrix.config.runtime-link }}"
-          "--build-type=${{ matrix.build-type }}"
-          --build
+          --build-tests=false
+          --test
 
-      - name: Upload artifacts (bin)
+      - name: Prepare artifacts
+        if: matrix.config.deliver
+        run: |
+          artifacts_dir=".artifacts/${{ matrix.config.os }}/${{ matrix.config.compiler }}/${{ matrix.config.runtime-link }}_runtime/${{ matrix.config.build-type }}"
+          mkdir -p "${artifacts_dir}"
+          rm -rf "build/${{ matrix.config.arch }}/obj"
+          mv "build/${{ matrix.config.arch }}" "${artifacts_dir}/"
+        shell: bash
+
+      - name: Upload artifacts
+        if: matrix.config.deliver
         uses: actions/upload-artifact@v3
         with:
-          name: artifacts-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.compiler.id }}-bin-${{ matrix.config.runtime-link }}-${{ matrix.config.build-type }}"
-          path: build/${{ matrix.config.arch }}/bin
+          name: artifacts-${{ matrix.config.os }}-${{ matrix.config.compiler }}
+          path: .artifacts
           retention-days: 1
 
-      - name: Upload artifacts (lib)
-        uses: actions/upload-artifact@v3
-        with:
-          name: artifacts-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.compiler.id }}-lib-${{ matrix.config.runtime-link }}-${{ matrix.config.build-type }}"
-          path: build/${{ matrix.config.arch }}/lib
-          retention-days: 1
-
-      - name: Test
-        if: matrix.config.run-tests
-        run: ${{ matrix.config.test-cmd }} python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --build-tests=false --test
-
-  go:
-    needs: library
-    name: go (${{ matrix.config.os }}, ${{ matrix.config.arch }})
-    runs-on: ${{ matrix.config.image }}
-    strategy:
-      matrix:
-        config:
-          - { os: linux,   image: ubuntu-latest,  arch: x64,   run-tests: true , test-cmd: xvfb-run }
-          - { os: macos,   image: macos-latest,   arch: x64,   run-tests: true , test-cmd: ''       }
-          - { os: windows, image: windows-latest, arch: x64,   run-tests: true , test-cmd: ''       }
-          - { os: windows, image: windows-latest, arch: x86,   run-tests: true , test-cmd: ''       }
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install dependencies (linux)
-        if: matrix.config.os == 'linux'
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y xvfb libwebkit2gtk-4.0-dev
-
-      - name: Set up MinGW-w64 (windows)
-        if: matrix.config.os == 'windows'
-        uses: ./.github/actions/setup-mingw
-        with:
-          arch: ${{ matrix.config.arch }}
-
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '1.13'
-
-      - name: Build
-        run: python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --go-build
-
-      - name: Test
-        run: ${{ matrix.config.test-cmd }} python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --go-build=false --go-test
+#  go:
+#    needs: library
+#    name: go (${{ matrix.config.image }}, ${{ matrix.config.arch }})
+#    runs-on: ${{ matrix.config.image }}
+#    strategy:
+#      matrix:
+#        arch: [x64]
+#        config:
+#          - { image: ubuntu-latest , test-cmd: xvfb-run }
+#          - { image: macos-latest  , test-cmd: ''       }
+#          - { image: windows-latest, test-cmd: ''       }
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - name: Install dependencies (linux)
+#        if: runner.os == 'Linux'
+#        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y xvfb libwebkit2gtk-4.0-dev
+#
+#      - name: Set up MinGW-w64 (windows)
+#        if: runner.os == 'Windows'
+#        uses: ./.github/actions/setup-mingw
+#        with:
+#          arch: ${{ matrix.config.arch }}
+#
+#      - uses: actions/setup-go@v3
+#        with:
+#          go-version: '1.13'
+#
+#      - name: Build
+#        run: python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --go-build
+#
+#      - name: Test
+#        run: ${{ matrix.config.test-cmd }} python3 script/build.py "--target-arch=${{ matrix.config.arch }}" --go-build=false --go-test
 
   swig:
     needs: library
