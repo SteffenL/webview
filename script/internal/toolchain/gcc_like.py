@@ -129,8 +129,8 @@ class GccLikeToolchain(Toolchain):
             if arch in (Arch.X64, Arch.X86):
                 cflags.append({Arch.X64: "-m64", Arch.X86: "-m32"}[arch])
 
-        # Shared libraries need PIC
-        if target.get_type() == TargetType.SHARED_LIBRARY:
+        # Shared libraries need PIC on Unix-based systems
+        if system != "Windows" and target.get_type() == TargetType.SHARED_LIBRARY:
             cflags.append("-fPIC")
 
         # Definitions
