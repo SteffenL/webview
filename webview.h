@@ -600,7 +600,7 @@ public:
       GdkGeometry g;
       g.min_width = g.max_width = width;
       g.min_height = g.max_height = height;
-      GdkWindowHints h =
+      const GdkWindowHints h =
           (hints == WEBVIEW_HINT_MIN ? GDK_HINT_MIN_SIZE : GDK_HINT_MAX_SIZE);
       // This defines either MIN_SIZE, or MAX_SIZE, but not both:
       gtk_window_set_geometry_hints(GTK_WINDOW(m_window), nullptr, &g, h);
