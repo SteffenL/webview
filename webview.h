@@ -1093,7 +1093,7 @@ using msg_cb_t = std::function<void(const std::string)>;
 // Converts a narrow (UTF-8-encoded) string into a wide (UTF-16-encoded) string.
 inline std::wstring widen_string(const std::string &input) {
   if (input.empty()) {
-    return std::wstring();
+    return {};
   }
   UINT cp = CP_UTF8;
   DWORD flags = MB_ERR_INVALID_CHARS;
@@ -1103,19 +1103,19 @@ inline std::wstring widen_string(const std::string &input) {
       MultiByteToWideChar(cp, flags, input_c, input_length, nullptr, 0);
   if (required_length > 0) {
     std::wstring output(static_cast<std::size_t>(required_length), L'\0');
-    if (MultiByteToWideChar(cp, flags, input_c, input_length, &output[0],
+    if (MultiByteToWideChar(cp, flags, input_c, input_length, output.data(),
                             required_length) > 0) {
       return output;
     }
   }
   // Failed to convert string from UTF-8 to UTF-16
-  return std::wstring();
+  return {};
 }
 
 // Converts a wide (UTF-16-encoded) string into a narrow (UTF-8-encoded) string.
 inline std::string narrow_string(const std::wstring &input) {
   if (input.empty()) {
-    return std::string();
+    return {};
   }
   UINT cp = CP_UTF8;
   DWORD flags = WC_ERR_INVALID_CHARS;
@@ -1125,13 +1125,13 @@ inline std::string narrow_string(const std::wstring &input) {
                                              nullptr, 0, nullptr, nullptr);
   if (required_length > 0) {
     std::string output(static_cast<std::size_t>(required_length), '\0');
-    if (WideCharToMultiByte(cp, flags, input_c, input_length, &output[0],
+    if (WideCharToMultiByte(cp, flags, input_c, input_length, output.data(),
                             required_length, nullptr, nullptr) > 0) {
       return output;
     }
   }
   // Failed to convert string from UTF-16 to UTF-8
-  return std::string();
+  return {};
 }
 
 // Parses a version string with 1-4 integral components, e.g. "1.2.3.4".
