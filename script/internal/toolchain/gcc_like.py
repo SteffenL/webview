@@ -104,7 +104,7 @@ class GccLikeToolchain(Toolchain):
                 ("pkg-config", "--cflags", *pkgconfig_libs)).decode("utf-8").strip().split(" ")
 
         if system == "Darwin":
-            macos_sdk_path = subprocess.check_output(("xcrun", "--show-sdk-path", "--sdk", "macosx"))
+            macos_sdk_path = subprocess.check_output(("xcrun", "--show-sdk-path", "--sdk", "macosx")).strip()
 
         # Warnings
         cflags += tuple(param for param in target.get_warning_params(PropertyScope.INTERNAL))
