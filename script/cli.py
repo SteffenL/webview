@@ -127,14 +127,14 @@ architecture:
     group.add_argument("--go-test",
                        help="Run Go tests.",
                        action=BoolArgAction)
+    group.add_argument("--fetch-deps",
+                        help="Fetch library dependencies. Implied when building and linting.",
+                        action=BoolArgAction)
     group.add_argument("--target-triplet",
                        help="Clang target triplet.",
                        action=StrArgAction)
 
     if system == "Windows":
-        group.add_argument("--fetch-deps",
-                           help="Fetch library dependencies. Implied when building and linting.",
-                           action=BoolArgAction)
         group.add_argument("--load-toolchain",
                            help="Attempt to load a C/C++ toolchain environment.",
                            choices=tuple(v.value for v in ToolchainEnvironmentId))
