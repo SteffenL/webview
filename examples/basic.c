@@ -9,7 +9,7 @@
 int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine,
                    int nCmdShow) {
 #else
-int main() {
+int main(void) {
 #endif
   webview_t w = webview_create(0, NULL);
   webview_set_title(w, "Basic Example");
