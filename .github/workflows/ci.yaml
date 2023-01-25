@@ -169,16 +169,3 @@ jobs:
               -outdir "build/bindings/${{ matrix.language }}" \
               -o build/bindings/${{ matrix.language }}/${{ matrix.language }}_wrap.cpp \
               webview.i
-
-  clang-format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run clang-format
-        uses: DoozyX/clang-format-lint-action@v0.6
-        with:
-          source: '.'
-          exclude: './script'
-          extensions: 'h,cc'
-          clangFormatVersion: 9
-          style: file
