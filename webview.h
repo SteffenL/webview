@@ -688,7 +688,7 @@ namespace objc {
 // throw exceptions.
 template <typename Result, typename Callable, typename... Args>
 Result invoke(Callable callable, Args... args) noexcept {
-  return reinterpret_cast<Result (*)(Args...)>(callable)(args...);
+  return static_cast<Result (*)(Args...)>(callable)(args...);
 }
 
 // Calls objc_msgSend.
