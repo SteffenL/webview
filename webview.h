@@ -469,7 +469,7 @@ inline std::string json_parse(const std::string &s, const std::string &key,
     if (value[0] != '"') {
       return {value, value_sz};
     }
-    int n = json_unescape(value, value_sz, nullptr);
+    const int n = json_unescape(value, value_sz, nullptr);
     if (n > 0) {
       char *decoded = new char[n + 1];
       json_unescape(value, value_sz, decoded);
