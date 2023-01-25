@@ -50,7 +50,7 @@ jobs:
         run: python3 -m pip install clang-tidy~=15.0.0
 
       - name: Load toolchain (windows, msvc)
-        if: os.runner == 'Windows'
+        if: runner.os == 'Windows'
         run: python3 script/build.py --load-toolchain=msvc
 
       - uses: actions/cache/restore@v3
