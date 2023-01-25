@@ -62,7 +62,7 @@ static void test_c_api_bind() {
         +[](const char * /*seq*/, const char * /*req*/, void *arg) {
           ++static_cast<context_t *>(arg)->number;
         };
-    const auto *context = static_cast<context_t *>(arg);
+    auto context = static_cast<context_t *>(arg);
     const std::string req_(req);
     // Bind and increment number.
     if (req_ == "[0]") {
