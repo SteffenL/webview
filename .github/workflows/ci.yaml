@@ -54,8 +54,13 @@ jobs:
           path: build/.deps
           key: ${{ runner.os }}-deps
 
-      - name: Check
+      - name: Check (not windows)
+        if: runner.os != 'Windows'
         run: python3 script/build.py --check-lint
+
+      - name: Check (windows)
+        if: runner.os == 'Windows'
+        run: python3 script/build.py --load-toolchain=msvc --check-lint
 
   library:
     needs: [check-style, check-lint]
