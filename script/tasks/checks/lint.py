@@ -16,8 +16,8 @@ def register(task_runner: TaskRunner, workspace: Workspace):
         return
 
     arch = workspace.get_toolchain().get_architecture()
-    toolchain = GccLikeToolchain(ToolchainId.CLANG, arch, ToolchainBinaries(
-        ar="ar", cc="clang", cxx="clang++"))
+    toolchain = GccLikeToolchain(id=ToolchainId.CLANG, architecture=arch, binaries=ToolchainBinaries(
+        ar="ar", cc="clang", cxx="clang++", ld="ld"))
     tasks = task_runner.create_task_collection(
         TaskPhase.PRE_COMPILE, concurrent=True)
 
