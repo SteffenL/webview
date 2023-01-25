@@ -136,7 +136,8 @@ def main(args):
                                  ar_override=options.ar.get_value(),
                                  cc_override=options.cc.get_value(),
                                  cxx_override=options.cxx.get_value(),
-                                 ld_override=options.ld.get_value())
+                                 ld_override=options.ld.get_value(),
+                                 triplet_override=options.target_triplet.get_value())
 
     workspace = Workspace(options,
                           toolchain,

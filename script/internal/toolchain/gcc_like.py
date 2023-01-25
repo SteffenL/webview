@@ -1,13 +1,13 @@
 from internal.build import BuildType, PropertyScope, RuntimeLinkType
 from internal.common import Arch
 from internal.target import Target, TargetType
-from internal.toolchain.common import ArchiveParams, CompileParams, Language, LinkParams, Toolchain
+from internal.toolchain.common import ArchiveParams, CompileParams, Language, LinkParams, Toolchain, ToolchainId
 
 import math
 import os
 import platform
 import subprocess
-from typing import List, Sequence
+from typing import List, Sequence, Union
 
 
 ARCH_TO_GCC_MACHINE_MAP = {Arch.ARM32: ("armv7",),
@@ -38,9 +38,11 @@ def gcc_machine_to_arch(machine: str) -> Sequence[Arch]:
 
 class GccLikeToolchain(Toolchain):
     _MACOS_TARGET_VERSION = "10.9"
+    _triplet: Union[str, None]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, triplet: str = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._triplet = triplet
 
     def get_compile_exe(self, language: Language):
         if language is None:
@@ -121,8 +123,8 @@ class GccLikeToolchain(Toolchain):
 
         # Target platform
         arch = self.get_architecture()
-        if system == "Darwin":
-            cflags += ("-target", self.get_darwin_target_platform(arch))
+        if self.get_id() == ToolchainId.CLANG:
+            cflags += ("-target", self.get_target_triplet(arch))
         elif arch != Arch.NATIVE:
             if arch in (Arch.X64, Arch.X86):
                 cflags.append({Arch.X64: "-m64", Arch.X86: "-m32"}[arch])
@@ -171,8 +173,8 @@ class GccLikeToolchain(Toolchain):
 
         # Target platform
         arch = self.get_architecture()
-        if system == "Darwin":
-            ldflags += ("-target", self.get_darwin_target_platform(arch))
+        if self.get_id() == ToolchainId.CLANG:
+            ldflags += ("-target", self.get_target_triplet(arch))
         elif arch != Arch.NATIVE:
             if arch in (Arch.X64, Arch.X86):
                 ldflags.append({Arch.X64: "-m64", Arch.X86: "-m32"}[arch])
@@ -313,16 +315,23 @@ class GccLikeToolchain(Toolchain):
             return ".a"
         return super().get_file_name_extension(target_type, system)
 
-    def get_darwin_target_platform(self, architecture: Arch):
+    def get_target_triplet(self, architecture: Arch):
+        if self._triplet is not None:
+            return self._triplet
         system = platform.system()
-        # x86 is unsupported on macOS
-        if system == "Darwin" and architecture != Arch.X86:
-            macos_arch = {Arch.ARM64: "arm64",
-                          Arch.X64: "x86_64"}[architecture]
-            return macos_arch + "-apple-macos" + self._MACOS_TARGET_VERSION
         if system == "Linux":
             linux_arch = {Arch.ARM64: "arm64",
                           Arch.X64: "x86_64", Arch.X86: "i386"}[architecture]
             return linux_arch + "-linux"
+        elif system == "Darwin":
+            # x86 is unsupported on macOS
+            if architecture != Arch.X86:
+                macos_arch = {Arch.ARM64: "arm64",
+                              Arch.X64: "x86_64"}[architecture]
+                return macos_arch + "-apple-macos" + self._MACOS_TARGET_VERSION
+        elif system == "Windows":
+            windows_arch = {Arch.ARM64: "arm64",
+                            Arch.X64: "x86_64", Arch.X86: "i686"}[architecture]
+            return windows_arch + "-w64-windows-gnu"
         raise Exception(
             "Unsupported target system/architecture: {}/{}".format(system, architecture.value))

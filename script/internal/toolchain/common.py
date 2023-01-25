@@ -71,7 +71,7 @@ class Toolchain:
     _architecture: Arch
     _binaries: ToolchainBinaries
 
-    def __init__(self, id: ToolchainId, architecture: Arch, binaries: ToolchainBinaries):
+    def __init__(self, id: ToolchainId, architecture: Arch, binaries: ToolchainBinaries, *args, **kwargs):
         self._id = id
         self._architecture = architecture
         self._binaries = binaries

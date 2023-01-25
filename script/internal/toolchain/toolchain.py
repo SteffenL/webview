@@ -29,7 +29,8 @@ def detect_toolchain(architecture: Arch,
                      ar_override: str = None,
                      cc_override: str = None,
                      cxx_override: str = None,
-                     ld_override: str = None) -> Toolchain:
+                     ld_override: str = None,
+                     triplet_override: str = None) -> Toolchain:
     if any([(exe is None) != (ar_override is None) for exe in (cc_override, cxx_override, ld_override)]):
         raise Exception(
             "Either all toolchain binary overrides or none must be specified")
@@ -80,7 +81,8 @@ def detect_toolchain(architecture: Arch,
             return toolchain_types[id](
                 id=id,
                 architecture=architecture,
-                binaries=ToolchainBinaries(ar=ar, cc=cc, cxx=cxx, ld=ld))
+                binaries=ToolchainBinaries(ar=ar, cc=cc, cxx=cxx, ld=ld),
+                triplet=triplet_override)
 
     system = platform.system()
 

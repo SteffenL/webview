@@ -49,6 +49,7 @@ class Options():
     runtime_link: Option[RuntimeLinkType]
     test: Option[bool]
     target_arch: Option[Arch]
+    target_triplet: Option[str]
     toolchain_prefix: Option[str]
     show_options: Option[bool]
     reformat: Option[bool]

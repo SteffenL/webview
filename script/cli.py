@@ -127,6 +127,9 @@ architecture:
     group.add_argument("--go-test",
                        help="Run Go tests.",
                        action=BoolArgAction)
+    group.add_argument("--target-triplet",
+                       help="Clang target triplet.",
+                       action=StrArgAction)
 
     if system == "Windows":
         group.add_argument("--fetch-deps",
