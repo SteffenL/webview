@@ -203,7 +203,8 @@ class GccLikeToolchain(Toolchain):
                 ldflags.append("-shared")
         elif target.get_type() == TargetType.EXE:
             if system == "Windows":
-                ldflags.append("-m" + ("windows" if target.is_using_gui() else "console"))
+                ldflags.append(
+                    "-m" + ("windows" if target.is_using_gui() else "console"))
 
         # Runtime linking
         if target.get_type() in (TargetType.EXE, TargetType.SHARED_LIBRARY):
