@@ -42,6 +42,7 @@ Checks: >
     -hicpp-vararg,
     -misc-definitions-in-headers,
     -misc-non-private-member-variables-in-classes,
+    -misc-unused-parameters,
     -modernize-avoid-c-arrays,
     -modernize-macro-to-enum,
     -modernize-pass-by-value,
