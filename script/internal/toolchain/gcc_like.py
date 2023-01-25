@@ -103,6 +103,9 @@ class GccLikeToolchain(Toolchain):
             pkgconfig_cflags = subprocess.check_output(
                 ("pkg-config", "--cflags", *pkgconfig_libs)).decode("utf-8").strip().split(" ")
 
+        if system == "Darwin":
+            macos_sdk_path = subprocess.check_output(("xcrun", "--show-sdk-path", "--sdk", "macosx"))
+
         # Warnings
         cflags += tuple(param for param in target.get_warning_params(PropertyScope.INTERNAL))
 
@@ -136,7 +139,10 @@ class GccLikeToolchain(Toolchain):
         # Definitions
         cflags += tuple("-D" + k if v is None else "-D{}={}".format(k, v)
                         for k, v in target.get_definitions(PropertyScope.INTERNAL).items())
+
         # Include directories
+        if system == "Darwin":
+            cflags += ("-isysroot", macos_sdk_path)
         cflags += tuple("-I{}".format(s)
                         for s in target.get_include_dirs(PropertyScope.INTERNAL))
 
