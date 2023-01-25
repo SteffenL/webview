@@ -27,6 +27,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install Clang tools
+        run: python -m pip install clang-format==15
+
       - name: Check
         run: python3 script/build.py --check-style
 
@@ -42,6 +45,9 @@ jobs:
       - name: Install dependencies (linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libwebkit2gtk-4.0-dev
+
+      - name: Install Clang tools
+        run: python -m pip install clang-tidy==15
 
       - uses: actions/cache/restore@v3
         with:
