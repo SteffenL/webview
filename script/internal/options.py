@@ -60,6 +60,7 @@ class Options():
     go_build: Option[bool]
     go_build_examples: Option[bool]
     go_test: Option[bool]
+    max_workers: Option[int]
 
     # Windows
     fetch_deps:  Option[bool]

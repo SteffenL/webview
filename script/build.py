@@ -145,7 +145,7 @@ def main(args):
                           build_dir=build_dir,
                           build_type=options.build_type.get_value())
 
-    task_runner = TaskRunner()
+    task_runner = TaskRunner(max_workers=options.max_workers.get_value())
 
     targets.deps.register(task_runner, workspace)
     targets.main.register(task_runner, workspace)

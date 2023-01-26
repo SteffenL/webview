@@ -40,6 +40,12 @@ class BoolArgAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
+class IntArgAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest + "_set_explicitly", True)
+        setattr(namespace, self.dest, int(values))
+
+
 class HelpFormatter(argparse.HelpFormatter):
     """
     Based on ArgumentDefaultsHelpFormatter and RawDescriptionHelpFormatter from

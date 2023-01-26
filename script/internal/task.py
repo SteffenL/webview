@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 import queue
 import threading
-from typing import Any, Callable, Generic, List, Mapping, Sequence, Tuple, TypeVar
+from typing import Any, Callable, Generic, List, Mapping, Sequence, Tuple, TypeVar, Union
 import uuid
 
 
@@ -151,9 +151,11 @@ class TaskStatus(Enum):
 
 class TaskRunner:
     _collections: Mapping[TaskPhase, List[TaskCollection]]
+    _max_workers: Union[int, None]
 
-    def __init__(self):
+    def __init__(self, max_workers: int = None):
         self._collections = dict((phase, []) for phase in TaskPhase)
+        self._max_workers = max_workers
 
     def execute(self, on_status: Callable[[TaskStatus, str, bool, str, Exception], None] = lambda *_: None):
         shared = TaskWorkShared(
@@ -174,7 +176,7 @@ class TaskRunner:
                 if len(tasks) == 0:
                     continue
                 is_concurrent = collection.is_concurrent()
-                worker_count = None if is_concurrent else 1
+                worker_count = self._max_workers if is_concurrent else 1
                 with ThreadPoolExecutor(max_workers=worker_count) as executor:
                     per_collection = TaskWorkPerCollection(
                         task_count=len(tasks),

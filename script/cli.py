@@ -1,6 +1,6 @@
 from internal.build import BuildType, RuntimeLinkType
 from internal.common import Arch
-from internal.cli import BoolArgAction, HelpFormatter, StrArgAction
+from internal.cli import BoolArgAction, HelpFormatter, IntArgAction, StrArgAction
 from internal.options import LintMode
 from internal.toolchain.common import ToolchainEnvironmentId, ToolchainId
 
@@ -133,6 +133,9 @@ architecture:
     group.add_argument("--target-triplet",
                        help="Clang target triplet.",
                        action=StrArgAction)
+    group.add_argument("--max-workers",
+                       help="Max parallel workers.",
+                       action=IntArgAction)
 
     if system == "Windows":
         group.add_argument("--load-toolchain",
