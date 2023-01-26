@@ -60,7 +60,15 @@ jobs:
 
       - name: Check (windows)
         if: runner.os == 'Windows'
-        run: python3 script/build.py --load-toolchain=mingw --check-lint --max-workers=1
+        #run: python3 script/build.py --load-toolchain=mingw --check-lint --max-workers=1
+        run: >
+          clang-tidy --warnings-as-errors=* webview.cc --
+          -Wall -Wextra -pedantic -Wno-unused-parameter
+          -Wno-unknown-pragmas -Wno-cast-function-type
+          -O2 -std=c++17 -target x86_64-w64-windows-gnu
+          -DWEBVIEW_EDGE -DWEBVIEW_BUILDING -DWEBVIEW_SHARED -I.
+          -Ibuild/.deps/mswebview2/1.0.1150.38/build/native/include
+          -pthread
 
   library:
     needs: [check-style, check-lint]
