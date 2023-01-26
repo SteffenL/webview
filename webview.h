@@ -1175,25 +1175,25 @@ std::wstring get_file_version_string(const std::wstring &file_path) noexcept {
   DWORD info_buffer_length =
       GetFileVersionInfoSizeW(file_path.c_str(), &dummy_handle);
   if (info_buffer_length == 0) {
-    return std::wstring();
+    return {};
   }
   std::vector<char> info_buffer;
   info_buffer.reserve(info_buffer_length);
   if (!GetFileVersionInfoW(file_path.c_str(), 0, info_buffer_length,
                            info_buffer.data())) {
-    return std::wstring();
+    return {};
   }
   auto sub_block = L"\\StringFileInfo\\040904B0\\ProductVersion";
   LPWSTR version = nullptr;
   unsigned int version_length = 0;
   if (!VerQueryValueW(info_buffer.data(), sub_block,
                       reinterpret_cast<LPVOID *>(&version), &version_length)) {
-    return std::wstring();
+    return {};
   }
   if (!version || version_length == 0) {
-    return std::wstring();
+    return {};
   }
-  return std::wstring(version, version_length);
+  return {version, version_length};
 }
 
 // A wrapper around COM library initialization. Calls CoInitializeEx in the
@@ -1340,15 +1340,15 @@ public:
     auto status = RegQueryValueExW(m_handle, name, nullptr, nullptr, nullptr,
                                    &buf_length);
     if (status != ERROR_SUCCESS && status != ERROR_MORE_DATA) {
-      return std::wstring();
+      return {};
     }
     // Read the data.
     std::wstring result(buf_length / sizeof(wchar_t), 0);
-    auto buf = reinterpret_cast<LPBYTE>(&result[0]);
+    auto buf = reinterpret_cast<LPBYTE>(result.data());
     status =
         RegQueryValueExW(m_handle, name, nullptr, nullptr, buf, &buf_length);
     if (status != ERROR_SUCCESS) {
-      return std::wstring();
+      return {};
     }
     // Remove trailing null-characters.
     for (std::size_t length = result.size(); length > 0; --length) {
