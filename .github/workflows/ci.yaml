@@ -60,7 +60,7 @@ jobs:
 
       - name: Check (windows)
         if: runner.os == 'Windows'
-        run: python3 script/build.py --load-toolchain=mingw --check-lint
+        run: python3 script/build.py --load-toolchain=mingw --check-lint --max-workers=1
 
   library:
     needs: [check-style, check-lint]
