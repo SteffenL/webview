@@ -128,8 +128,8 @@ architecture:
                        help="Run Go tests.",
                        action=BoolArgAction)
     group.add_argument("--fetch-deps",
-                        help="Fetch library dependencies. Implied when building and linting.",
-                        action=BoolArgAction)
+                       help="Fetch library dependencies. Implied when building and linting.",
+                       action=BoolArgAction)
     group.add_argument("--target-triplet",
                        help="Clang target triplet.",
                        action=StrArgAction)
