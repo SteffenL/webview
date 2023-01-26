@@ -1961,8 +1961,7 @@ public:
 
   void run() {
     MSG msg;
-    BOOL res;
-    while ((res = GetMessage(&msg, nullptr, 0, 0)) != -1) {
+    while (GetMessage(&msg, nullptr, 0, 0) != -1) {
       if (msg.hwnd) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);

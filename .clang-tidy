@@ -47,6 +47,7 @@ Checks: >
     -misc-no-recursion,
     -misc-non-private-member-variables-in-classes,
     -misc-unused-parameters,
+    -modernize-avoid-bind,
     -modernize-avoid-c-arrays,
     -modernize-macro-to-enum,
     -modernize-pass-by-value,
