@@ -45,7 +45,7 @@ void increment(const char *seq, const char *req, void *arg) {
 int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine,
                    int nCmdShow) {
 #else
-int main() {
+int main(void) {
 #endif
   webview_t w = webview_create(0, NULL);
   context_t context = {.w = w, .count = 0};
