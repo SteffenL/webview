@@ -31,7 +31,7 @@ jobs:
           - config: { os: linux }
             test-cmd: xvfb-run
           - config: { compiler: { id: msvc } }
-            msvc-arch: ${{ matrix.config.arch }}
+            msvc-arch: ${{ config.arch }}
           - config: { arch: x64, compiler: { id: msvc } }
             msvc-arch: amd64
     runs-on: ${{ matrix.config.image }}
