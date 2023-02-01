@@ -1,5 +1,5 @@
 function(fetch_webview2 VERSION)
-    message("Fetching WebView2 ${VERSION}")
+    message(STATUS "Fetching WebView2 ${VERSION}")
     include(FetchContent)
     set(FC_NAME microsoft_web_webview2)
     FetchContent_Declare(${FC_NAME}
