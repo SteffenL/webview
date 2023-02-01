@@ -25,6 +25,12 @@
 #ifndef WEBVIEW_H
 #define WEBVIEW_H
 
+#ifdef __has_include
+#if __has_include("webview/exports.h")
+#include "webview/exports.h"
+#endif
+#endif
+
 #ifndef WEBVIEW_API
 #define WEBVIEW_API extern
 #endif
