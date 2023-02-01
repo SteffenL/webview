@@ -78,8 +78,8 @@ jobs:
         shell: cmd
       - name: Set compiler environment variables
         run: |
-          echo "CC=${{ matrix.config.cc }}" >> ${GITHUB_ENV}
-          echo "CXX=${{ matrix.config.cxx }}" >> ${GITHUB_ENV}
+          echo "CC=${{ matrix.config.binaries.cc }}" >> ${GITHUB_ENV}
+          echo "CXX=${{ matrix.config.binaries.cxx }}" >> ${GITHUB_ENV}
         shell: bash
       - name: Configure build
         run: cmake -G Ninja -B build -S .
