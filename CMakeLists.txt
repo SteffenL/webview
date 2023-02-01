@@ -18,6 +18,7 @@ project(webview
     VERSION "${WEBVIEW_VERSION_MAJOR}.${WEBVIEW_VERSION_MINOR}.${WEBVIEW_VERSION_PATCH}"
     LANGUAGES C CXX)
 
+include(cmake/options.cmake)
 include(cmake/build_support.cmake)
 include(cmake/deps.cmake)
 

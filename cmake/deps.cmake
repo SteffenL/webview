@@ -1,5 +1,3 @@
-option(WEBVIEW_FETCH_DEPS "Fetch dependencies" ON)
-set(WEBVIEW2_VERSION "1.0.1185.39")
 add_library(webview_deps INTERFACE)
 
 if(WIN32)
