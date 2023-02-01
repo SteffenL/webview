@@ -28,8 +28,8 @@ jobs:
           #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: static, build-type: debug  , test: true , deliver: true  }
           #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: static, build-type: release, test: true , deliver: true  }
         include:
-          - config: { os: linux }
-            test-cmd: xvfb-run
+          #- config: { os: linux }
+          #  test-cmd: xvfb-run
           - config: { os: windows }
             toolchain: mingw
           - config: { os: windows, compiler: { id: msvc } }
