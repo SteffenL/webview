@@ -30,10 +30,6 @@ jobs:
         include:
           - config: { os: linux }
             test-cmd: xvfb-run
-          - config: { compiler: { id: msvc } }
-            msvc-arch: ${{ config.arch }}
-          - config: { arch: x64, compiler: { id: msvc } }
-            msvc-arch: amd64
     runs-on: ${{ matrix.config.image }}
     name: library (${{ matrix.config.image }}, ${{ matrix.config.compiler.id }}${{ matrix.config.compiler.version }} ${{ matrix.config.runtime-link }}-rt, ${{ matrix.config.build-type }})
     steps:
@@ -74,7 +70,7 @@ jobs:
             set "vcvarsall_path_x64=%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
             set "vcvarsall_path_x86=%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
             if exist "%vcvarsall_path_x64%" (set "vcvarsall_path=%vcvarsall_path_x64%") else (set "vcvarsall_path=%vcvarsall_path_x86%")
-            call "%vcvarsall_path%" ${{ matrix.msvc-arch }} -vcvars_ver=${{ matrix.config.compiler.version }}
+            call "%vcvarsall_path%" ${{ matrix.config.arch }} -vcvars_ver=${{ matrix.config.compiler.version }}
             for /F "usebackq tokens=1,2 delims==" %%a in (`set`) do echo %%a=%%b>>%GITHUB_ENV%
             goto :eof
         shell: cmd
