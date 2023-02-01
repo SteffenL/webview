@@ -1,6 +1,7 @@
 add_library(webview_deps INTERFACE)
 
 if(WIN32)
+    message(STATUS "WebView2 version: ${WEBVIEW_MSWEBVIEW2_VERSION}")
     if(NOT TARGET WebView2 AND WEBVIEW_FETCH_DEPS)
         include(${CMAKE_CURRENT_LIST_DIR}/webview2.cmake)
         fetch_webview2(${WEBVIEW_MSWEBVIEW2_VERSION})
