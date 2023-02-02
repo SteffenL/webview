@@ -1,6 +1,3 @@
-include(GenerateExportHeader)
-include(GNUInstallDirs)
-
 #
 # Header-only library
 #

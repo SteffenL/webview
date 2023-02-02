@@ -18,6 +18,12 @@ project(webview
     VERSION "${WEBVIEW_VERSION_MAJOR}.${WEBVIEW_VERSION_MINOR}.${WEBVIEW_VERSION_PATCH}"
     LANGUAGES C CXX)
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
+include(CMakePackageConfigHelpers)
+include(GenerateExportHeader)
+include(GNUInstallDirs)
+
 include(cmake/options.cmake)
 include(cmake/build_support.cmake)
 include(cmake/deps.cmake)
@@ -26,9 +32,6 @@ add_subdirectory(core)
 add_subdirectory(examples)
 add_subdirectory(test)
 
-include(CMakePackageConfigHelpers)
-
 write_basic_package_version_file(
     WebviewConfigVersion.cmake
-    COMPATIBILITY SameMajorVersion
-)
+    COMPATIBILITY SameMajorVersion)
