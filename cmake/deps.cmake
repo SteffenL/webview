@@ -2,7 +2,7 @@ add_library(webview_deps INTERFACE)
 
 if(WIN32)
     find_package(WebView2 ${WEBVIEW_MSWEBVIEW2_VERSION} REQUIRED)
-    target_link_libraries(webview_deps INTERFACE WebView2::sdk)
+    target_link_libraries(webview_deps INTERFACE WebView2::loader)
     target_compile_definitions(webview_deps INTERFACE WEBVIEW_EDGE)
     target_compile_features(webview_deps INTERFACE cxx_std_17)
 elseif(APPLE)
