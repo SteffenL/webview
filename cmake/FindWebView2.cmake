@@ -35,20 +35,20 @@ if(WebView2_ROOT)
     find_file(
         WebView2_NUSPEC_PATH
         NAMES Microsoft.Web.WebView2.nuspec
-        HINTS ${WebView2_ROOT})
-    mark_as_advanced(WebView2_NUSPEC_PATH)
+        HINTS ${WebView2_ROOT}
+        NO_CACHE)
 
     find_path(
         WebView2_INCLUDE_DIR
         NAMES WebView2.h
-        HINTS ${NATIVE_DIR}/include)
-    mark_as_advanced(WebView2_INCLUDE_DIR)
+        HINTS ${NATIVE_DIR}/include
+        NO_CACHE)
 
     find_path(
         WebView2_WINRT_INCLUDE_DIR
         NAMES WebView2Interop.h
-        HINTS ${NATIVE_DIR}/include-winrt)
-    mark_as_advanced(WebView2_WINRT_INCLUDE_DIR)
+        HINTS ${NATIVE_DIR}/include-winrt
+        NO_CACHE)
 
     set(WebView2_INCLUDE_DIRS ${WebView2_INCLUDE_DIR} ${WebView2_WINRT_INCLUDE_DIR})
 endif()
