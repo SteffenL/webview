@@ -77,6 +77,12 @@ if(WebView2_FOUND)
             set(LIB_SUBDIR "x64")
         endif()
 
+        add_library(WebView2::loader_s STATIC IMPORTED)
+        target_link_libraries(WebView2::loader_s INTERFACE WebView2::sdk)
+        set_target_properties(WebView2::loader_s PROPERTIES
+            IMPORTED_LOCATION ${NATIVE_DIR}/${LIB_SUBDIR}/WebView2LoaderStatic.lib
+        )
+
         add_library(WebView2::loader SHARED IMPORTED)
         target_link_libraries(WebView2::loader INTERFACE WebView2::sdk)
         set_target_properties(WebView2::loader PROPERTIES
