@@ -1,31 +1,18 @@
-set(WebView2_ROOT CACHE STRING "WebView2 SDK root directory")
-set(WebView2_FETCH_MISSING TRUE CACHE BOOL "Fetch WebView2 SDK if missing")
+# Input variables:
+#   WebView2_ROOT          - WebView2 SDK root directory
+#   WebView2_FETCH_MISSING - Fetch WebView2 SDK if missing
+# Targets:
+#   WebView2::sdk          - WebView2 SDK headers
+#   WebView2::loader       - Shared WebView2 loader
+#   WebView2::loader_s     - Static WebView2 loader
+
+if(NOT DEFINED WebView2_FETCH_MISSING)
+    set(WebView2_FETCH_MISSING TRUE)
+endif()
 
 set(LOG_TAG "FindWebView2: ")
 
-if(WebView2_ROOT)
-    find_file(
-        WebView2_NUSPEC_PATH
-        NAMES Microsoft.Web.WebView2.nuspec
-        HINTS ${WebView2_ROOT})
-    mark_as_advanced(WebView2_NUSPEC_PATH)
-
-    find_path(
-        WebView2_INCLUDE_DIR
-        NAMES WebView2.h
-        HINTS ${WebView2_ROOT}/build/native/include)
-    mark_as_advanced(WebView2_INCLUDE_DIR)
-
-    find_path(
-        WebView2_WINRT_INCLUDE_DIR
-        NAMES WebView2Interop.h
-        HINTS ${WebView2_ROOT}/build/native/include-winrt)
-    mark_as_advanced(WebView2_WINRT_INCLUDE_DIR)
-endif()
-
-set(WebView2_INCLUDE_DIRS ${WebView2_INCLUDE_DIR} ${WebView2_WINRT_INCLUDE_DIR})
-
-if(NOT WebView2_INCLUDE_DIRS AND WebView2_FETCH_MISSING)
+if(NOT WebView2_ROOT AND WebView2_FETCH_MISSING)
     if(NOT DEFINED WebView2_FIND_VERSION)
         message(FATAL_ERROR "${LOG_TAG}Please specify a version.")
     endif()
@@ -38,28 +25,32 @@ if(NOT WebView2_INCLUDE_DIRS AND WebView2_FETCH_MISSING)
     FetchContent_GetProperties(${FC_NAME})
     if(NOT ${FC_NAME}_POPULATED)
         FetchContent_Populate(${FC_NAME})
-        set(WebView2_ROOT ${${FC_NAME}_SOURCE_DIR} FORCE)
-
-        find_file(
-            WebView2_NUSPEC_PATH
-            NAMES Microsoft.Web.WebView2.nuspec
-            HINTS ${WebView2_ROOT})
-        mark_as_advanced(WebView2_NUSPEC_PATH)
-    
-        find_path(
-            WebView2_INCLUDE_DIR
-            NAMES WebView2.h
-            HINTS ${WebView2_ROOT}/build/native/include)
-        mark_as_advanced(WebView2_INCLUDE_DIR)
-    
-        find_path(
-            WebView2_WINRT_INCLUDE_DIR
-            NAMES WebView2Interop.h
-            HINTS ${WebView2_ROOT}/build/native/include-winrt)
-        mark_as_advanced(WebView2_WINRT_INCLUDE_DIR)
-
-        set(WebView2_INCLUDE_DIRS ${WebView2_INCLUDE_DIR} ${WebView2_WINRT_INCLUDE_DIR})
+        set(WebView2_ROOT ${${FC_NAME}_SOURCE_DIR} CACHE PATH "WebView2 SDK root directory" FORCE)
     endif()
+endif()
+
+if(WebView2_ROOT)
+    set(NATIVE_DIR ${WebView2_ROOT}/build/native)
+
+    find_file(
+        WebView2_NUSPEC_PATH
+        NAMES Microsoft.Web.WebView2.nuspec
+        HINTS ${WebView2_ROOT})
+    mark_as_advanced(WebView2_NUSPEC_PATH)
+
+    find_path(
+        WebView2_INCLUDE_DIR
+        NAMES WebView2.h
+        HINTS ${NATIVE_DIR}/include)
+    mark_as_advanced(WebView2_INCLUDE_DIR)
+
+    find_path(
+        WebView2_WINRT_INCLUDE_DIR
+        NAMES WebView2Interop.h
+        HINTS ${NATIVE_DIR}/include-winrt)
+    mark_as_advanced(WebView2_WINRT_INCLUDE_DIR)
+
+    set(WebView2_INCLUDE_DIRS ${WebView2_INCLUDE_DIR} ${WebView2_WINRT_INCLUDE_DIR})
 endif()
 
 if(WebView2_NUSPEC_PATH)
@@ -71,7 +62,7 @@ endif()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
     WebView2
-    REQUIRED_VARS WebView2_INCLUDE_DIR WebView2_WINRT_INCLUDE_DIR
+    REQUIRED_VARS WebView2_ROOT WebView2_INCLUDE_DIRS
     VERSION_VAR WebView2_FOUND_VERSION)
 
 if(WebView2_FOUND)
@@ -89,8 +80,8 @@ if(WebView2_FOUND)
         add_library(WebView2::loader SHARED IMPORTED)
         target_link_libraries(WebView2::loader INTERFACE WebView2::sdk)
         set_target_properties(WebView2::loader PROPERTIES
-            IMPORTED_IMPLIB ${WebView2_ROOT}/${LIB_SUBDIR}/WebView2Loader.dll.lib
-            IMPORTED_LOCATION ${WebView2_ROOT}/${LIB_SUBDIR}/WebView2Loader.dll
+            IMPORTED_IMPLIB ${NATIVE_DIR}/${LIB_SUBDIR}/WebView2Loader.dll.lib
+            IMPORTED_LOCATION ${NATIVE_DIR}/${LIB_SUBDIR}/WebView2Loader.dll
         )
     endif()
 endif()
