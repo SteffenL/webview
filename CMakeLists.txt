@@ -56,4 +56,5 @@ install(
 install(EXPORT webview
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/webview
     NAMESPACE webview::
+    COMPONENT webview_cmake_package
 )

@@ -1,7 +1,7 @@
 include(CTest)
 if(BUILD_TESTING)
     set(TARGET_NAME webview_test)
-    add_executable(${TARGET_NAME} src/webview_test.cc)
+    add_executable(${TARGET_NAME} include/test.h src/webview_test.cc)
     target_include_directories(${TARGET_NAME} PRIVATE include)
     target_link_libraries(${TARGET_NAME} PRIVATE webview_build_support webview_core_header)
     add_test(NAME core_test COMMAND ${TARGET_NAME})

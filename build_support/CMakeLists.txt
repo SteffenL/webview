@@ -29,3 +29,5 @@ target_compile_options(${TARGET_NAME} INTERFACE ${COMPILE_OPTIONS})
 if(MSVC)
     target_compile_definitions(${TARGET_NAME} INTERFACE _CRT_SECURE_NO_WARNINGS)
 endif()
+
+set_target_properties(${TARGET_NAME} PROPERTIES EXPORT_NAME build_support)

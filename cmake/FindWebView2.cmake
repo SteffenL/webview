@@ -6,8 +6,6 @@
 #   WebView2::loader       - Shared WebView2 loader
 #   WebView2::loader_s     - Static WebView2 loader
 
-set(LOG_TAG "FindWebView2: ")
-
 # Set default values for undefined variables.
 if(NOT DEFINED WebView2_FETCH_MISSING)
     set(WebView2_FETCH_MISSING TRUE)
@@ -21,7 +19,7 @@ endif()
 # Download WebView2 SDK if desired.
 if(NOT WebView2_ROOT AND WebView2_FETCH_MISSING)
     if(NOT DEFINED WebView2_FIND_VERSION)
-        message(FATAL_ERROR "${LOG_TAG}Please specify a version.")
+        message(FATAL_ERROR "Please specify a WebView2 SDK version")
     endif()
     include(FetchContent)
     set(FC_NAME microsoft_web_webview2)

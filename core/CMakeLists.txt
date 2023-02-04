@@ -9,7 +9,7 @@ endif()
 #
 
 set(TARGET_NAME_BASE webview_core_base)
-add_library(${TARGET_NAME_BASE} INTERFACE)
+add_library(${TARGET_NAME_BASE} INTERFACE include/webview.h include/webview/webview.h)
 add_library(${PROJECT_NAME}::core_base ALIAS ${TARGET_NAME_BASE})
 target_compile_features(${TARGET_NAME_BASE} INTERFACE cxx_std_11)
 target_compile_definitions(${TARGET_NAME_BASE} INTERFACE
@@ -20,6 +20,7 @@ target_include_directories(${TARGET_NAME_BASE} INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+set_target_properties(${TARGET_NAME_BASE} PROPERTIES EXPORT_NAME core_base)
 
 # Third party libraries
 if(WIN32)
@@ -50,7 +51,6 @@ elseif(UNIX)
     target_compile_definitions(${TARGET_NAME_BASE} INTERFACE WEBVIEW_GTK)
 endif()
 
-
 #
 # Header-only library
 #
@@ -62,6 +62,7 @@ target_compile_features(${TARGET_NAME_HEADER} INTERFACE cxx_std_11)
 # TODO: When WEBVIEW_API defaults to "inline" in the source code then we can remove it here.
 target_compile_definitions(${TARGET_NAME_HEADER} INTERFACE WEBVIEW_API=inline)
 target_link_libraries(${TARGET_NAME_HEADER} INTERFACE ${TARGET_NAME_BASE} ${PRIVATE_LIBRARIES})
+set_target_properties(${TARGET_NAME_HEADER} PROPERTIES EXPORT_NAME core_header)
 
 #
 # Shared library
@@ -73,6 +74,7 @@ add_library(${PROJECT_NAME}::core_shared ALIAS ${TARGET_NAME_SHARED})
 target_compile_definitions(${TARGET_NAME_SHARED} INTERFACE WEBVIEW_HEADER WEBVIEW_SHARED PRIVATE WEBVIEW_BUILD_SHARED)
 target_link_libraries(${TARGET_NAME_SHARED} PUBLIC ${TARGET_NAME_BASE} PRIVATE webview_build_support ${PRIVATE_LIBRARIES})
 set_target_properties(${TARGET_NAME_SHARED} PROPERTIES
+    EXPORT_NAME core_shared
     OUTPUT_NAME webview
     SOVERSION ${PROJECT_VERSION_MAJOR}
     VERSION ${PROJECT_VERSION}
@@ -93,7 +95,10 @@ add_library(${TARGET_NAME_STATIC} STATIC src/webview.cc)
 add_library(${PROJECT_NAME}::core_static ALIAS ${TARGET_NAME_STATIC})
 target_compile_definitions(${TARGET_NAME_STATIC} INTERFACE WEBVIEW_HEADER PUBLIC WEBVIEW_STATIC)
 target_link_libraries(${TARGET_NAME_STATIC} PUBLIC ${TARGET_NAME_BASE} ${PRIVATE_LIBRARIES} PRIVATE webview_build_support)
-set_target_properties(${TARGET_NAME_STATIC} PROPERTIES OUTPUT_NAME webview_s)
+set_target_properties(${TARGET_NAME_STATIC} PROPERTIES
+    EXPORT_NAME core_static
+    OUTPUT_NAME webview_s
+)
 
 #
 # Common
