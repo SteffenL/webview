@@ -28,7 +28,7 @@ endif()
 set(TARGET_NAME_SHARED webview_core_shared)
 add_library(${TARGET_NAME_SHARED} SHARED src/webview.cc)
 add_library(${TARGET_NAME_SHARED}::${TARGET_NAME_SHARED} ALIAS ${TARGET_NAME_SHARED})
-#target_compile_definitions(${TARGET_NAME_STATIC} PUBLIC WEBVIEW_SHARED PRIVATE WEBVIEW_BUILDING)
+target_compile_definitions(${TARGET_NAME_SHARED} INTERFACE WEBVIEW_SHARED PRIVATE WEBVIEW_BUILD_SHARED)
 target_include_directories(${TARGET_NAME_SHARED} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/generated>
     $<INSTALL_INTERFACE:generated>
@@ -45,15 +45,6 @@ if(NOT APPLE)
         INSTALL_RPATH "$ORIGIN;$ORIGIN/../lib"
     )
 endif()
-# Use WEBVIEW_DEPRECATED defined in-source instead of WEBVIEW_DEPRECATED_.
-generate_export_header(
-    ${TARGET_NAME_SHARED}
-    BASE_NAME WEBVIEW
-    EXPORT_MACRO_NAME WEBVIEW_API
-    EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/generated/webview/exports.h
-    DEPRECATED_MACRO_NAME WEBVIEW_DEPRECATED_
-    STATIC_DEFINE WEBVIEW_STATIC
-)
 
 #
 # Static library
@@ -62,7 +53,7 @@ generate_export_header(
 set(TARGET_NAME_STATIC webview_core_static)
 add_library(${TARGET_NAME_STATIC} STATIC src/webview.cc)
 add_library(${TARGET_NAME_STATIC}::${TARGET_NAME_STATIC} ALIAS ${TARGET_NAME_STATIC})
-#target_compile_definitions(${TARGET_NAME_STATIC} PUBLIC WEBVIEW_STATIC)
+target_compile_definitions(${TARGET_NAME_STATIC} PUBLIC WEBVIEW_STATIC)
 target_link_libraries(${TARGET_NAME_STATIC} PUBLIC ${TARGET_NAME_HEADER} PRIVATE webview_build_support)
 set_target_properties(${TARGET_NAME_STATIC} PROPERTIES
     OUTPUT_NAME webview_s

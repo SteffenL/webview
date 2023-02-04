@@ -25,14 +25,23 @@
 #ifndef WEBVIEW_H
 #define WEBVIEW_H
 
-#ifdef __has_include
-#if __has_include("webview/exports.h")
-#include "webview/exports.h"
-#endif
-#endif
-
 #ifndef WEBVIEW_API
 #define WEBVIEW_API extern
+#if defined(WEBVIEW_SHARED) || defined(WEBVIEW_BUILD_SHARED)
+#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(WEBVIEW_BUILD_SHARED)
+#define WEBVIEW_API __declspec(dllexport)
+#else
+#define WEBVIEW_API __declspec(dllimport)
+#endif
+#else
+#define WEBVIEW_API __attribute__((visibility("default")))
+#endif
+#elif !defined(WEBVIEW_STATIC) && defined(__cplusplus)
+#define WEBVIEW_API inline
+#else
+#define WEBVIEW_API
+#endif
 #endif
 
 #ifndef WEBVIEW_VERSION_MAJOR
