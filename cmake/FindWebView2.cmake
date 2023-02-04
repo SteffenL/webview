@@ -6,11 +6,11 @@
 #   WebView2::loader       - Shared WebView2 loader
 #   WebView2::loader_s     - Static WebView2 loader
 
+set(LOG_TAG "FindWebView2: ")
+
 if(NOT DEFINED WebView2_FETCH_MISSING)
     set(WebView2_FETCH_MISSING TRUE)
 endif()
-
-set(LOG_TAG "FindWebView2: ")
 
 if(NOT WebView2_ROOT AND WebView2_FETCH_MISSING)
     if(NOT DEFINED WebView2_FIND_VERSION)
@@ -30,25 +30,39 @@ if(NOT WebView2_ROOT AND WebView2_FETCH_MISSING)
 endif()
 
 if(WebView2_ROOT)
+    if(WebView2_CURRENT_ROOT)
+        if(NOT WebView2_ROOT STREQUAL WebView2_CURRENT_ROOT)
+            message(STATUS "${LOG_TAG}Root directory changed.")
+            unset(WebView2_NUSPEC_PATH CACHE)
+            unset(WebView2_INCLUDE_DIR CACHE)
+            unset(WebView2_WINRT_INCLUDE_DIR CACHE)
+            set(WebView2_CURRENT_ROOT ${WebView2_ROOT} CACHE PATH "" FORCE)
+            mark_as_advanced(WebView2_CURRENT_ROOT)
+        endif()
+    else()
+        set(WebView2_CURRENT_ROOT ${WebView2_ROOT} CACHE PATH "" FORCE)
+        mark_as_advanced(WebView2_CURRENT_ROOT)
+    endif()
+
     set(NATIVE_DIR ${WebView2_ROOT}/build/native)
 
     find_file(
         WebView2_NUSPEC_PATH
         NAMES Microsoft.Web.WebView2.nuspec
-        HINTS ${WebView2_ROOT}
-        NO_CACHE)
+        HINTS ${WebView2_ROOT})
+    mark_as_advanced(WebView2_NUSPEC_PATH)
 
     find_path(
         WebView2_INCLUDE_DIR
         NAMES WebView2.h
-        HINTS ${NATIVE_DIR}/include
-        NO_CACHE)
+        HINTS ${NATIVE_DIR}/include)
+    mark_as_advanced(WebView2_INCLUDE_DIR)
 
     find_path(
         WebView2_WINRT_INCLUDE_DIR
         NAMES WebView2Interop.h
-        HINTS ${NATIVE_DIR}/include-winrt
-        NO_CACHE)
+        HINTS ${NATIVE_DIR}/include-winrt)
+    mark_as_advanced(WebView2_WINRT_INCLUDE_DIR)
 
     set(WebView2_INCLUDE_DIRS ${WebView2_INCLUDE_DIR} ${WebView2_WINRT_INCLUDE_DIR})
 endif()
