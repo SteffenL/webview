@@ -8,10 +8,17 @@
 
 set(LOG_TAG "FindWebView2: ")
 
+# Set default values for undefined variables.
 if(NOT DEFINED WebView2_FETCH_MISSING)
     set(WebView2_FETCH_MISSING TRUE)
 endif()
 
+# Normalize input variables.
+if(WebView2_ROOT)
+    file(TO_CMAKE_PATH ${WebView2_ROOT} WebView2_ROOT)
+endif()
+
+# Download WebView2 SDK if desired.
 if(NOT WebView2_ROOT AND WebView2_FETCH_MISSING)
     if(NOT DEFINED WebView2_FIND_VERSION)
         message(FATAL_ERROR "${LOG_TAG}Please specify a version.")
@@ -30,9 +37,9 @@ if(NOT WebView2_ROOT AND WebView2_FETCH_MISSING)
 endif()
 
 if(WebView2_ROOT)
+    # Reset cache variables when the root directory changes.
     if(WebView2_CURRENT_ROOT)
         if(NOT WebView2_ROOT STREQUAL WebView2_CURRENT_ROOT)
-            message(STATUS "${LOG_TAG}Root directory changed.")
             unset(WebView2_NUSPEC_PATH CACHE)
             unset(WebView2_INCLUDE_DIR CACHE)
             unset(WebView2_WINRT_INCLUDE_DIR CACHE)
@@ -67,6 +74,7 @@ if(WebView2_ROOT)
     set(WebView2_INCLUDE_DIRS ${WebView2_INCLUDE_DIR} ${WebView2_WINRT_INCLUDE_DIR})
 endif()
 
+# Extract version number from the *.nuspec file.
 if(WebView2_NUSPEC_PATH)
     file(READ ${WebView2_NUSPEC_PATH} WebView2_NUSPEC_CONTENT)
     string(REGEX MATCH  "<version>([0-9.]+)" WebView2_FOUND_VERSION_MATCH "${WebView2_NUSPEC_CONTENT}")
