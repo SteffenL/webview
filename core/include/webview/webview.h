@@ -26,7 +26,6 @@
 #define WEBVIEW_H
 
 #ifndef WEBVIEW_API
-#define WEBVIEW_API extern
 #if defined(WEBVIEW_SHARED) || defined(WEBVIEW_BUILD_SHARED)
 #if defined(_WIN32) || defined(__CYGWIN__)
 #if defined(WEBVIEW_BUILD_SHARED)
@@ -38,10 +37,20 @@
 #define WEBVIEW_API __attribute__((visibility("default")))
 #endif
 #elif !defined(WEBVIEW_STATIC) && defined(__cplusplus)
-#define WEBVIEW_API inline
+// TODO: When time is right we should change the default from extern to inline
+// (header-only C++ library).
+#define WEBVIEW_API extern
 #else
 #define WEBVIEW_API
 #endif
+#endif
+
+#ifdef WEBVIEW_CXX
+#pragma message("Compiling C++")
+#endif
+
+#ifdef WEBVIEW_C
+#pragma message("Compiling C")
 #endif
 
 #ifndef WEBVIEW_VERSION_MAJOR
