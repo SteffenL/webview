@@ -13,7 +13,7 @@ endif()
 
 # Normalize input variables.
 if(WebView2_ROOT)
-    file(TO_CMAKE_PATH ${WebView2_ROOT} WebView2_ROOT)
+    cmake_path(NORMAL_PATH WebView2_ROOT)
 endif()
 
 # Download WebView2 SDK if desired.
