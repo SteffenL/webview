@@ -25,9 +25,8 @@ include(GenerateExportHeader)
 include(GNUInstallDirs)
 
 include(cmake/options.cmake)
-include(cmake/build_support.cmake)
-include(cmake/deps.cmake)
 
+add_subdirectory(build_support)
 add_subdirectory(core)
 add_subdirectory(examples)
 add_subdirectory(test)
@@ -35,3 +34,26 @@ add_subdirectory(test)
 write_basic_package_version_file(
     WebviewConfigVersion.cmake
     COMPATIBILITY SameMajorVersion)
+install(
+    TARGETS
+        webview_build_support
+        webview_core_base
+        webview_core_header
+        webview_core_shared
+        webview_core_static
+    EXPORT webview
+    RUNTIME
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        COMPONENT webview_runtime
+    LIBRARY
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT webview_runtime
+        NAMELINK_COMPONENT webview_development
+    ARCHIVE
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT webview_development
+)
+install(EXPORT webview
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/webview
+    NAMESPACE webview::
+)

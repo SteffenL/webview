@@ -18,8 +18,14 @@ else()
         )
     endif()
 endif()
-add_library(webview_build_support INTERFACE)
-target_compile_options(webview_build_support INTERFACE ${COMPILE_OPTIONS})
+
+set(TARGET_NAME webview_build_support)
+
+add_library(${TARGET_NAME} INTERFACE)
+add_library(${PROJECT_NAME}::build_support ALIAS ${TARGET_NAME})
+
+target_compile_options(${TARGET_NAME} INTERFACE ${COMPILE_OPTIONS})
+
 if(MSVC)
-    target_compile_definitions(webview_build_support INTERFACE _CRT_SECURE_NO_WARNINGS)
+    target_compile_definitions(${TARGET_NAME} INTERFACE _CRT_SECURE_NO_WARNINGS)
 endif()
