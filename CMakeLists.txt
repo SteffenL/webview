@@ -19,7 +19,7 @@ project(webview
     VERSION ${WEBVIEW_VERSION}
     LANGUAGES C CXX)
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(CMakePackageConfigHelpers)
 include(GenerateExportHeader)
@@ -62,14 +62,24 @@ install(
         NAMELINK_COMPONENT webview_development
     ARCHIVE
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        COMPONENT webview_development)
+        COMPONENT webview_development
+)
 
 install(
     FILES
+        cmake/FindWebView2.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/WebviewConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/WebviewConfigVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/webview
     COMPONENT webview_cmake_package)
+
+install(FILES core/include/webview.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    COMPONENT webview_development)
+
+install(DIRECTORY core/include/webview
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    COMPONENT webview_development)
 
 install(EXPORT webview_targets
     FILE WebviewTargets.cmake

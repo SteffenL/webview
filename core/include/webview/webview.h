@@ -45,14 +45,6 @@
 #endif
 #endif
 
-#ifdef WEBVIEW_CXX
-#pragma message("Compiling C++")
-#endif
-
-#ifdef WEBVIEW_C
-#pragma message("Compiling C")
-#endif
-
 #ifndef WEBVIEW_VERSION_MAJOR
 // The current library major version.
 #define WEBVIEW_VERSION_MAJOR 0

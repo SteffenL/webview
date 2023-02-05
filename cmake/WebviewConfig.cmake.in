@@ -17,4 +17,4 @@ elseif(UNIX)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/WebviewTargets.cmake")
-check_required_components(webview)
+#check_required_components(webview)

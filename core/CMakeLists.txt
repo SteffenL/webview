@@ -18,7 +18,6 @@ target_compile_definitions(${TARGET_NAME_BASE} INTERFACE
 )
 target_include_directories(${TARGET_NAME_BASE} INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
 )
 set_target_properties(${TARGET_NAME_BASE} PROPERTIES EXPORT_NAME core_base)
 
