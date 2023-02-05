@@ -65,6 +65,12 @@ install(
         COMPONENT webview_development
 )
 
+install(EXPORT webview_targets
+    FILE WebviewTargets.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/webview
+    NAMESPACE webview::
+    COMPONENT webview_cmake_package)
+
 install(
     FILES
         cmake/FindWebView2.cmake
@@ -80,9 +86,3 @@ install(FILES core/include/webview.h
 install(DIRECTORY core/include/webview
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     COMPONENT webview_development)
-
-install(EXPORT webview_targets
-    FILE WebviewTargets.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/webview
-    NAMESPACE webview::
-    COMPONENT webview_cmake_package)
