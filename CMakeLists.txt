@@ -32,9 +32,19 @@ add_subdirectory(core)
 add_subdirectory(examples)
 add_subdirectory(test)
 
+set(WEBVIEW_CMAKE_MODULES_DIR cmake)
+
+configure_package_config_file(
+    cmake/WebviewConfig.cmake.in WebviewConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/webview
+    PATH_VARS WEBVIEW_CMAKE_MODULES_DIR
+    NO_SET_AND_CHECK_MACRO
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+
 write_basic_package_version_file(
     WebviewConfigVersion.cmake
     COMPATIBILITY SameMajorVersion)
+
 install(
     TARGETS
         webview_build_support
@@ -42,7 +52,7 @@ install(
         webview_core_header
         webview_core_shared
         webview_core_static
-    EXPORT webview
+    EXPORT webview_targets
     RUNTIME
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         COMPONENT webview_runtime
@@ -52,10 +62,17 @@ install(
         NAMELINK_COMPONENT webview_development
     ARCHIVE
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        COMPONENT webview_development
-)
-install(EXPORT webview
+        COMPONENT webview_development)
+
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/WebviewConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/WebviewConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/webview
+    COMPONENT webview_cmake_package)
+
+install(EXPORT webview_targets
+    FILE WebviewTargets.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/webview
     NAMESPACE webview::
-    COMPONENT webview_cmake_package
-)
+    COMPONENT webview_cmake_package)

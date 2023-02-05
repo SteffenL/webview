@@ -1,0 +1,20 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+list(APPEND CMAKE_MODULE_PATH "@PACKAGE_WEBVIEW_CMAKE_MODULES_DIR@")
+
+# Find dependencies
+if(WIN32)
+    find_package(WebView2 ${WEBVIEW_MSWEBVIEW2_VERSION} REQUIRED)
+elseif(APPLE)
+    find_library(WEBKIT_LIBRARY WebKit REQUIRED)
+elseif(UNIX)
+    find_package(PkgConfig REQUIRED)
+    find_package(Threads REQUIRED)
+    pkg_check_modules(GTK REQUIRED gtk+-3.0)
+    pkg_check_modules(WEBKIT2GTK REQUIRED webkit2gtk-4.0)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/WebviewTargets.cmake")
+check_required_components(webview)
