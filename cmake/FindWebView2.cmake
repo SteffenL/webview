@@ -109,8 +109,7 @@ set(ARM64_PROCESSOR_NAMES
     aarch64 # Linux
 )
 
-# Detect directory for architecture-specific libraries based on 
-# CMAKE_SYSTEM_PROCESSOR
+# Detect directory for architecture-specific libraries based on CMAKE_SYSTEM_PROCESSOR
 if(CMAKE_SYSTEM_PROCESSOR IN_LIST X64_PROCESSOR_NAMES)
     if(CMAKE_SIZEOF_VOID_P MATCHES 4)
         set(LIB_SUBDIR "x86")
