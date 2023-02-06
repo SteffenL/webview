@@ -4,6 +4,13 @@ if(WIN32 AND NOT MSVC)
     list(APPEND PRIVATE_LIBRARIES advapi32 ole32 shell32 shlwapi user32 version)
 endif()
 
+# Select standard runtime libraries
+if(WEBVIEW_USE_STATIC_RUNTIME)
+    set(WEBVIEW_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>)
+else()
+    set(WEBVIEW_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>DLL)
+endif()
+
 #
 # Base for the library targets
 #
@@ -74,7 +81,9 @@ target_compile_definitions(${TARGET_NAME_SHARED} INTERFACE WEBVIEW_HEADER WEBVIE
 target_link_libraries(${TARGET_NAME_SHARED} PUBLIC ${TARGET_NAME_BASE} PRIVATE webview_build_support ${PRIVATE_LIBRARIES})
 set_target_properties(${TARGET_NAME_SHARED} PROPERTIES
     EXPORT_NAME core_shared
-    OUTPUT_NAME webview
+    MSVC_RUNTIME_LIBRARY ${WEBVIEW_MSVC_RUNTIME_LIBRARY}
+    OUTPUT_NAME_DEBUG webview_d
+    OUTPUT_NAME_RELEASE webview
     SOVERSION ${PROJECT_VERSION_MAJOR}
     VERSION ${PROJECT_VERSION}
 )
@@ -96,7 +105,9 @@ target_compile_definitions(${TARGET_NAME_STATIC} INTERFACE WEBVIEW_HEADER PUBLIC
 target_link_libraries(${TARGET_NAME_STATIC} PUBLIC ${TARGET_NAME_BASE} ${PRIVATE_LIBRARIES} PRIVATE webview_build_support)
 set_target_properties(${TARGET_NAME_STATIC} PROPERTIES
     EXPORT_NAME core_static
-    OUTPUT_NAME webview_s
+    MSVC_RUNTIME_LIBRARY ${WEBVIEW_MSVC_RUNTIME_LIBRARY}
+    OUTPUT_NAME_DEBUG webview_s_d
+    OUTPUT_NAME_RELEASE webview_s
 )
 
 #

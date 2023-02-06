@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
 
-# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP
-if(POLICY CMP0135)
-    cmake_policy(SET CMP0135 NEW)
-endif()
-
 # Read version from the header's header file.
 file(READ core/include/webview/webview.h WEBVIEW_H_CONTENT)
 string(REGEX MATCH "#define WEBVIEW_VERSION_MAJOR ([0-9]+)" WEBVIEW_VERSION_MATCH "${WEBVIEW_H_CONTENT}")
@@ -21,6 +16,11 @@ project(webview
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+# Set default build type
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 include(CMakePackageConfigHelpers)
 include(GenerateExportHeader)
 include(GNUInstallDirs)
@@ -31,6 +31,7 @@ add_subdirectory(build_support)
 add_subdirectory(core)
 add_subdirectory(examples)
 add_subdirectory(test)
+add_subdirectory(packaging)
 
 set(WEBVIEW_CMAKE_MODULES_DIR cmake)
 
@@ -63,6 +64,7 @@ install(
     ARCHIVE
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
         COMPONENT webview_development
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 install(EXPORT webview_targets
@@ -74,6 +76,7 @@ install(EXPORT webview_targets
 install(
     FILES
         cmake/FindWebView2.cmake
+        cmake/options.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/WebviewConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/WebviewConfigVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/webview
