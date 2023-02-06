@@ -5,10 +5,18 @@ if(WIN32 AND NOT MSVC)
 endif()
 
 # Select standard runtime libraries
-if(WEBVIEW_USE_STATIC_RUNTIME)
-    set(WEBVIEW_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>)
-else()
-    set(WEBVIEW_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>DLL)
+set(WEBVIEW_RUNTIME_FLAGS)
+if(WIN32)
+    if(WEBVIEW_USE_STATIC_RUNTIME)
+        set(WEBVIEW_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>)
+        if(NOT MSVC)
+            # Note: Using "-static" instead of "-static-libgcc -static-libstdc++" because
+            # winpthread will be linked dynamically otherwise.
+            set(WEBVIEW_RUNTIME_FLAGS -static)
+        endif()
+    else()
+        set(WEBVIEW_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>DLL)
+    endif()
 endif()
 
 #
@@ -78,6 +86,7 @@ set(TARGET_NAME_SHARED webview_core_shared)
 add_library(${TARGET_NAME_SHARED} SHARED src/webview.cc)
 add_library(${PROJECT_NAME}::core_shared ALIAS ${TARGET_NAME_SHARED})
 target_compile_definitions(${TARGET_NAME_SHARED} INTERFACE WEBVIEW_HEADER WEBVIEW_SHARED PRIVATE WEBVIEW_BUILD_SHARED)
+target_link_options(${TARGET_NAME_SHARED} PRIVATE ${WEBVIEW_RUNTIME_FLAGS})
 target_link_libraries(${TARGET_NAME_SHARED} PUBLIC ${TARGET_NAME_BASE} PRIVATE webview_build_support ${PRIVATE_LIBRARIES})
 set_target_properties(${TARGET_NAME_SHARED} PROPERTIES
     EXPORT_NAME core_shared
@@ -102,6 +111,7 @@ set(TARGET_NAME_STATIC webview_core_static)
 add_library(${TARGET_NAME_STATIC} STATIC src/webview.cc)
 add_library(${PROJECT_NAME}::core_static ALIAS ${TARGET_NAME_STATIC})
 target_compile_definitions(${TARGET_NAME_STATIC} INTERFACE WEBVIEW_HEADER PUBLIC WEBVIEW_STATIC)
+target_link_options(${TARGET_NAME_STATIC} PRIVATE ${WEBVIEW_RUNTIME_FLAGS})
 target_link_libraries(${TARGET_NAME_STATIC} PUBLIC ${TARGET_NAME_BASE} ${PRIVATE_LIBRARIES} PRIVATE webview_build_support)
 set_target_properties(${TARGET_NAME_STATIC} PROPERTIES
     EXPORT_NAME core_static
