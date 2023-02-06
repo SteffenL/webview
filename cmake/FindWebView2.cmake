@@ -6,6 +6,8 @@
 #   WebView2::loader       - Shared WebView2 loader
 #   WebView2::loader_s     - Static WebView2 loader
 
+cmake_minimum_required(VERSION 3.20)
+
 # Set default values for undefined variables.
 if(NOT DEFINED WebView2_FETCH_MISSING)
     set(WebView2_FETCH_MISSING TRUE)
@@ -93,18 +95,40 @@ find_package_handle_standard_args(
     REQUIRED_VARS WebView2_ROOT WebView2_INCLUDE_DIRS
     VERSION_VAR WebView2_FOUND_VERSION)
 
+# System processors/architectures supported by the WebView2 loader
+set(X64_PROCESSOR_NAMES
+    AMD64  # Windows
+    x86_64 # Linux
+)
+set(X86_PROCESSOR_NAMES
+    X86  # Windows
+    i386 # Linux
+)
+set(ARM64_PROCESSOR_NAMES
+    ARM64   # Windows
+    aarch64 # Linux
+)
+
+# Detect directory for architecture-specific libraries based on 
+# CMAKE_SYSTEM_PROCESSOR
+if(CMAKE_SYSTEM_PROCESSOR IN_LIST X64_PROCESSOR_NAMES)
+    if(CMAKE_SIZEOF_VOID_P MATCHES 4)
+        set(LIB_SUBDIR "x86")
+    else()
+        set(LIB_SUBDIR "x64")
+    endif()
+elseif(CMAKE_SYSTEM_PROCESSOR IN_LIST X86_PROCESSOR_NAMES)
+    set(LIB_SUBDIR "x86")
+elseif(CMAKE_SYSTEM_PROCESSOR IN_LIST ARM64_PROCESSOR_NAMES)
+    set(LIB_SUBDIR "arm64")
+endif()
+
 if(WebView2_FOUND)
     if(NOT TARGET WebView2::sdk)
         add_library(WebView2::sdk INTERFACE IMPORTED)
         target_include_directories(WebView2::sdk INTERFACE ${WebView2_INCLUDE_DIRS})
     endif()
     if(NOT TARGET WebView2::loader)
-        if(CMAKE_SIZEOF_VOID_P MATCHES 4)
-            set(LIB_SUBDIR "x86")
-        else()
-            set(LIB_SUBDIR "x64")
-        endif()
-
         add_library(WebView2::loader_s STATIC IMPORTED)
         target_link_libraries(WebView2::loader_s INTERFACE WebView2::sdk)
         set_target_properties(WebView2::loader_s PROPERTIES
