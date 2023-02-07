@@ -31,6 +31,8 @@ jobs:
           #- cmake-generator: Ninja
           #- config: { multiconfig: true }
           #  cmake-generator: Ninja Multi-Config
+          - config: { os: macos, arch: arm64 }
+            macos-target: macos-apple-10.
     runs-on: ${{ matrix.config.image }}
     name: library (${{ matrix.config.image }}, ${{ matrix.config.compiler.id }}${{ matrix.config.compiler.version }}, static-runtime=${{ matrix.config.static-runtime }})
     steps:
