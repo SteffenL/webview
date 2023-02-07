@@ -56,9 +56,6 @@ jobs:
             toolchain: mingw
           - config: { os: windows, compiler: { id: msvc } }
             toolchain: msvc
-          - cmake-generator: Ninja
-          - config: { multiconfig: true }
-            cmake-generator: Ninja Multi-Config
     runs-on: ${{ matrix.config.image }}
     name: library (${{ matrix.config.image }}, ${{ matrix.config.compiler.id }}${{ matrix.config.compiler.version }} ${{ matrix.config.runtime-link }}-rt, ${{ matrix.config.build-type }})
     steps:
@@ -118,11 +115,13 @@ jobs:
         shell: bash
       - name: Configure build
         run: |
+          generator=Ninja
           extra_args=()
           if [[ "${{ matrix.multiconfig }}" = "true" ]];
+            generator="Ninja Multi-Config"
             extra_args+=("-DCMAKE_BUILD_TYPE=${{ matrix.build-type }}")
           fi
-          cmake -G "${{ matrix.cmake-generator }}" -B build -S . "-DWEBVIEW_USE_STATIC_RUNTIME=${{ matrix.static-runtime }}" "${extra_args[@]}"
+          cmake -G "${generator}" -B build -S . "-DWEBVIEW_USE_STATIC_RUNTIME=${{ matrix.static-runtime }}" "${extra_args[@]}"
         shell: bash
       - name: Build
         if: matrix.multiconfig != 'true'
