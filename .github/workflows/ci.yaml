@@ -76,7 +76,9 @@ jobs:
           :configure_msvc
             echo Configuring MSVC toolset
             set "msvc_arch=${{ matrix.config.arch }}"
+            if "%msvc_arch%" == "arm64" set msvc_arch=amd64_arm64
             if "%msvc_arch%" == "x64" set msvc_arch=amd64
+            if "%msvc_arch%" == "x86" set msvc_arch=amd64_x86
             set "vcvarsall_path_x64=%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
             set "vcvarsall_path_x86=%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
             if exist "%vcvarsall_path_x64%" (set "vcvarsall_path=%vcvarsall_path_x64%") else (set "vcvarsall_path=%vcvarsall_path_x86%")
