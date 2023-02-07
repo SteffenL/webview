@@ -103,7 +103,7 @@ jobs:
           cmake -G "${{ matrix.cmake-generator }}" -B build -S . "-DWEBVIEW_USE_STATIC_RUNTIME=${{ matrix.config.static-runtime }}" "${extra_args[@]}"
         shell: bash
       - name: Build
-        if: \!matrix.config.multiconfig
+        if: \\!matrix.config.multiconfig
         run: cmake --build build
       - name: Build (debug)
         if: matrix.config.multiconfig
