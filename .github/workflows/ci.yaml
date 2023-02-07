@@ -7,6 +7,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '12'   }, binaries: { cc: 'gcc-12'  , cxx: 'g++-12'     }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
           - { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: OFF, build-type: Release, test: true , deliver: true , multiconfig: true }
         include:
           #- config: { os: linux }
@@ -30,7 +31,7 @@ jobs:
         config:
           #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: clang, version: '15'   }, binaries: { cc: 'clang-15', cxx: 'clang++-15' }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
           #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: clang, version: '11'   }, binaries: { cc: 'clang-11', cxx: 'clang++-11' }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
-          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '12'   }, binaries: { cc: 'gcc-12'  , cxx: 'g++-12'     }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
+          - { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '12'   }, binaries: { cc: 'gcc-12'  , cxx: 'g++-12'     }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
           #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '9'    }, binaries: { cc: 'gcc-9'   , cxx: 'g++-9'      }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
           #- { os: macos  , image: macos-12    , arch: arm64, compiler: { id: clang, version: ''     }, binaries: { cc: 'clang'   , cxx: 'clang++'    }, static-runtime: OFF, build-type: Release, test: false, deliver: true , multiconfig: false }
           #- { os: macos  , image: macos-12    , arch: x64  , compiler: { id: clang, version: ''     }, binaries: { cc: 'clang'   , cxx: 'clang++'    }, static-runtime: OFF, build-type: Release, test: true , deliver: true , multiconfig: false }
