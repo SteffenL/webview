@@ -97,13 +97,13 @@ jobs:
       - name: Configure build
         run: |
           extra_args=()
-          if [[ "${{ matrix.multiconfig }}" = "true" ]]; then
+          if [[ "${{ matrix.config.multiconfig }}" = "true" ]]; then
             extra_args+=("-DCMAKE_BUILD_TYPE=${{ matrix.build-type }}")
           fi
           cmake -G "${{ matrix.cmake-generator }}" -B build -S . "-DWEBVIEW_USE_STATIC_RUNTIME=${{ matrix.config.static-runtime }}" "${extra_args[@]}"
         shell: bash
       - name: Build
-        if: ! matrix.config.multiconfig
+        if: \!matrix.config.multiconfig
         run: cmake --build build
       - name: Build (debug)
         if: matrix.config.multiconfig
