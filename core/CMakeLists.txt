@@ -60,7 +60,7 @@ elseif(UNIX)
     find_package(Threads REQUIRED)
     pkg_check_modules(GTK REQUIRED gtk+-3.0)
     pkg_check_modules(WEBKIT2GTK REQUIRED webkit2gtk-4.0)
-    target_include_directories(${TARGET_NAME_BASE} INTERFACE include ${WEBKIT2GTK_INCLUDE_DIRS})
+    target_include_directories(${TARGET_NAME_BASE} INTERFACE ${WEBKIT2GTK_INCLUDE_DIRS})
     target_link_libraries(${TARGET_NAME_BASE} INTERFACE ${WEBKIT2GTK_LIBRARIES} Threads::Threads)
     target_compile_definitions(${TARGET_NAME_BASE} INTERFACE WEBVIEW_GTK)
 endif()
@@ -90,8 +90,8 @@ target_link_options(${TARGET_NAME_SHARED} PRIVATE ${WEBVIEW_RUNTIME_FLAGS})
 target_link_libraries(${TARGET_NAME_SHARED} PUBLIC ${TARGET_NAME_BASE} PRIVATE webview_build_support ${PRIVATE_LIBRARIES})
 set_target_properties(${TARGET_NAME_SHARED} PROPERTIES
     EXPORT_NAME core_shared
+    OUTPUT_NAME webview
     OUTPUT_NAME_DEBUG webview_d
-    OUTPUT_NAME_RELEASE webview
     SOVERSION ${PROJECT_VERSION_MAJOR}
     VERSION ${PROJECT_VERSION}
 )
@@ -117,8 +117,8 @@ target_link_options(${TARGET_NAME_STATIC} PRIVATE ${WEBVIEW_RUNTIME_FLAGS})
 target_link_libraries(${TARGET_NAME_STATIC} PUBLIC ${TARGET_NAME_BASE} ${PRIVATE_LIBRARIES} PRIVATE webview_build_support)
 set_target_properties(${TARGET_NAME_STATIC} PROPERTIES
     EXPORT_NAME core_static
+    OUTPUT_NAME webview_s
     OUTPUT_NAME_DEBUG webview_s_d
-    OUTPUT_NAME_RELEASE webview_s
 )
 if(WEBVIEW_MSVC_RUNTIME_LIBRARY)
     set_target_properties(${TARGET_NAME_STATIC} PROPERTIES MSVC_RUNTIME_LIBRARY ${WEBVIEW_MSVC_RUNTIME_LIBRARY})
