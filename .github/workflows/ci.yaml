@@ -116,12 +116,13 @@ jobs:
         run: ${{ matrix.test-cmd }} ctest --test-dir build/test --output-on-failure --config Release
 
   swig:
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
         language: [csharp, java, python, ruby]
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Generate bindings with SWIG
         run: |
           mkdir -p "build/bindings/${{ matrix.language }}" \
@@ -133,7 +134,7 @@ jobs:
   clang-format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Run clang-format
         uses: DoozyX/clang-format-lint-action@v0.6
         with:
