@@ -103,16 +103,16 @@ jobs:
           cmake -G "${{ matrix.cmake-generator }}" -B build -S . "-DWEBVIEW_USE_STATIC_RUNTIME=${{ matrix.config.static-runtime }}" "${extra_args[@]}"
         shell: bash
       - name: Build
-        if: ${{ !matrix.multiconfig }}
+        if: ! matrix.config.multiconfig
         run: cmake --build build
       - name: Build (debug)
-        if: matrix.multiconfig
+        if: matrix.config.multiconfig
         run: cmake --build build --config Debug
       - name: Build (release)
-        if: matrix.multiconfig
+        if: matrix.config.multiconfig
         run: cmake --build build --config Release
       - name: Run tests
-        if: matrix.test
+        if: matrix.config.test
         run: ${{ matrix.test-cmd }} ctest --test-dir build/test --output-on-failure --config Release
 
   swig:
