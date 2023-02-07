@@ -116,7 +116,7 @@ jobs:
         run: |
           extra_args=()
           if [[ "${{ matrix.config.multiconfig }}" = "true" ]]; then
-            extra_args+=(--config Release)
+            extra_args+=(-C Release)
           fi
           ${{ matrix.test-cmd }} ctest --test-dir build/test --output-on-failure "${extra_args[@]}"
         shell: bash
