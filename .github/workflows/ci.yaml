@@ -28,8 +28,8 @@ jobs:
           #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: ON , build-type: Debug  , test: true , deliver: true , multiconfig: true }
           #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: ON , build-type: Release, test: true , deliver: true , multiconfig: true }
         include:
-          #- config: { os: linux }
-          #  test-cmd: xvfb-run
+          - config: { os: linux }
+            test-cmd: xvfb-run
           - config: { os: windows }
             toolchain: mingw
           - config: { os: windows, compiler: { id: msvc } }
@@ -113,7 +113,13 @@ jobs:
         run: cmake --build build --config Release
       - name: Run tests
         if: matrix.config.test
-        run: ${{ matrix.test-cmd }} ctest --test-dir build/test --output-on-failure --config Release
+        run: |
+          extra_args=()
+          if [[ "${{ matrix.config.multiconfig }}" = "true" ]]; then
+            extra_args+=(--config Release)
+          fi
+          ${{ matrix.test-cmd }} ctest --test-dir build/test --output-on-failure "${extra_args[@]}"
+        shell: bash
 
   swig:
     needs: build
