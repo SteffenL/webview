@@ -2,7 +2,29 @@ name: CI Pipeline
 on: [push, pull_request]
 
 jobs:
+  experiment:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: OFF, build-type: Release, test: true , deliver: true , multiconfig: true }
+        include:
+          #- config: { os: linux }
+          #  test-cmd: xvfb-run
+          - config: { os: windows }
+            toolchain: mingw
+          - config: { os: windows, compiler: { id: msvc } }
+            toolchain: msvc
+          - config: { multiconfig: false }
+            cmake-generator: Ninja
+          - config: { multiconfig: true }
+            cmake-generator: Ninja Multi-Config
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "${{ matrix.config.os }}, ${{ matrix.config.image }}, ${{ matrix.cmake-generator }}, ${{ matrix.config.multiconfig }}"
+
   build:
+    needs: experiment
     strategy:
       fail-fast: false
       matrix:
