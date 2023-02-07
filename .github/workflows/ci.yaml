@@ -7,26 +7,26 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: clang, version: '15'   }, binaries: { cc: 'clang-15', cxx: 'clang++-15' }, runtime-link: shared, build-type: release, test: true , deliver: false }
-          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: clang, version: '11'   }, binaries: { cc: 'clang-11', cxx: 'clang++-11' }, runtime-link: shared, build-type: release, test: true , deliver: false }
-          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '12'   }, binaries: { cc: 'gcc-12'  , cxx: 'g++-12'     }, runtime-link: shared, build-type: release, test: true , deliver: false }
-          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '9'    }, binaries: { cc: 'gcc-9'   , cxx: 'g++-9'      }, runtime-link: shared, build-type: release, test: true , deliver: false }
-          #- { os: macos  , image: macos-12    , arch: arm64, compiler: { id: clang, version: ''     }, binaries: { cc: 'clang'   , cxx: 'clang++'    }, runtime-link: shared, build-type: release, test: false, deliver: true  }
-          #- { os: macos  , image: macos-12    , arch: x64  , compiler: { id: clang, version: ''     }, binaries: { cc: 'clang'   , cxx: 'clang++'    }, runtime-link: shared, build-type: release, test: true , deliver: true  }
-          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: clang, version: ''     }, binaries: { cc: 'clang'   , cxx: 'clang++'    }, runtime-link: static, build-type: release, test: true , deliver: false }
-          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: gcc  , version: '14.3' }, binaries: { cc: 'gcc'     , cxx: 'g++'        }, runtime-link: static, build-type: release, test: true , deliver: false }
-          #- { os: windows, image: windows-2022, arch: arm64, compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: shared, build-type: debug  , test: false, deliver: true  }
-          - { os: windows, image: windows-2022, arch: arm64, compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: shared, build-type: release, test: false, deliver: true  }
-          #- { os: windows, image: windows-2022, arch: arm64, compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: static, build-type: debug  , test: false, deliver: true  }
-          #- { os: windows, image: windows-2022, arch: arm64, compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: static, build-type: release, test: false, deliver: true  }
-          - { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: shared, build-type: debug  , test: true , deliver: true  }
-          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: shared, build-type: release, test: true , deliver: true  }
-          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: static, build-type: debug  , test: true , deliver: true  }
-          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: static, build-type: release, test: true , deliver: true  }
-          - { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: shared, build-type: debug  , test: true , deliver: true  }
-          #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: shared, build-type: release, test: true , deliver: true  }
-          #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: static, build-type: debug  , test: true , deliver: true  }
-          #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, runtime-link: static, build-type: release, test: true , deliver: true  }
+          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: clang, version: '15'   }, binaries: { cc: 'clang-15', cxx: 'clang++-15' }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
+          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: clang, version: '11'   }, binaries: { cc: 'clang-11', cxx: 'clang++-11' }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
+          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '12'   }, binaries: { cc: 'gcc-12'  , cxx: 'g++-12'     }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
+          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '9'    }, binaries: { cc: 'gcc-9'   , cxx: 'g++-9'      }, static-runtime: OFF, build-type: Release, test: true , deliver: false, multiconfig: false }
+          #- { os: macos  , image: macos-12    , arch: arm64, compiler: { id: clang, version: ''     }, binaries: { cc: 'clang'   , cxx: 'clang++'    }, static-runtime: OFF, build-type: Release, test: false, deliver: true , multiconfig: false }
+          #- { os: macos  , image: macos-12    , arch: x64  , compiler: { id: clang, version: ''     }, binaries: { cc: 'clang'   , cxx: 'clang++'    }, static-runtime: OFF, build-type: Release, test: true , deliver: true , multiconfig: false }
+          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: clang, version: ''     }, binaries: { cc: 'clang'   , cxx: 'clang++'    }, static-runtime: ON , build-type: Release, test: true , deliver: false, multiconfig: false }
+          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: gcc  , version: '14.3' }, binaries: { cc: 'gcc'     , cxx: 'g++'        }, static-runtime: ON , build-type: Release, test: true , deliver: false, multiconfig: false }
+          #- { os: windows, image: windows-2022, arch: arm64, compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: OFF, build-type: Debug  , test: false, deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: arm64, compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: OFF, build-type: Release, test: false, deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: arm64, compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: ON , build-type: Debug  , test: false, deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: arm64, compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: ON , build-type: Release, test: false, deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: OFF, build-type: Debug  , test: true , deliver: true , multiconfig: true }
+          - { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: OFF, build-type: Release, test: true , deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: ON , build-type: Debug  , test: true , deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: x64  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: ON , build-type: Release, test: true , deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: OFF, build-type: Debug  , test: true , deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: OFF, build-type: Release, test: true , deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: ON , build-type: Debug  , test: true , deliver: true , multiconfig: true }
+          #- { os: windows, image: windows-2022, arch: x86  , compiler: { id: msvc , version: '14.3' }, binaries: { cc: 'cl'      , cxx: 'cl'         }, static-runtime: ON , build-type: Release, test: true , deliver: true , multiconfig: true }
         include:
           #- config: { os: linux }
           #  test-cmd: xvfb-run
@@ -34,6 +34,10 @@ jobs:
             toolchain: mingw
           - config: { os: windows, compiler: { id: msvc } }
             toolchain: msvc
+          - config: { multiconfig: false }
+            cmake-generator: Ninja
+          - config: { multiconfig: true }
+            cmake-generator: Ninja Multi-Config
     runs-on: ${{ matrix.config.image }}
     name: library (${{ matrix.config.image }}, ${{ matrix.config.compiler.id }}${{ matrix.config.compiler.version }} ${{ matrix.config.runtime-link }}-rt, ${{ matrix.config.build-type }})
     steps:
@@ -92,10 +96,24 @@ jobs:
           echo "CXX=${{ matrix.config.binaries.cxx }}" >> ${GITHUB_ENV}
         shell: bash
       - name: Configure build
-        run: cmake -G Ninja -B build -S .
+        run: |
+          extra_args=()
+          if [[ "${{ matrix.multiconfig }}" = "true" ]];
+            extra_args+=("-DCMAKE_BUILD_TYPE=${{ matrix.build-type }}")
+          fi
+          cmake -G "${{ matrix.cmake-generator }}" -B build -S . "-DWEBVIEW_USE_STATIC_RUNTIME=${{ matrix.static-runtime }}" "${extra_args[@]}"
+        shell: bash
       - name: Build
+        if: !matrix.multiconfig
+        run: cmake --build build
+      - name: Build (debug)
+        if: matrix.multiconfig
+        run: cmake --build build --config Debug
+      - name: Build (release)
+        if: matrix.multiconfig
         run: cmake --build build --config Release
       - name: Run tests
+        if: matrix.test
         run: ${{ matrix.test-cmd }} ctest --test-dir build/test --output-on-failure --config Release
 
   swig:
