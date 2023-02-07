@@ -7,7 +7,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: clang, version: '15'   }, binaries: { cc: 'clang-15', cxx: 'clang++-15' }, static-runtime: OFF, test: true , deliver: false, multiconfig: false }
+          - { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: clang, version: '15'   }, binaries: { cc: 'clang-15', cxx: 'clang++-15' }, static-runtime: OFF, test: true , deliver: false, multiconfig: false }
           #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: clang, version: '11'   }, binaries: { cc: 'clang-11', cxx: 'clang++-11' }, static-runtime: OFF, test: true , deliver: false, multiconfig: false }
           #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '12'   }, binaries: { cc: 'gcc-12'  , cxx: 'g++-12'     }, static-runtime: OFF, test: true , deliver: false, multiconfig: false }
           #- { os: linux  , image: ubuntu-22.04, arch: x64  , compiler: { id: gcc  , version: '9'    }, binaries: { cc: 'gcc-9'   , cxx: 'g++-9'      }, static-runtime: OFF, test: true , deliver: false, multiconfig: false }
