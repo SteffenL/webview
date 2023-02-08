@@ -26,11 +26,11 @@ static void test_terminate() {
 // TEST: use C API to create a window, run app and terminate it.
 // =================================================================
 static void cb_assert_arg(webview_t w, void *arg) {
-  assert(w != nullptr);
-  assert(memcmp(arg, "arg", 3) == 0);
+  REQUIRE(w != nullptr);
+  REQUIRE(memcmp(arg, "arg", 3) == 0);
 }
 static void cb_terminate(webview_t w, void *arg) {
-  assert(arg == nullptr);
+  REQUIRE(arg == nullptr);
   webview_terminate(w);
 }
 static void test_c_api() {
@@ -63,7 +63,7 @@ static void test_c_api_bind() {
     std::string req_(req);
     // Bind and increment number.
     if (req_ == "[0]") {
-      assert(context->number == 0);
+      REQUIRE(context->number == 0);
       webview_bind(context->w, "increment", increment, context);
       webview_return(
           context->w, seq, 0,
@@ -72,7 +72,7 @@ static void test_c_api_bind() {
     }
     // Unbind and make sure that we cannot increment even if we try.
     if (req_ == "[1]") {
-      assert(context->number == 1);
+      REQUIRE(context->number == 1);
       webview_unbind(context->w, "increment");
       webview_return(
           context->w, seq, 0,
@@ -81,7 +81,7 @@ static void test_c_api_bind() {
     }
     // Number should not have changed but we can bind again and change the number.
     if (req_ == "[2]") {
-      assert(context->number == 1);
+      REQUIRE(context->number == 1);
       webview_bind(context->w, "increment", increment, context);
       webview_return(
           context->w, seq, 0,
@@ -90,11 +90,11 @@ static void test_c_api_bind() {
     }
     // Finish test.
     if (req_ == "[3]") {
-      assert(context->number == 2);
+      REQUIRE(context->number == 2);
       webview_terminate(context->w);
       return;
     }
-    assert(!"Should not reach here");
+    REQUIRE(!"Should not reach here");
   };
   auto html = "<script>\n"
               "  window.test(0);\n"
@@ -124,29 +124,29 @@ static void test_sync_bind() {
     };
     // Bind and increment number.
     if (req == "[0]") {
-      assert(number == 0);
+      REQUIRE(number == 0);
       w.bind("increment", increment);
       return "(() => {try{window.increment()}catch{}window.test(1)})()";
     }
     // Unbind and make sure that we cannot increment even if we try.
     if (req == "[1]") {
-      assert(number == 1);
+      REQUIRE(number == 1);
       w.unbind("increment");
       return "(() => {try{window.increment()}catch{}window.test(2)})()";
     }
     // Number should not have changed but we can bind again and change the number.
     if (req == "[2]") {
-      assert(number == 1);
+      REQUIRE(number == 1);
       w.bind("increment", increment);
       return "(() => {try{window.increment()}catch{}window.test(3)})()";
     }
     // Finish test.
     if (req == "[3]") {
-      assert(number == 2);
+      REQUIRE(number == 2);
       w.terminate();
       return "";
     }
-    assert(!"Should not reach here");
+    REQUIRE(!"Should not reach here");
     return "";
   };
   auto html = "<script>\n"
@@ -166,15 +166,15 @@ static void test_sync_bind() {
 // =================================================================
 static void test_c_api_version() {
   auto vi = webview_version();
-  assert(vi);
-  assert(vi->version.major == 1);
-  assert(vi->version.minor == 2);
-  assert(vi->version.patch == 3);
-  assert(std::string(vi->version_number) == "1.2.3");
-  assert(std::string(vi->pre_release) == "-test");
-  assert(std::string(vi->build_metadata) == "+gaabbccd");
+  REQUIRE(vi);
+  REQUIRE(vi->version.major == 1);
+  REQUIRE(vi->version.minor == 2);
+  REQUIRE(vi->version.patch == 3);
+  REQUIRE(std::string(vi->version_number) == "1.2.3");
+  REQUIRE(std::string(vi->pre_release) == "-test");
+  REQUIRE(std::string(vi->build_metadata) == "+gaabbccd");
   // The function should return the same pointer when called again.
-  assert(webview_version() == vi);
+  REQUIRE(webview_version() == vi);
 }
 
 // =================================================================
@@ -193,15 +193,15 @@ static void test_bidir_comms() {
     std::cout << msg << std::endl;
     switch (i) {
     case 0:
-      assert(msg == "loaded");
+      REQUIRE(msg == "loaded");
       w->eval("window.external.invoke('exiting ' + window.x)");
       break;
     case 1:
-      assert(msg == "exiting 42");
+      REQUIRE(msg == "exiting 42");
       w->terminate();
       break;
     default:
-      assert(0);
+      REQUIRE(0);
     }
   });
   browser.init(R"(
@@ -220,36 +220,36 @@ static void test_bidir_comms() {
 static void test_json() {
   auto J = webview::detail::json_parse;
   // Valid input with expected output
-  assert(J(R"({"foo":"bar"})", "foo", -1) == "bar");
-  assert(J(R"({"foo":""})", "foo", -1).empty());
-  assert(J(R"({"foo":{}")", "foo", -1) == "{}");
-  assert(J(R"({"foo": {"bar": 1}})", "foo", -1) == R"({"bar": 1})");
-  assert(J(R"(["foo", "bar", "baz"])", "", 0) == "foo");
-  assert(J(R"(["foo", "bar", "baz"])", "", 2) == "baz");
+  REQUIRE(J(R"({"foo":"bar"})", "foo", -1) == "bar");
+  REQUIRE(J(R"({"foo":""})", "foo", -1).empty());
+  REQUIRE(J(R"({"foo":{}")", "foo", -1) == "{}");
+  REQUIRE(J(R"({"foo": {"bar": 1}})", "foo", -1) == R"({"bar": 1})");
+  REQUIRE(J(R"(["foo", "bar", "baz"])", "", 0) == "foo");
+  REQUIRE(J(R"(["foo", "bar", "baz"])", "", 2) == "baz");
   // Valid UTF-8 with expected output
-  assert(J(R"({"フー":"バー"})", "フー", -1) == "バー");
-  assert(J(R"(["フー", "バー", "バズ"])", "", 2) == "バズ");
+  REQUIRE(J(R"({"フー":"バー"})", "フー", -1) == "バー");
+  REQUIRE(J(R"(["フー", "バー", "バズ"])", "", 2) == "バズ");
   // Invalid input with valid output - should probably fail
-  assert(J(R"({"foo":"bar")", "foo", -1) == "bar");
+  REQUIRE(J(R"({"foo":"bar")", "foo", -1) == "bar");
   // Valid input with other invalid parameters - should fail
-  assert(J(R"([])", "", 0).empty());
-  assert(J(R"({})", "foo", -1).empty());
-  assert(J(R"(["foo", "bar", "baz"])", "", -1).empty());
-  assert(J(R"(["foo"])", "", 1234).empty());
-  assert(J(R"(["foo"])", "", -1234).empty());
+  REQUIRE(J(R"([])", "", 0).empty());
+  REQUIRE(J(R"({})", "foo", -1).empty());
+  REQUIRE(J(R"(["foo", "bar", "baz"])", "", -1).empty());
+  REQUIRE(J(R"(["foo"])", "", 1234).empty());
+  REQUIRE(J(R"(["foo"])", "", -1234).empty());
   // Invalid input - should fail
-  assert(J("", "", 0).empty());
-  assert(J("", "foo", -1).empty());
-  assert(J(R"({"foo":")", "foo", -1).empty());
-  assert(J(R"({"foo":{)", "foo", -1).empty());
-  assert(J(R"({"foo":{")", "foo", -1).empty());
-  assert(J(R"(}")", "foo", -1).empty());
-  assert(J(R"({}}")", "foo", -1).empty());
-  assert(J(R"("foo)", "foo", -1).empty());
-  assert(J(R"(foo)", "foo", -1).empty());
-  assert(J(R"({{[[""foo""]]}})", "", 1234).empty());
-  assert(J("bad", "", 0).empty());
-  assert(J("bad", "foo", -1).empty());
+  REQUIRE(J("", "", 0).empty());
+  REQUIRE(J("", "foo", -1).empty());
+  REQUIRE(J(R"({"foo":")", "foo", -1).empty());
+  REQUIRE(J(R"({"foo":{)", "foo", -1).empty());
+  REQUIRE(J(R"({"foo":{")", "foo", -1).empty());
+  REQUIRE(J(R"(}")", "foo", -1).empty());
+  REQUIRE(J(R"({}}")", "foo", -1).empty());
+  REQUIRE(J(R"("foo)", "foo", -1).empty());
+  REQUIRE(J(R"(foo)", "foo", -1).empty());
+  REQUIRE(J(R"({{[[""foo""]]}})", "", 1234).empty());
+  REQUIRE(J("bad", "", 0).empty());
+  REQUIRE(J("bad", "foo", -1).empty());
 }
 
 static void run_with_timeout(std::function<void()> fn, int timeout_ms) {
@@ -277,31 +277,31 @@ static void run_with_timeout(std::function<void()> fn, int timeout_ms) {
 static void test_parse_version() {
   using namespace webview::detail;
   auto v = parse_version("");
-  assert(v.size() == 4);
-  assert(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
+  REQUIRE(v.size() == 4);
+  REQUIRE(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
   v = parse_version("1");
-  assert(v[0] == 1 && v[1] == 0 && v[2] == 0 && v[3] == 0);
+  REQUIRE(v[0] == 1 && v[1] == 0 && v[2] == 0 && v[3] == 0);
   v = parse_version("0.2");
-  assert(v[0] == 0 && v[1] == 2 && v[2] == 0 && v[3] == 0);
+  REQUIRE(v[0] == 0 && v[1] == 2 && v[2] == 0 && v[3] == 0);
   v = parse_version("0.0.3");
-  assert(v[0] == 0 && v[1] == 0 && v[2] == 3 && v[3] == 0);
+  REQUIRE(v[0] == 0 && v[1] == 0 && v[2] == 3 && v[3] == 0);
   v = parse_version("0.0.0.4");
-  assert(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 4);
+  REQUIRE(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 4);
   v = parse_version("1.2.3.4.5");
-  assert(v.size() == 4);
-  assert(v[0] == 1 && v[1] == 2 && v[2] == 3 && v[3] == 4);
+  REQUIRE(v.size() == 4);
+  REQUIRE(v[0] == 1 && v[1] == 2 && v[2] == 3 && v[3] == 4);
   v = parse_version("1.2.3.4.5.6");
-  assert(v[0] == 1 && v[1] == 2 && v[2] == 3 && v[3] == 4);
+  REQUIRE(v[0] == 1 && v[1] == 2 && v[2] == 3 && v[3] == 4);
   v = parse_version("11.22.33.44");
-  assert(v[0] == 11 && v[1] == 22 && v[2] == 33 && v[3] == 44);
+  REQUIRE(v[0] == 11 && v[1] == 22 && v[2] == 33 && v[3] == 44);
   v = parse_version("0.0.0.0");
-  assert(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
+  REQUIRE(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
   v = parse_version("-1.-2.-3.-4");
-  assert(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
+  REQUIRE(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
   v = parse_version("a.b.c.d");
-  assert(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
+  REQUIRE(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
   v = parse_version("...");
-  assert(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
+  REQUIRE(v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0);
 }
 
 // =================================================================
@@ -309,36 +309,36 @@ static void test_parse_version() {
 // =================================================================
 static void test_win32_narrow_wide_string_conversion() {
   using namespace webview::detail;
-  assert(widen_string("").empty());
-  assert(narrow_string(L"").empty());
-  assert(widen_string("foo") == L"foo");
-  assert(narrow_string(L"foo") == "foo");
-  assert(widen_string("フー") == L"フー");
-  assert(narrow_string(L"フー") == "フー");
-  assert(widen_string("æøå") == L"æøå");
-  assert(narrow_string(L"æøå") == "æøå");
+  REQUIRE(widen_string("").empty());
+  REQUIRE(narrow_string(L"").empty());
+  REQUIRE(widen_string("foo") == L"foo");
+  REQUIRE(narrow_string(L"foo") == "foo");
+  REQUIRE(widen_string("フー") == L"フー");
+  REQUIRE(narrow_string(L"フー") == "フー");
+  REQUIRE(widen_string("æøå") == L"æøå");
+  REQUIRE(narrow_string(L"æøå") == "æøå");
   // Unicode number for the smiley face below: U+1F600
-  assert(widen_string("😀") == L"😀");
-  assert(narrow_string(L"😀") == "😀");
+  REQUIRE(widen_string("😀") == L"😀");
+  REQUIRE(narrow_string(L"😀") == "😀");
   // Ensure that elements of wide string are correct
   {
     auto s = widen_string("😀");
-    assert(s.size() == 2);
-    assert(static_cast<std::uint16_t>(s[0]) == 0xD83D);
-    assert(static_cast<std::uint16_t>(s[1]) == 0xDE00);
+    REQUIRE(s.size() == 2);
+    REQUIRE(static_cast<std::uint16_t>(s[0]) == 0xD83D);
+    REQUIRE(static_cast<std::uint16_t>(s[1]) == 0xDE00);
   }
   // Ensure that elements of narrow string are correct
   {
     auto s = narrow_string(L"😀");
-    assert(s.size() == 4);
-    assert(static_cast<std::uint8_t>(s[0]) == 0xf0);
-    assert(static_cast<std::uint8_t>(s[1]) == 0x9f);
-    assert(static_cast<std::uint8_t>(s[2]) == 0x98);
-    assert(static_cast<std::uint8_t>(s[3]) == 0x80);
+    REQUIRE(s.size() == 4);
+    REQUIRE(static_cast<std::uint8_t>(s[0]) == 0xf0);
+    REQUIRE(static_cast<std::uint8_t>(s[1]) == 0x9f);
+    REQUIRE(static_cast<std::uint8_t>(s[2]) == 0x98);
+    REQUIRE(static_cast<std::uint8_t>(s[3]) == 0x80);
   }
   // Null-characters must also be converted
-  assert(widen_string(std::string(2, '\0')) == std::wstring(2, L'\0'));
-  assert(narrow_string(std::wstring(2, L'\0')) == std::string(2, '\0'));
+  REQUIRE(widen_string(std::string(2, '\0')) == std::wstring(2, L'\0'));
+  REQUIRE(narrow_string(std::wstring(2, L'\0')) == std::string(2, '\0'));
 }
 #endif
 

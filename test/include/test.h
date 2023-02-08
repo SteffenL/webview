@@ -1,17 +1,10 @@
 #ifndef WEBVIEW_TEST_H
 #define WEBVIEW_TEST_H
 
-#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 
-// Redefine assert() macro so that tests work in release builds.
-
-#ifdef assert
-#undef assert
-#endif
-
-#define assert(condition)                                                      \
+#define REQUIRE(condition)                                                     \
   if (!(condition)) {                                                          \
     std::printf(                                                               \
         "############################################################\n"       \
