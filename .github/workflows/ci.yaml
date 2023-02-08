@@ -31,8 +31,6 @@ jobs:
           #- cmake-generator: Ninja
           #- config: { multiconfig: true }
           #  cmake-generator: Ninja Multi-Config
-          - config: { os: macos, arch: arm64 }
-            macos-target: macos-apple-10.
     runs-on: ${{ matrix.config.image }}
     name: library (${{ matrix.config.image }}, ${{ matrix.config.compiler.id }}${{ matrix.config.compiler.version }}, static-runtime=${{ matrix.config.static-runtime }})
     steps:
@@ -87,7 +85,13 @@ jobs:
           echo "CXX=${{ matrix.config.binaries.cxx }}" >> ${GITHUB_ENV}
         shell: bash
       - name: Configure build
-        run: cmake -G "${{ matrix.cmake-generator }}" -B build -S . "-DWEBVIEW_USE_STATIC_RUNTIME=${{ matrix.config.static-runtime }}"
+        run: |
+          extra_args=()
+          if [[ ! -z "${{ matrix.macos-target }}" ]]; then
+            extra_args+=("-DCMAKE_OSX_DEPLOYMENT_TARGET=${{ matrix.macos-target }}")
+          fi
+          cmake -G "${{ matrix.cmake-generator }}" -B build -S . "-DWEBVIEW_USE_STATIC_RUNTIME=${{ matrix.config.static-runtime }}" "${extra_args[@]}"
+        shell: bash
       - name: Build
         if: ${{ !matrix.config.multiconfig }}
         run: cmake --build build
