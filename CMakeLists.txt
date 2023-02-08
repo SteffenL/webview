@@ -10,7 +10,12 @@ string(REGEX MATCH "#define WEBVIEW_VERSION_PATCH ([0-9]+)" WEBVIEW_VERSION_MATC
 set(WEBVIEW_VERSION_PATCH ${CMAKE_MATCH_1})
 set(WEBVIEW_VERSION ${WEBVIEW_VERSION_MAJOR}.${WEBVIEW_VERSION_MINOR}.${WEBVIEW_VERSION_PATCH})
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Target macOS version")
+# The the minimum version of macOS we target.
+# C++ projects were recommended to set a deployment target of macOS
+# 10.9 or later since Xcode 10.
+if(NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "")
+endif()
 
 # Set default build type
 if(NOT DEFINED CMAKE_BUILD_TYPE)
