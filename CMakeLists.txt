@@ -12,16 +12,16 @@ set(WEBVIEW_VERSION ${WEBVIEW_VERSION_MAJOR}.${WEBVIEW_VERSION_MINOR}.${WEBVIEW_
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Target macOS version")
 
+# Set default build type
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "")
+endif()
+
 project(webview
     VERSION ${WEBVIEW_VERSION}
     LANGUAGES C CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-# Set default build type
-if(NOT DEFINED CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
 
 include(CMakePackageConfigHelpers)
 include(GenerateExportHeader)
