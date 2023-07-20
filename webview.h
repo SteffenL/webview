@@ -662,6 +662,7 @@ using browser_engine = detail::gtk_webkit_engine;
 #include <CoreGraphics/CoreGraphics.h>
 #include <objc/NSObjCRuntime.h>
 #include <objc/objc-runtime.h>
+#include <iostream>
 
 namespace webview {
 namespace detail {
@@ -982,6 +983,21 @@ private:
           objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
           objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
           "developerExtrasEnabled"_str);
+      // Explicitly make WKWebView inspectable on OS versions that support it.
+      // The behavior on older OS versions is for content to always be inspectable
+      // in debug builds.
+#ifdef __has_builtin
+#if __has_builtin(__builtin_available)
+      if (__builtin_available(macOS 13.3, iOS 16.4, tvOS 16.4, *)) {
+        std::cout << "API available" << std::endl;
+        objc::msg_send<void>(
+            m_webview, "setInspectable:"_sel,
+            objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES));
+      } else {
+        std::cout << "API unavailable" << std::endl;
+      }
+#endif
+#endif
     }
 
     // Equivalent Obj-C:

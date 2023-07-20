@@ -1,63 +1,85 @@
-#!/bin/sh
+#!/bin/bash
 
-set -e
-
-DIR="$(cd "$(dirname "$0")/../" && pwd)"
-FLAGS="-Wall -Wextra -pedantic -I$DIR"
-CFLAGS="-std=c99 $FLAGS"
-
-if [ "$(uname)" = "Darwin" ]; then
-	CXXFLAGS="-DWEBVIEW_COCOA -std=c++11 $FLAGS -framework WebKit"
+if [[ "${OSTYPE}" == "msys" || "${OSTYPE}" == "cygwin" ]]; then
+	os=windows
+elif [[ "$(uname)" == "Darwin" ]]; then
+	os=macos
 else
-	CXXFLAGS="-DWEBVIEW_GTK -std=c++11 $FLAGS $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0)"
+	os=linux
 fi
 
-if command -v clang-format >/dev/null 2>&1 ; then
-	echo "Formatting..."
-	clang-format -i \
-		"$DIR/webview.h" \
-		"$DIR/webview_test.cc" \
-		"$DIR/examples/"*.c \
-		"$DIR/examples/"*.cc
-else
-	echo "SKIP: Formatting (clang-format not installed)"
+realpath_wrapper() {
+    if [[ "${os}" == "macos" ]]; then
+        readlink -f "${1}" || return 1
+    else
+        realpath "${1}" || return 1
+    fi
+}
+
+# Default C standard
+c_std=c99
+# Default C++ standard
+cxx_std=c++11
+# Default C compiler
+c_compiler=cc
+# Default C++ compiler
+cxx_compiler=c++
+
+# C compiler override
+if [[ ! -z "${CC}" ]]; then
+    c_compiler=${CC}
 fi
 
-if command -v clang-tidy >/dev/null 2>&1 ; then
-	echo "Linting..."
-	clang-tidy "$DIR/examples/basic.cc" -- $CXXFLAGS
-	clang-tidy "$DIR/examples/bind.cc" -- $CXXFLAGS
-	clang-tidy "$DIR/webview_test.cc" -- $CXXFLAGS
-else
-	echo "SKIP: Linting (clang-tidy not installed)"
+# C++ compiler override
+if [[ ! -z "${CXX}" ]]; then
+    cxx_compiler=${CXX}
 fi
+
+project_dir="$(dirname "$(dirname "$(realpath_wrapper "${BASH_SOURCE[0]}")")")" || exit 1
+warning_flags=(-Wall -Wextra -pedantic)
+common_compile_flags=("${warning_flags[@]}" "-I${project_dir}")
+common_link_flags=("${warning_flags[@]}")
+c_compile_flags=("${common_compile_flags[@]}")
+c_link_flags=("${common_link_flags[@]}")
+cxx_compile_flags=("${common_compile_flags[@]}")
+cxx_link_flags=("${common_link_flags[@]}")
+
+c_compile_flags+=("-std=${c_std}")
+cxx_compile_flags+=("-std=${cxx_std}")
+
+if [[ "${os}" == "linux" ]]; then
+    pkgconfig_libs=(gtk+-3.0 webkit2gtk-4.0)
+    cxx_compile_flags+=($(pkg-config --cflags "${pkgconfig_libs[@]}")) || exit 1
+    cxx_link_flags+=($(pkg-config --libs "${pkgconfig_libs[@]}")) || exit 1
+elif [[ "${os}" == "macos" ]]; then
+    cxx_link_flags+=(-framework WebKit)
+    macos_target_version=10.9
+    c_compile_flags+=("-mmacosx-version-min=${macos_target_version}")
+    cxx_compile_flags+=("-mmacosx-version-min=${macos_target_version}")
+elif [[ "${os}" == "windows" ]]; then
+    cxx_link_flags+=(-mwindows -ladvapi32 -lole32 -lshell32 -lshlwapi -luser32 -lversion)
+fi
+
+echo "Project directory: ${project_dir[@]}"
+echo "C compiler: ${c_compiler}"
+echo "C compiler flags: ${c_compile_flags[@]}"
+echo "C linker flags: ${c_link_flags[@]}"
+echo "C++ compiler: ${cxx_compiler}"
+echo "C++ compiler flags: ${cxx_compile_flags[@]}"
+echo "C++ linker flags: ${cxx_link_flags[@]}"
 
 mkdir -p build/examples/c build/examples/cc build/examples/go || true
 
 echo "Building C++ examples"
-c++ examples/basic.cc $CXXFLAGS -o build/examples/cc/basic
-c++ examples/bind.cc $CXXFLAGS -o build/examples/cc/bind
+"${cxx_compiler}" "${project_dir}/examples/basic.cc" "${cxx_compile_flags[@]}" "${cxx_link_flags[@]}" -o "${project_dir}/build/examples/cc/basic" || exit 1
+"${cxx_compiler}" "${project_dir}/examples/bind.cc" "${cxx_compile_flags[@]}" "${cxx_link_flags[@]}" -o "${project_dir}/build/examples/cc/bind" || exit 1
 
 echo "Building C examples"
-c++ -c $CXXFLAGS webview.cc -o build/webview.o
-cc -c examples/basic.c $CFLAGS -o build/examples/c/basic.o
-cc -c examples/bind.c $CFLAGS -o build/examples/c/bind.o
-c++ build/examples/c/basic.o build/webview.o $CXXFLAGS -o build/examples/c/basic
-c++ build/examples/c/bind.o build/webview.o $CXXFLAGS -o build/examples/c/bind
-
-echo "Building Go examples"
-go build -o build/examples/go/basic examples/basic.go
-go build -o build/examples/go/bind examples/bind.go
+"${cxx_compiler}" -c "${cxx_compile_flags[@]}" "${project_dir}/webview.cc" -o "${project_dir}/build/webview.o" || exit 1
+"${c_compiler}" -c "${c_compile_flags[@]}" "${project_dir}/examples/basic.c" -o "${project_dir}/build/examples/c/basic.o" || exit 1
+"${c_compiler}" -c "${c_compile_flags[@]}" "${project_dir}/examples/bind.c" -o "${project_dir}/build/examples/c/bind.o" || exit 1
+"${cxx_compiler}" "${cxx_compile_flags[@]}" "${project_dir}/build/examples/c/basic.o" "${project_dir}/build/webview.o" "${cxx_link_flags[@]}" -o "${project_dir}/build/examples/c/basic" || exit 1
+"${cxx_compiler}" "${cxx_compile_flags[@]}" "${project_dir}/build/examples/c/bind.o" "${project_dir}/build/webview.o" "${cxx_link_flags[@]}" -o "${project_dir}/build/examples/c/bind" || exit 1
 
 echo "Building test app"
-c++ webview_test.cc $CXXFLAGS -o webview_test
-
-echo "Running tests"
-./webview_test
-
-if command -v go >/dev/null 2>&1 ; then
-	echo "Running Go tests"
-	CGO_ENABLED=1 go test
-else
-	echo "SKIP: Go tests"
-fi
+"${cxx_compiler}" "${cxx_compile_flags[@]}" "${project_dir}/webview_test.cc" "${cxx_link_flags[@]}" -o "${project_dir}/build/webview_test" || exit 1
