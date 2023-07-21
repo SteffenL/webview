@@ -102,8 +102,8 @@ task_go_build() {
         go_setup_env || return 1
         echo "Building Go examples..."
         (cd "${project_dir}" && (
-            go build -o "build/examples/go/basic${exe_suffix}" examples/basic.go || exit 1
-            go build -o "build/examples/go/bind${exe_suffix}" examples/bind.go || exit 1
+            go build -ldflags "-H windowsgui" -o "build/examples/go/basic${exe_suffix}" examples/basic.go || exit 1
+            go build -ldflags "-H windowsgui" -o "build/examples/go/bind${exe_suffix}" examples/bind.go || exit 1
         )) || return 1
     else
         echo "SKIP: Go build (go not installed)"
