@@ -16,6 +16,26 @@ realpath_wrapper() {
     fi
 }
 
+task_clean() {
+    rm -rd "${build_dir}" || return 1
+}
+
+task_build() {
+    #rm -rd "${build_dir}" || return 1
+    echo build
+}
+
+task_test() {
+    #rm -rd "${build_dir}" || return 1
+    echo test
+}
+
+run_task() {
+    local name=${1}
+    shift
+    eval "task_${name}" "${@}" || return 1
+}
+
 # Default C standard
 c_std=c99
 # Default C++ standard
@@ -35,7 +55,8 @@ if [[ ! -z "${CXX}" ]]; then
     cxx_compiler=${CXX}
 fi
 
-project_dir="$(dirname "$(dirname "$(realpath_wrapper "${BASH_SOURCE[0]}")")")" || exit 1
+project_dir=$(dirname "$(dirname "$(realpath_wrapper "${BASH_SOURCE[0]}")")") || exit 1
+build_dir=${project_dir}/build
 warning_flags=(-Wall -Wextra -pedantic)
 common_compile_flags=("${warning_flags[@]}" "-I${project_dir}")
 common_link_flags=("${warning_flags[@]}")
@@ -60,7 +81,8 @@ elif [[ "${os}" == "windows" ]]; then
     cxx_link_flags+=(-mwindows -ladvapi32 -lole32 -lshell32 -lshlwapi -luser32 -lversion)
 fi
 
-echo "-- Project directory: ${project_dir[@]}"
+tasks=(clean build test)
+
 echo "-- C compiler: ${c_compiler}"
 echo "-- C compiler flags: ${c_compile_flags[@]}"
 echo "-- C linker flags: ${c_link_flags[@]}"
@@ -68,18 +90,6 @@ echo "-- C++ compiler: ${cxx_compiler}"
 echo "-- C++ compiler flags: ${cxx_compile_flags[@]}"
 echo "-- C++ linker flags: ${cxx_link_flags[@]}"
 
-mkdir -p build/examples/c build/examples/cc build/examples/go || true
-
-echo "Building C++ examples"
-"${cxx_compiler}" "${project_dir}/examples/basic.cc" "${cxx_compile_flags[@]}" "${cxx_link_flags[@]}" -o "${project_dir}/build/examples/cc/basic" || exit 1
-"${cxx_compiler}" "${project_dir}/examples/bind.cc" "${cxx_compile_flags[@]}" "${cxx_link_flags[@]}" -o "${project_dir}/build/examples/cc/bind" || exit 1
-
-echo "Building C examples"
-"${cxx_compiler}" -c "${cxx_compile_flags[@]}" "${project_dir}/webview.cc" -o "${project_dir}/build/webview.o" || exit 1
-"${c_compiler}" -c "${c_compile_flags[@]}" "${project_dir}/examples/basic.c" -o "${project_dir}/build/examples/c/basic.o" || exit 1
-"${c_compiler}" -c "${c_compile_flags[@]}" "${project_dir}/examples/bind.c" -o "${project_dir}/build/examples/c/bind.o" || exit 1
-"${cxx_compiler}" "${cxx_compile_flags[@]}" "${project_dir}/build/examples/c/basic.o" "${project_dir}/build/webview.o" "${cxx_link_flags[@]}" -o "${project_dir}/build/examples/c/basic" || exit 1
-"${cxx_compiler}" "${cxx_compile_flags[@]}" "${project_dir}/build/examples/c/bind.o" "${project_dir}/build/webview.o" "${cxx_link_flags[@]}" -o "${project_dir}/build/examples/c/bind" || exit 1
-
-echo "Building test app"
-"${cxx_compiler}" "${cxx_compile_flags[@]}" "${project_dir}/webview_test.cc" "${cxx_link_flags[@]}" -o "${project_dir}/build/webview_test" || exit 1
+for task in "${tasks[@]}"; do
+    run_task "${task}" || exit 1
+done
