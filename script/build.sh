@@ -1,11 +1,11 @@
 #!/bin/bash
 
 if [[ "${OSTYPE}" == "msys" || "${OSTYPE}" == "cygwin" ]]; then
-	os=windows
+    os=windows
 elif [[ "$(uname)" == "Darwin" ]]; then
-	os=macos
+    os=macos
 else
-	os=linux
+    os=linux
 fi
 
 realpath_wrapper() {
