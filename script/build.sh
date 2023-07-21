@@ -8,11 +8,25 @@ else
     os=linux
 fi
 
-realpath_wrapper() {
+unix_realpath_wrapper() {
     if [[ "${os}" == "macos" ]]; then
         readlink -f "${1}" || return 1
     else
         realpath "${1}" || return 1
+    fi
+}
+
+windows_fetch_mswebview2() {
+    local nuget_exe=${tools_dir}/nuget/nuget.exe
+    if [[ ! -f "${nuget_exe}" ]]; then
+        mkdir -p "$(dirname "${nuget_exe}")" || return 1
+        echo "Fetching NuGet..."
+        curl -sSLo "${nuget_exe}" https://dist.nuget.org/win-x86-commandline/latest/nuget.exe || return 1
+    fi
+    if [[ ! -d "${mswebview2_dir}" ]]; then
+        mkdir -p "${libs_dir}/Microsoft.Web.WebView2.${mswebview2_version}" || return 1
+        echo "Fetching mswebview2 ${mswebview2_version}..."
+        "${nuget_exe}" install Microsoft.Web.Webview2 -Version "${mswebview2_version}" -OutputDirectory "${libs_dir}" || return 1
     fi
 }
 
@@ -32,6 +46,12 @@ task_format() {
                 "${project_dir}/examples/"*.cc || return 1
     else
         echo "SKIP: Formatting (clang-format not installed)"
+    fi
+}
+
+task_deps() {
+    if [[ "${os}" == "windows" ]]; then
+        windows_fetch_mswebview2 || return 1
     fi
 }
 
@@ -115,8 +135,11 @@ if [[ ! -z "${CXX}" ]]; then
     cxx_compiler=${CXX}
 fi
 
-project_dir=$(dirname "$(dirname "$(realpath_wrapper "${BASH_SOURCE[0]}")")") || exit 1
+project_dir=$(dirname "$(dirname "$(unix_realpath_wrapper "${BASH_SOURCE[0]}")")") || exit 1
 build_dir=${project_dir}/build
+external_dir=${build_dir}/external
+libs_dir=${external_dir}/libs
+tools_dir=${external_dir}/tools
 warning_flags=(-Wall -Wextra -pedantic)
 common_compile_flags=("${warning_flags[@]}" "-I${project_dir}")
 common_link_flags=("${warning_flags[@]}")
@@ -126,8 +149,15 @@ cxx_compile_flags=("${common_compile_flags[@]}")
 cxx_link_flags=("${common_link_flags[@]}")
 exe_suffix=
 
+if [[ "${os}" == "windows" ]]; then
+    cxx_std=c++17
+fi
+
 c_compile_flags+=("-std=${c_std}")
 cxx_compile_flags+=("-std=${cxx_std}")
+
+# Versions of dependencies
+mswebview2_version=1.0.1150.38
 
 if [[ "${os}" == "linux" ]]; then
     pkgconfig_libs=(gtk+-3.0 webkit2gtk-4.0)
@@ -140,11 +170,12 @@ elif [[ "${os}" == "macos" ]]; then
     cxx_compile_flags+=("-mmacosx-version-min=${macos_target_version}")
 elif [[ "${os}" == "windows" ]]; then
     exe_suffix=.exe
+    cxx_compile_flags+=("-I${libs_dir}/Microsoft.Web.WebView2.${mswebview2_version}/build/native/include")
     cxx_link_flags+=(-mwindows -ladvapi32 -lole32 -lshell32 -lshlwapi -luser32 -lversion)
 fi
 
 # Default tasks
-tasks=(clean format check build test go:build go:test)
+tasks=(clean format deps check build test go:build go:test)
 
 # Task override from command line
 if [[ ${#@} -gt 0 ]]; then
