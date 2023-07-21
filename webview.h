@@ -983,21 +983,6 @@ private:
           objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
           objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
           "developerExtrasEnabled"_str);
-      // Explicitly make WKWebView inspectable on OS versions that support it.
-      // The behavior on older OS versions is for content to always be inspectable
-      // in debug builds.
-#ifdef __has_builtin
-#if __has_builtin(__builtin_available)
-      if (__builtin_available(macOS 13.3, iOS 16.4, tvOS 16.4, *)) {
-        std::cout << "API available" << std::endl;
-        objc::msg_send<void>(
-            m_webview, "setInspectable:"_sel,
-            objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES));
-      } else {
-        std::cout << "API unavailable" << std::endl;
-      }
-#endif
-#endif
     }
 
     // Equivalent Obj-C:
@@ -1025,6 +1010,28 @@ private:
     objc::msg_send<void>(m_webview, "initWithFrame:configuration:"_sel,
                          CGRectMake(0, 0, 0, 0), config);
     objc::msg_send<void>(m_webview, "setUIDelegate:"_sel, ui_delegate);
+
+    if (m_debug) {
+      // Explicitly make WKWebView inspectable on OS versions that support it.
+      // The behavior on older OS versions is for content to always be inspectable.
+#if defined(__has_builtin)
+#if __has_builtin(__builtin_available)
+      if (__builtin_available(macOS 13.3, iOS 16.4, tvOS 16.4, *)) {
+        std::cout << "API available" << std::endl;
+        objc::msg_send<void>(
+            m_webview, "setInspectable:"_sel,
+            objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES));
+      } else {
+        std::cout << "API unavailable" << std::endl;
+      }
+#else
+#error __builtin_available is not supported by the compiler
+#endif
+#else
+#error __has_builtin is not supported by the compiler
+#endif
+    }
+
     auto script_message_handler = create_script_message_handler();
     objc::msg_send<void>(m_manager, "addScriptMessageHandler:name:"_sel,
                          script_message_handler, "external"_str);

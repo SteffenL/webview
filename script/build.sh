@@ -60,13 +60,13 @@ elif [[ "${os}" == "windows" ]]; then
     cxx_link_flags+=(-mwindows -ladvapi32 -lole32 -lshell32 -lshlwapi -luser32 -lversion)
 fi
 
-echo "Project directory: ${project_dir[@]}"
-echo "C compiler: ${c_compiler}"
-echo "C compiler flags: ${c_compile_flags[@]}"
-echo "C linker flags: ${c_link_flags[@]}"
-echo "C++ compiler: ${cxx_compiler}"
-echo "C++ compiler flags: ${cxx_compile_flags[@]}"
-echo "C++ linker flags: ${cxx_link_flags[@]}"
+echo "-- Project directory: ${project_dir[@]}"
+echo "-- C compiler: ${c_compiler}"
+echo "-- C compiler flags: ${c_compile_flags[@]}"
+echo "-- C linker flags: ${c_link_flags[@]}"
+echo "-- C++ compiler: ${cxx_compiler}"
+echo "-- C++ compiler flags: ${cxx_compile_flags[@]}"
+echo "-- C++ linker flags: ${cxx_link_flags[@]}"
 
 mkdir -p build/examples/c build/examples/cc build/examples/go || true
 
