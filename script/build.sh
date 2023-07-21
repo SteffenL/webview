@@ -116,6 +116,9 @@ run_task() {
     eval "task_${name}" "${@}" || return 1
 }
 
+# Versions of dependencies
+mswebview2_version=1.0.1150.38
+
 # Default C standard
 c_std=c99
 # Default C++ standard
@@ -155,9 +158,6 @@ fi
 
 c_compile_flags+=("-std=${c_std}")
 cxx_compile_flags+=("-std=${cxx_std}")
-
-# Versions of dependencies
-mswebview2_version=1.0.1150.38
 
 if [[ "${os}" == "linux" ]]; then
     pkgconfig_libs=(gtk+-3.0 webkit2gtk-4.0)
