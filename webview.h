@@ -1925,9 +1925,9 @@ public:
     if (!m_com_init.is_initialized()) {
       return;
     }
-    enable_dpi_awareness();
+    HINSTANCE hInstance = GetModuleHandle(nullptr);
     if (window == nullptr) {
-      HINSTANCE hInstance = GetModuleHandle(nullptr);
+      enable_dpi_awareness();
       HICON icon = (HICON)LoadImage(
           hInstance, IDI_APPLICATION, IMAGE_ICON, GetSystemMetrics(SM_CXICON),
           GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR);
@@ -1984,16 +1984,38 @@ public:
       embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
       resize_widget(m_window);
       m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);*/
+      /*ShowWindow(m_window, SW_SHOW);
+      UpdateWindow(m_window);
+      SetFocus(m_window);*/
     } else {
       m_window = *(static_cast<HWND *>(window));
       //embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
     }
-      ShowWindow(m_window, SW_SHOW);
-      UpdateWindow(m_window);
-      SetFocus(m_window);
-      embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
-      //resize_widget(m_window);
-      //m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+    m_widget = CreateWindowW(L"STATIC", nullptr, WS_CHILD,
+                              CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, m_window,
+                              nullptr, hInstance, nullptr);
+    SetWindowLongPtr(m_widget, GWLP_USERDATA, (LONG_PTR)this);
+    SetWindowLongPtr(m_widget, GWLP_WNDPROC, 
+      (LONG_PTR)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
+        auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        switch (msg) {
+        case WM_SIZE:
+          w->resize_widget(hwnd);
+          break;
+        default:
+          return DefWindowProcW(hwnd, msg, wp, lp);
+        }
+        return 0;
+      }));
+      ShowWindow(m_widget, SW_SHOW);
+      UpdateWindow(m_widget);
+
+    /*ShowWindow(m_widget, SW_SHOW);
+    UpdateWindow(m_widget);*/
+
+    embed(m_widget, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
+    //resize_widget(m_window);
+    //m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
   }
 
   virtual ~win32_edge_engine() {
@@ -2026,6 +2048,7 @@ public:
   }
 
   void *window() { return (void *)m_window; }
+  void *widget() { return (void *)m_widget; }
   void terminate() { PostQuitMessage(0); }
 
   void dispatch(std::function<void()> f) {
@@ -2105,6 +2128,15 @@ public:
     m_ready_callback = fn;
   }
 
+  void resize_widget() {
+    if (m_controller == nullptr) {
+      return;
+    }
+    RECT bounds;
+    GetClientRect(m_widget, &bounds);
+    m_controller->put_Bounds(bounds);
+  }
+
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
@@ -2124,7 +2156,7 @@ private:
 
     m_com_handler = new webview2_com_handler(
         wnd, cb,
-        [this](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
+        [this, wnd](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
           if (!controller || !webview) {
             return false;
           }
@@ -2142,7 +2174,8 @@ private:
             return false;
           }
           init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
-          resize_widget(m_window);
+          resize_widget(wnd);
+          SetFocus(wnd);
           controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
           if (m_ready_callback) {
             m_ready_callback();
@@ -2194,6 +2227,7 @@ private:
   com_init_wrapper m_com_init{COINIT_APARTMENTTHREADED};
   bool m_debug = false;
   HWND m_window = nullptr;
+  HWND m_widget = nullptr;
   POINT m_minsz = POINT{0, 0};
   POINT m_maxsz = POINT{0, 0};
   DWORD m_main_thread = GetCurrentThreadId();

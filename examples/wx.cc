@@ -3,59 +3,47 @@
 #include <wx/nativewin.h>
 #include <memory>
 
-
-/*class WebViewWidget : public wxNativeWindow {
-public:
-    explicit WebViewWidget(wxWindow* parent) : wxNativeWindow() {
-        // When creating the native window, we must specify the valid parent
-        // and while we don't have to specify any position if it's going to be
-        // laid out by sizers, we do need the size.
-        const wxSize size = FromDIP(wxSize(140, 30));
-
-        HWND hwnd = ::CreateWindowW(
-                        L"BUTTON",
-                        L"Press me to do it",
-                        WS_CHILD | WS_VISIBLE | BS_SPLITBUTTON,
-                        0, 0, size.x, size.y,
-                        (HWND)parent->GetHWND(), 0, nullptr, nullptr);
-        if ( !hwnd )
-        {
-            wxLogError("Creating split button failed.");
-            return;
-        }
-
-        (void)Create(parent, wxID_ANY, hwnd);
-    }
-
-    virtual ~WebViewWidget() {
-        Disown();
-    }
-
-protected:
-    virtual bool MSWOnNotify(int idCtrl, WXLPARAM lParam, WXLPARAM *result) override {
-        
-        return true;
-    }
-};*/
-
 class MyFrame : public wxFrame {
 public:
-    MyFrame() : wxFrame(nullptr, wxID_ANY, "Hello World") {
-        auto* left = new wxPanel{this};
-        auto* right = new wxPanel{this};
-        auto hwnd = static_cast<HWND>(left->GetHWND());
-        m_webview = std::make_unique<webview::webview>(false, &hwnd);
-        m_webview->set_ready_callback([this] {
-            m_webview->navigate("https://github.com/webview/webview");
+    MyFrame() : wxFrame(nullptr, wxID_ANY, "wxWidgets Example") {
+        auto* top = new wxPanel{this};
+        auto *topSizer = new wxBoxSizer{wxHORIZONTAL};
+
+        auto* locationTextCtrl = new wxTextCtrl{top, wxID_ANY, "https://github.com/webview/webview"};
+        locationTextCtrl->Bind(wxEVT_UPDATE_UI, [this] (wxUpdateUIEvent& event) {
+            event.Enable(m_ready);
         });
-        auto *sizer = new wxBoxSizer{wxHORIZONTAL};
-        sizer->Add(left, 1, wxEXPAND);
-        sizer->Add(right, 1, wxEXPAND);
+
+        auto* goButton = new wxButton{top, wxID_ANY, "Go"};
+        goButton->Bind(wxEVT_UPDATE_UI, [this] (wxUpdateUIEvent& event) {
+            event.Enable(m_ready);
+        });
+        goButton->Bind(wxEVT_BUTTON, [this, locationTextCtrl] (wxCommandEvent& event) {
+            m_webview->navigate(locationTextCtrl->GetValue().ToStdString());
+        });
+
+        topSizer->Add(locationTextCtrl, 1, wxEXPAND);
+        topSizer->Add(goButton, 0, wxEXPAND);
+        top->SetSizer(topSizer);
+
+        auto hwnd = static_cast<HWND>(GetHWND());
+        m_webview = std::make_unique<webview::webview>(false, &hwnd);
+        auto* bottom = new wxNativeWindow{this, wxID_ANY, reinterpret_cast<HWND>(m_webview->widget())};
+
+        auto *sizer = new wxBoxSizer{wxVERTICAL};
+        sizer->Add(top, 0, wxEXPAND);
+        sizer->Add(bottom, 1, wxEXPAND);
         SetSizer(sizer);
         Layout();
+
+        m_webview->set_ready_callback([this] {
+            m_webview->set_html("Hello, webview!");
+            m_ready = true;
+        });
     }
 
 private:
+    bool m_ready{};
     std::unique_ptr<webview::webview> m_webview;
 };
  
