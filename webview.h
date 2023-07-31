@@ -179,6 +179,11 @@ WEBVIEW_API void webview_unbind(webview_t w, const char *name);
 WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
                                 const char *result);
 
+// Process internal events. Call this function when using your own event loop,
+// e.g. once after processing all pending events. Currently this is only
+// relevant on Windows and does nothing on other platforms.
+WEBVIEW_API void webview_process_events(webview_t w);
+
 // Get the library's version information.
 // @since 0.10
 WEBVIEW_API const webview_version_info_t *webview_version();
@@ -221,6 +226,8 @@ WEBVIEW_API const webview_version_info_t *webview_version();
 #include <functional>
 #include <future>
 #include <map>
+#include <mutex>
+#include <queue>
 #include <string>
 #include <utility>
 #include <vector>
@@ -603,6 +610,8 @@ public:
                               nullptr);
   }
 
+  void process_events() {}
+
   void init(const std::string &js) {
     WebKitUserContentManager *manager =
         webkit_web_view_get_user_content_manager(WEBKIT_WEB_VIEW(m_webview));
@@ -826,6 +835,7 @@ public:
                                             html.c_str()),
                          nullptr);
   }
+  void process_events() {}
   void init(const std::string &js) {
     // Equivalent Obj-C:
     // [m_manager addUserScript:[[WKUserScript alloc] initWithSource:[NSString stringWithUTF8String:js.c_str()] injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES]]
@@ -1117,6 +1127,19 @@ namespace webview {
 namespace detail {
 
 using msg_cb_t = std::function<void(const std::string)>;
+
+enum class webview_event_id {
+  invalid,
+  call_binding,
+  dispatch
+};
+
+using webview_event_callback_fn_t = std::function<void()>;
+
+struct webview_event {
+  webview_event_id id{};
+  webview_event_callback_fn_t callback;
+};
 
 // Converts a narrow (UTF-8-encoded) string into a wide (UTF-16-encoded) string.
 inline std::wstring widen_string(const std::string &input) {
@@ -1954,20 +1977,17 @@ public:
         return;
       }
       SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR)this);
+
+      ShowWindow(m_window, SW_SHOW);
+      UpdateWindow(m_window);
+      SetFocus(m_window);
+      embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
+      resize(m_window);
+      m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
     } else {
       m_window = *(static_cast<HWND *>(window));
+      embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
     }
-
-    ShowWindow(m_window, SW_SHOW);
-    UpdateWindow(m_window);
-    SetFocus(m_window);
-
-    auto cb =
-        std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1);
-
-    embed(m_window, debug, cb);
-    resize(m_window);
-    m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
   }
 
   virtual ~win32_edge_engine() {
@@ -1992,26 +2012,27 @@ public:
 
   void run() {
     MSG msg;
-    BOOL res;
-    while ((res = GetMessage(&msg, nullptr, 0, 0)) != -1) {
-      if (msg.hwnd) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-        continue;
-      }
-      if (msg.message == WM_APP) {
-        auto f = (dispatch_fn_t *)(msg.lParam);
-        (*f)();
-        delete f;
-      } else if (msg.message == WM_QUIT) {
-        return;
-      }
+    while (GetMessageW(&msg, nullptr, 0, 0) > 0) {
+      TranslateMessage(&msg);
+      DispatchMessageW(&msg);
+      process_events();
     }
   }
+
   void *window() { return (void *)m_window; }
   void terminate() { PostQuitMessage(0); }
-  void dispatch(dispatch_fn_t f) {
-    PostThreadMessage(m_main_thread, WM_APP, 0, (LPARAM) new dispatch_fn_t(f));
+
+  void dispatch(std::function<void()> f) {
+    if (!f) {
+      return;
+    }
+    std::lock_guard<std::mutex> lock{m_event_queue_mutex};
+    detail::webview_event event{};
+    event.id = detail::webview_event_id::dispatch;
+    event.callback = [f] {
+      f();
+    };
+    m_event_queue.emplace(event);
   }
 
   void set_title(const std::string &title) {
@@ -2065,6 +2086,15 @@ public:
     m_webview->NavigateToString(widen_string(html).c_str());
   }
 
+  void process_events() {
+    std::lock_guard<std::mutex> lock{m_event_queue_mutex};
+    while (!m_event_queue.empty()) {
+      auto event = std::move(m_event_queue.front());
+      m_event_queue.pop();
+      process_event(event);
+    }
+  }
+
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
@@ -2084,16 +2114,32 @@ private:
 
     m_com_handler = new webview2_com_handler(
         wnd, cb,
-        [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
-          if (!controller || !webview) {
-            flag.clear();
-            return;
+        [this](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
+          if (controller && webview) {
+            controller->AddRef();
+            webview->AddRef();
+            m_controller = controller;
+            m_webview = webview;
           }
-          controller->AddRef();
-          webview->AddRef();
-          m_controller = controller;
-          m_webview = webview;
-          flag.clear();
+          std::lock_guard<std::mutex> lock{m_event_queue_mutex};
+          detail::webview_event event{};
+          event.id = detail::webview_event_id::dispatch;
+          event.callback = [f] {
+            if (!m_controller || !m_webview) {
+              return false;
+            }
+            ICoreWebView2Settings *settings = nullptr;
+            auto res = m_webview->get_Settings(&settings);
+            if (res != S_OK) {
+              return false;
+            }
+            res = settings->put_AreDevToolsEnabled(debug ? TRUE : FALSE);
+            if (res != S_OK) {
+              return false;
+            }
+            init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+          };
+          m_event_queue.emplace(event);
         });
 
     m_com_handler->set_attempt_handler([&] {
@@ -2101,25 +2147,6 @@ private:
           nullptr, userDataFolder, nullptr, m_com_handler);
     });
     m_com_handler->try_create_environment();
-
-    MSG msg = {};
-    while (flag.test_and_set() && GetMessage(&msg, nullptr, 0, 0)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    }
-    if (!m_controller || !m_webview) {
-      return false;
-    }
-    ICoreWebView2Settings *settings = nullptr;
-    auto res = m_webview->get_Settings(&settings);
-    if (res != S_OK) {
-      return false;
-    }
-    res = settings->put_AreDevToolsEnabled(debug ? TRUE : FALSE);
-    if (res != S_OK) {
-      return false;
-    }
-    init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
     return true;
   }
 
@@ -2145,6 +2172,12 @@ private:
     return ok;
   }
 
+  void process_event(const detail::webview_event& event) {
+    if (event.callback) {
+      event.callback();
+    }
+  }
+
   virtual void on_message(const std::string &msg) = 0;
 
   // The app is expected to call CoInitializeEx before
@@ -2159,6 +2192,8 @@ private:
   ICoreWebView2Controller *m_controller = nullptr;
   webview2_com_handler *m_com_handler = nullptr;
   mswebview2::loader m_webview2_loader;
+  std::mutex m_event_queue_mutex;
+  std::queue<detail::webview_event> m_event_queue;
 };
 
 } // namespace detail
@@ -2345,6 +2380,10 @@ WEBVIEW_API void webview_unbind(webview_t w, const char *name) {
 WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
                                 const char *result) {
   static_cast<webview::webview *>(w)->resolve(seq, status, result);
+}
+
+WEBVIEW_API void webview_process_events(webview_t w) {
+  static_cast<webview::webview *>(w)->process_events();
 }
 
 WEBVIEW_API const webview_version_info_t *webview_version() {

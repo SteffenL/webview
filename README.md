@@ -23,6 +23,12 @@ Windows  | [Windows API][win32-api], [WebView2][ms-webview2]
 
 We have started working on publishing documentation at [webview.dev] but you can always find the most up-to-date documentation right in the source code. Improving the documentation is a continuous effort and you are more than welcome to [offer suggestions][issues-new] or [contribute with content][docs-repo]. Please bear with us if the latest updates are not yet published.
 
+### Integration With GUI Frameworks
+
+Name      | Notes
+--------- | -----
+wxWidgets | Use `wxWebView` or `wxNativeWindow`.
+
 ## Prerequisites
 
 Your compiler must support minimum C++11 except for platforms that require a more modern version.
