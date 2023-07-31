@@ -1918,7 +1918,7 @@ private:
 
 class win32_edge_engine {
 public:
-  win32_edge_engine(bool debug, void *window) {
+  win32_edge_engine(bool debug, void *window) : m_debug(debug) {
     if (!is_webview2_available()) {
       return;
     }
@@ -1943,7 +1943,7 @@ public:
             auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
             switch (msg) {
             case WM_SIZE:
-              w->resize(hwnd);
+              w->resize_widget(hwnd);
               break;
             case WM_CLOSE:
               DestroyWindow(hwnd);
@@ -1978,16 +1978,22 @@ public:
       }
       SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR)this);
 
+      /*ShowWindow(m_window, SW_SHOW);
+      UpdateWindow(m_window);
+      SetFocus(m_window);
+      embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
+      resize_widget(m_window);
+      m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);*/
+    } else {
+      m_window = *(static_cast<HWND *>(window));
+      //embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
+    }
       ShowWindow(m_window, SW_SHOW);
       UpdateWindow(m_window);
       SetFocus(m_window);
       embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
-      resize(m_window);
-      m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
-    } else {
-      m_window = *(static_cast<HWND *>(window));
-      embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
-    }
+      //resize_widget(m_window);
+      //m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
   }
 
   virtual ~win32_edge_engine() {
@@ -2063,7 +2069,7 @@ public:
       SetWindowPos(
           m_window, nullptr, r.left, r.top, r.right - r.left, r.bottom - r.top,
           SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_FRAMECHANGED);
-      resize(m_window);
+      resize_widget(m_window);
     }
   }
 
@@ -2095,6 +2101,10 @@ public:
     }
   }
 
+  void set_ready_callback(std::function<void()> fn) {
+    m_ready_callback = fn;
+  }
+
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
@@ -2115,31 +2125,29 @@ private:
     m_com_handler = new webview2_com_handler(
         wnd, cb,
         [this](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
-          if (controller && webview) {
-            controller->AddRef();
-            webview->AddRef();
-            m_controller = controller;
-            m_webview = webview;
+          if (!controller || !webview) {
+            return false;
           }
-          std::lock_guard<std::mutex> lock{m_event_queue_mutex};
-          detail::webview_event event{};
-          event.id = detail::webview_event_id::dispatch;
-          event.callback = [f] {
-            if (!m_controller || !m_webview) {
-              return false;
-            }
-            ICoreWebView2Settings *settings = nullptr;
-            auto res = m_webview->get_Settings(&settings);
-            if (res != S_OK) {
-              return false;
-            }
-            res = settings->put_AreDevToolsEnabled(debug ? TRUE : FALSE);
-            if (res != S_OK) {
-              return false;
-            }
-            init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
-          };
-          m_event_queue.emplace(event);
+          controller->AddRef();
+          webview->AddRef();
+          m_controller = controller;
+          m_webview = webview;
+          ICoreWebView2Settings *settings = nullptr;
+          auto res = m_webview->get_Settings(&settings);
+          if (res != S_OK) {
+            return false;
+          }
+          res = settings->put_AreDevToolsEnabled(m_debug ? TRUE : FALSE);
+          if (res != S_OK) {
+            return false;
+          }
+          init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+          resize_widget(m_window);
+          controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+          if (m_ready_callback) {
+            m_ready_callback();
+          }
+          return true;
         });
 
     m_com_handler->set_attempt_handler([&] {
@@ -2150,7 +2158,7 @@ private:
     return true;
   }
 
-  void resize(HWND wnd) {
+  void resize_widget(HWND wnd) {
     if (m_controller == nullptr) {
       return;
     }
@@ -2184,6 +2192,7 @@ private:
   // CreateCoreWebView2EnvironmentWithOptions.
   // Source: https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/webview2-idl#createcorewebview2environmentwithoptions
   com_init_wrapper m_com_init{COINIT_APARTMENTTHREADED};
+  bool m_debug = false;
   HWND m_window = nullptr;
   POINT m_minsz = POINT{0, 0};
   POINT m_maxsz = POINT{0, 0};
@@ -2194,6 +2203,7 @@ private:
   mswebview2::loader m_webview2_loader;
   std::mutex m_event_queue_mutex;
   std::queue<detail::webview_event> m_event_queue;
+  std::function<void()> m_ready_callback;
 };
 
 } // namespace detail

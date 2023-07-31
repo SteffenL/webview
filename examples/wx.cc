@@ -4,7 +4,7 @@
 #include <memory>
 
 
-class WebViewWidget : public wxNativeWindow {
+/*class WebViewWidget : public wxNativeWindow {
 public:
     explicit WebViewWidget(wxWindow* parent) : wxNativeWindow() {
         // When creating the native window, we must specify the valid parent
@@ -36,7 +36,7 @@ protected:
         
         return true;
     }
-};
+};*/
 
 class MyFrame : public wxFrame {
 public:
@@ -45,7 +45,9 @@ public:
         auto* right = new wxPanel{this};
         auto hwnd = static_cast<HWND>(left->GetHWND());
         m_webview = std::make_unique<webview::webview>(false, &hwnd);
-        m_webview->navigate("https://github.com/webview/webview");
+        m_webview->set_ready_callback([this] {
+            m_webview->navigate("https://github.com/webview/webview");
+        });
         auto *sizer = new wxBoxSizer{wxHORIZONTAL};
         sizer->Add(left, 1, wxEXPAND);
         sizer->Add(right, 1, wxEXPAND);
