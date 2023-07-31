@@ -2007,8 +2007,6 @@ public:
         }
         return 0;
       }));
-      ShowWindow(m_widget, SW_SHOW);
-      UpdateWindow(m_widget);
 
     /*ShowWindow(m_widget, SW_SHOW);
     UpdateWindow(m_widget);*/
@@ -2175,6 +2173,9 @@ private:
           }
           init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
           resize_widget(wnd);
+          controller->put_IsVisible(TRUE);
+          ShowWindow(m_widget, SW_SHOW);
+          UpdateWindow(m_widget);
           SetFocus(wnd);
           controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
           if (m_ready_callback) {
