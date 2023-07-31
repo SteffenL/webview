@@ -18,19 +18,18 @@ class WebViewWidget : public wxNativeWindow {
 public:
     WebViewWidget(wxWindow *parent, wxWindowID winid, std::weak_ptr<webview::webview> w)
         : wxNativeWindow{parent, winid, static_cast<HWND>(w.lock()->widget())},
-          m_webview{w} {}
-
-protected:
-    virtual WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam) override {
-        auto r = wxNativeWindow::MSWWindowProc(nMsg, wParam, lParam);
-        if (auto w{m_webview.lock()}) {
-            w->process_events();
-        }
-        return r;
+          m_webview{w} {
+        m_timer.Bind(wxEVT_TIMER, [this] (wxTimerEvent& event) {
+            if (auto w{m_webview.lock()}) {
+                w->process_events();
+            }
+        });
+        m_timer.Start(20);
     }
 
 private:
     std::weak_ptr<webview::webview> m_webview;
+    wxTimer m_timer;
 };
 
 class MyFrame : public wxFrame {
