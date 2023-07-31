@@ -3,18 +3,45 @@
 #include <wx/nativewin.h>
 #include <memory>
 
+constexpr const auto html =
+    R"html(<button id="increment">Tap me</button>
+<script>
+  const [incrementElement] = document.querySelectorAll("#increment");
+  document.addEventListener("DOMContentLoaded", () => {
+    incrementElement.addEventListener("click", () => {
+      window.increment();
+    });
+  });
+</script>)html";
+
+class WebViewWidget : public wxNativeWindow {
+public:
+    WebViewWidget(wxWindow *parent, wxWindowID winid, std::weak_ptr<webview::webview> w)
+        : wxNativeWindow{parent, winid, static_cast<HWND>(w.lock()->widget())},
+          m_webview{w} {}
+
+protected:
+    virtual WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam) override {
+        auto r = wxNativeWindow::MSWWindowProc(nMsg, wParam, lParam);
+        if (auto w{m_webview.lock()}) {
+            w->process_events();
+        }
+        return r;
+    }
+
+private:
+    std::weak_ptr<webview::webview> m_webview;
+};
+
 class MyFrame : public wxFrame {
 public:
     MyFrame() : wxFrame(nullptr, wxID_ANY, "wxWidgets Example") {
-        auto* top = new wxPanel{this};
-        auto *topSizer = new wxBoxSizer{wxHORIZONTAL};
-
-        auto* locationTextCtrl = new wxTextCtrl{top, wxID_ANY, "https://github.com/webview/webview"};
+        auto* locationTextCtrl = new wxTextCtrl{this, wxID_ANY, "https://github.com/webview/webview"};
         locationTextCtrl->Bind(wxEVT_UPDATE_UI, [this] (wxUpdateUIEvent& event) {
             event.Enable(m_ready);
         });
 
-        auto* goButton = new wxButton{top, wxID_ANY, "Go"};
+        auto* goButton = new wxButton{this, wxID_ANY, "Go"};
         goButton->Bind(wxEVT_UPDATE_UI, [this] (wxUpdateUIEvent& event) {
             event.Enable(m_ready);
         });
@@ -22,29 +49,44 @@ public:
             m_webview->navigate(locationTextCtrl->GetValue().ToStdString());
         });
 
+        auto hwnd = static_cast<HWND>(GetHWND());
+        m_webview = std::make_shared<webview::webview>(false, &hwnd);
+
+        auto* webviewWidget = new WebViewWidget{this, wxID_ANY, m_webview};
+
+        auto* counterText = new wxStaticText{this, wxID_ANY, "0", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL | wxST_NO_AUTORESIZE};
+        auto font{counterText->GetFont()};
+        font.SetPointSize(72);
+        counterText->SetFont(font);
+
+        auto *topSizer = new wxBoxSizer{wxHORIZONTAL};
         topSizer->Add(locationTextCtrl, 1, wxEXPAND);
         topSizer->Add(goButton, 0, wxEXPAND);
-        top->SetSizer(topSizer);
 
-        auto hwnd = static_cast<HWND>(GetHWND());
-        m_webview = std::make_unique<webview::webview>(false, &hwnd);
-        auto* bottom = new wxNativeWindow{this, wxID_ANY, reinterpret_cast<HWND>(m_webview->widget())};
+        auto *bottomSizer = new wxBoxSizer{wxHORIZONTAL};
+        bottomSizer->Add(webviewWidget, 1, wxEXPAND);
+        bottomSizer->Add(counterText, 1, wxALIGN_CENTER);
 
         auto *sizer = new wxBoxSizer{wxVERTICAL};
-        sizer->Add(top, 0, wxEXPAND);
-        sizer->Add(bottom, 1, wxEXPAND);
+        sizer->Add(topSizer, 0, wxEXPAND);
+        sizer->Add(bottomSizer, 1, wxEXPAND);
         SetSizer(sizer);
         Layout();
 
-        m_webview->set_ready_callback([this] {
-            m_webview->set_html("Hello, webview!");
+        m_webview->set_ready_callback([this, counterText] {
+            m_webview->bind("increment", [this, counterText](const std::string & /*req*/) -> std::string {
+                counterText->SetLabel(wxString::Format("%d", ++m_counter));
+                return "";
+            });
+            m_webview->set_html(html);
             m_ready = true;
         });
     }
 
 private:
     bool m_ready{};
-    std::unique_ptr<webview::webview> m_webview;
+    std::shared_ptr<webview::webview> m_webview;
+    int m_counter{};
 };
  
 class MyApp : public wxApp
