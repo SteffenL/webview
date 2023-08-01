@@ -14,24 +14,6 @@ constexpr const auto html =
   });
 </script>)html";
 
-class WebViewWidget : public wxNativeWindow {
-public:
-    WebViewWidget(wxWindow *parent, wxWindowID winid, std::weak_ptr<webview::webview> w)
-        : wxNativeWindow{parent, winid, static_cast<HWND>(w.lock()->widget())},
-          m_webview{w} {
-        m_timer.Bind(wxEVT_TIMER, [this] (wxTimerEvent& event) {
-            if (auto w{m_webview.lock()}) {
-                w->process_events();
-            }
-        });
-        m_timer.Start(20);
-    }
-
-private:
-    std::weak_ptr<webview::webview> m_webview;
-    wxTimer m_timer;
-};
-
 class MyFrame : public wxFrame {
 public:
     MyFrame() : wxFrame(nullptr, wxID_ANY, "wxWidgets Example") {
@@ -49,9 +31,9 @@ public:
         });
 
         auto hwnd = static_cast<HWND>(GetHWND());
-        m_webview = std::make_shared<webview::webview>(false, &hwnd);
+        m_webview = std::make_unique<webview::webview>(false, &hwnd);
 
-        auto* webviewWidget = new WebViewWidget{this, wxID_ANY, m_webview};
+        auto* webviewWidget = new wxNativeWindow{this, wxID_ANY, static_cast<HWND>(m_webview->widget())};
 
         auto* counterText = new wxStaticText{this, wxID_ANY, "0", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL | wxST_NO_AUTORESIZE};
         auto font{counterText->GetFont()};
@@ -84,7 +66,7 @@ public:
 
 private:
     bool m_ready{};
-    std::shared_ptr<webview::webview> m_webview;
+    std::unique_ptr<webview::webview> m_webview;
     int m_counter{};
 };
  

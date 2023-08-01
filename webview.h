@@ -179,11 +179,6 @@ WEBVIEW_API void webview_unbind(webview_t w, const char *name);
 WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
                                 const char *result);
 
-// Process internal events. Call this function when using your own event loop,
-// e.g. once after processing all pending events. Currently this is only
-// relevant on Windows and does nothing on other platforms.
-WEBVIEW_API void webview_process_events(webview_t w);
-
 // Get the library's version information.
 // @since 0.10
 WEBVIEW_API const webview_version_info_t *webview_version();
@@ -224,10 +219,7 @@ WEBVIEW_API const webview_version_info_t *webview_version();
 #include <atomic>
 #include <cstdint>
 #include <functional>
-#include <future>
 #include <map>
-#include <mutex>
-#include <queue>
 #include <string>
 #include <utility>
 #include <vector>
@@ -610,8 +602,6 @@ public:
                               nullptr);
   }
 
-  void process_events() {}
-
   void init(const std::string &js) {
     WebKitUserContentManager *manager =
         webkit_web_view_get_user_content_manager(WEBKIT_WEB_VIEW(m_webview));
@@ -835,7 +825,6 @@ public:
                                             html.c_str()),
                          nullptr);
   }
-  void process_events() {}
   void init(const std::string &js) {
     // Equivalent Obj-C:
     // [m_manager addUserScript:[[WKUserScript alloc] initWithSource:[NSString stringWithUTF8String:js.c_str()] injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES]]
@@ -1991,13 +1980,18 @@ public:
       m_window = *(static_cast<HWND *>(window));
       //embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
     }
-    m_widget = CreateWindowW(L"STATIC", nullptr, WS_CHILD,
-                             CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, m_window,
-                             nullptr, hInstance, nullptr);
-    SetWindowLongPtr(m_widget, GWLP_USERDATA, (LONG_PTR)this);
-    SetWindowLongPtr(m_widget, GWLP_WNDPROC,
-      (LONG_PTR)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
+
+
+    WNDCLASSEXW widget_wc{};
+    widget_wc.cbSize = sizeof(WNDCLASSEX);
+    widget_wc.hInstance = hInstance;
+    widget_wc.lpszClassName = L"webview_widget";
+    widget_wc.lpfnWndProc =
+      (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
         auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        if (!w) {
+          return DefWindowProcW(hwnd, msg, wp, lp);
+        }
         switch (msg) {
         case WM_SIZE:
           w->resize_widget(hwnd);
@@ -2006,14 +2000,42 @@ public:
           return DefWindowProcW(hwnd, msg, wp, lp);
         }
         return 0;
-      }));
+      });
+    auto widget_atom = RegisterClassExW(&widget_wc);
+    m_widget = CreateWindowW(L"webview_widget", nullptr, WS_CHILD,
+                             0, 0, 0, 0, m_window,
+                             nullptr, hInstance, nullptr);
+    SetWindowLongPtr(m_widget, GWLP_USERDATA, (LONG_PTR)this);
 
-    /*ShowWindow(m_widget, SW_SHOW);
-    UpdateWindow(m_widget);*/
+    WNDCLASSEXW message_wc{};
+    message_wc.cbSize = sizeof(WNDCLASSEX);
+    message_wc.hInstance = hInstance;
+    message_wc.lpszClassName = L"webview_message";
+    message_wc.lpfnWndProc =
+      (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
+        auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        if (!w) {
+          return DefWindowProcW(hwnd, msg, wp, lp);
+        }
+        switch (msg) {
+        case WM_APP:
+          if (auto f = (dispatch_fn_t *)(lp)) {
+            (*f)();
+            delete f;
+          }
+          break;
+        default:
+          return DefWindowProcW(hwnd, msg, wp, lp);
+        }
+        return 0;
+      });
+    auto message_atom = RegisterClassExW(&message_wc);
+    m_message_window = CreateWindowExW(0, L"webview_message", nullptr, 0,
+                                       0, 0, 0, 0, HWND_MESSAGE,
+                                       nullptr, hInstance, nullptr);
+    SetWindowLongPtr(m_message_window, GWLP_USERDATA, (LONG_PTR)this);
 
     embed(m_widget, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
-    //resize_widget(m_window);
-    //m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
   }
 
   virtual ~win32_edge_engine() {
@@ -2041,7 +2063,6 @@ public:
     while (GetMessageW(&msg, nullptr, 0, 0) > 0) {
       TranslateMessage(&msg);
       DispatchMessageW(&msg);
-      process_events();
     }
   }
 
@@ -2049,17 +2070,8 @@ public:
   void *widget() { return (void *)m_widget; }
   void terminate() { PostQuitMessage(0); }
 
-  void dispatch(std::function<void()> f) {
-    if (!f) {
-      return;
-    }
-    std::lock_guard<std::mutex> lock{m_event_queue_mutex};
-    detail::webview_event event{};
-    event.id = detail::webview_event_id::dispatch;
-    event.callback = [f] {
-      f();
-    };
-    m_event_queue.emplace(event);
+  void dispatch(dispatch_fn_t f) {
+    PostMessageW(m_message_window, WM_APP, 0, (LPARAM) new dispatch_fn_t(f));
   }
 
   void set_title(const std::string &title) {
@@ -2111,15 +2123,6 @@ public:
 
   void set_html(const std::string &html) {
     m_webview->NavigateToString(widen_string(html).c_str());
-  }
-
-  void process_events() {
-    std::lock_guard<std::mutex> lock{m_event_queue_mutex};
-    while (!m_event_queue.empty()) {
-      auto event = std::move(m_event_queue.front());
-      m_event_queue.pop();
-      process_event(event);
-    }
   }
 
   void set_ready_callback(std::function<void()> fn) {
@@ -2214,12 +2217,6 @@ private:
     return ok;
   }
 
-  void process_event(const detail::webview_event& event) {
-    if (event.callback) {
-      event.callback();
-    }
-  }
-
   virtual void on_message(const std::string &msg) = 0;
 
   // The app is expected to call CoInitializeEx before
@@ -2236,9 +2233,8 @@ private:
   ICoreWebView2Controller *m_controller = nullptr;
   webview2_com_handler *m_com_handler = nullptr;
   mswebview2::loader m_webview2_loader;
-  std::mutex m_event_queue_mutex;
-  std::queue<detail::webview_event> m_event_queue;
   std::function<void()> m_ready_callback;
+  HWND m_message_window = nullptr;
 };
 
 } // namespace detail
@@ -2427,9 +2423,6 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
   static_cast<webview::webview *>(w)->resolve(seq, status, result);
 }
 
-WEBVIEW_API void webview_process_events(webview_t w) {
-  static_cast<webview::webview *>(w)->process_events();
-}
 
 WEBVIEW_API const webview_version_info_t *webview_version() {
   return &webview::detail::library_version_info;
