@@ -1117,19 +1117,6 @@ namespace detail {
 
 using msg_cb_t = std::function<void(const std::string)>;
 
-enum class webview_event_id {
-  invalid,
-  call_binding,
-  dispatch
-};
-
-using webview_event_callback_fn_t = std::function<void()>;
-
-struct webview_event {
-  webview_event_id id{};
-  webview_event_callback_fn_t callback;
-};
-
 // Converts a narrow (UTF-8-encoded) string into a wide (UTF-16-encoded) string.
 inline std::wstring widen_string(const std::string &input) {
   if (input.empty()) {
