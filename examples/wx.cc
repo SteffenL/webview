@@ -69,7 +69,7 @@ private:
     std::unique_ptr<webview::webview> m_webview;
     int m_counter{};
 };
- 
+
 class MyApp : public wxApp
 {
 public:
