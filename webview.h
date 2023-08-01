@@ -1908,6 +1908,7 @@ public:
           hInstance, IDI_APPLICATION, IMAGE_ICON, GetSystemMetrics(SM_CXICON),
           GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR);
 
+      // Create a top-level window.
       WNDCLASSEXW wc;
       ZeroMemory(&wc, sizeof(WNDCLASSEX));
       wc.cbSize = sizeof(WNDCLASSEX);
@@ -1917,10 +1918,17 @@ public:
       wc.lpfnWndProc =
           (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
             auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+            if (!w) {
+              return DefWindowProcW(hwnd, msg, wp, lp);
+            }
             switch (msg) {
-            case WM_SIZE:
-              w->resize_widget(hwnd);
+            case WM_SIZE: {
+              RECT rect{};
+              if (GetClientRect(hwnd, &rect)) {
+                MoveWindow(w->m_widget, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+              }
               break;
+            }
             case WM_CLOSE:
               DestroyWindow(hwnd);
               break;
@@ -1954,21 +1962,13 @@ public:
       }
       SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR)this);
 
-      /*ShowWindow(m_window, SW_SHOW);
+      ShowWindow(m_window, SW_SHOW);
       UpdateWindow(m_window);
-      SetFocus(m_window);
-      embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
-      resize_widget(m_window);
-      m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);*/
-      /*ShowWindow(m_window, SW_SHOW);
-      UpdateWindow(m_window);
-      SetFocus(m_window);*/
     } else {
       m_window = *(static_cast<HWND *>(window));
-      //embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
     }
 
-
+    // Create a window that WebView2 will be embedded into.
     WNDCLASSEXW widget_wc{};
     widget_wc.cbSize = sizeof(WNDCLASSEX);
     widget_wc.hInstance = hInstance;
@@ -1994,6 +1994,7 @@ public:
                              nullptr, hInstance, nullptr);
     SetWindowLongPtr(m_widget, GWLP_USERDATA, (LONG_PTR)this);
 
+    // Create a message-only window for internal messaging.
     WNDCLASSEXW message_wc{};
     message_wc.cbSize = sizeof(WNDCLASSEX);
     message_wc.hInstance = hInstance;
@@ -2127,6 +2128,8 @@ public:
 
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
+    bool webview2_done{};
+
     wchar_t currentExePath[MAX_PATH];
     GetModuleFileNameW(nullptr, currentExePath, MAX_PATH);
     wchar_t *currentExeName = PathFindFileNameW(currentExePath);
@@ -2141,7 +2144,8 @@ private:
 
     m_com_handler = new webview2_com_handler(
         wnd, cb,
-        [this, wnd](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
+        [this, wnd, &webview2_done](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
+          webview2_done = true;
           if (!controller || !webview) {
             return false;
           }
@@ -2165,9 +2169,6 @@ private:
           UpdateWindow(m_widget);
           SetFocus(wnd);
           controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
-          if (m_ready_callback) {
-            m_ready_callback();
-          }
           return true;
         });
 
@@ -2176,6 +2177,17 @@ private:
           nullptr, userDataFolder, nullptr, m_com_handler);
     });
     m_com_handler->try_create_environment();
+
+    // Wait for WebView2 to finish initialization.
+    MSG msg;
+    while (!webview2_done && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
+      if (msg.message == WM_QUIT) {
+        return false;
+      }
+      TranslateMessage(&msg);
+      DispatchMessageW(&msg);
+    }
+
     return true;
   }
 
