@@ -17,8 +17,12 @@ constexpr const auto html =
 class MyFrame : public wxFrame {
 public:
     MyFrame() : wxFrame(nullptr, wxID_ANY, "wxWidgets Example") {
-        m_webview = std::make_unique<webview::webview>(false, GetHandle());
+        m_webview = std::unique_ptr<webview::webview>{new webview::webview{false, GetHandle()}};
+#ifdef wxHAS_NATIVE_WINDOW
         auto* webviewWidget = new wxNativeWindow{this, wxID_ANY, static_cast<wxNativeWindowHandle>(m_webview->widget())};
+#else
+#error wxWidgets >= 3.1 is required for wxNativeWindow.
+#endif
 
         auto* locationTextCtrl = new wxTextCtrl{this, wxID_ANY, "https://github.com/webview/webview"};
         auto* goButton = new wxButton{this, wxID_ANY, "Go"};
