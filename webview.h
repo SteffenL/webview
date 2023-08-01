@@ -2129,7 +2129,7 @@ public:
     m_ready_callback = fn;
   }
 
-  void resize_widget() {
+  void resize_webview() {
     if (m_controller == nullptr) {
       return;
     }
@@ -2140,9 +2140,6 @@ public:
 
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
-    std::atomic_flag flag = ATOMIC_FLAG_INIT;
-    flag.test_and_set();
-
     wchar_t currentExePath[MAX_PATH];
     GetModuleFileNameW(nullptr, currentExePath, MAX_PATH);
     wchar_t *currentExeName = PathFindFileNameW(currentExePath);
