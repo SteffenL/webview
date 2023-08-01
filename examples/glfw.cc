@@ -4,30 +4,26 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
-#include <cstdlib>
-#include <iostream>
+int main() {
+    if (!glfwInit()) {
+        return -1;
+    }
 
-int main()
-{
-    if (!glfwInit())
-        return EXIT_FAILURE;
-
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-    auto *window = glfwCreateWindow(800, 600, "Hello Webview!", nullptr, nullptr);
-    glfwMakeContextCurrent(window);
+    auto *window{glfwCreateWindow(640, 480, "GLFW Example", nullptr, nullptr)};
+    if (!window) {
+        glfwTerminate();
+        return -1;
+    }
 
     auto hwnd = glfwGetWin32Window(window);
     webview::webview w(false, &hwnd);
-    if (w.window() != hwnd)
-        std::cout << "not the same\n"; // not emitted, they are the same
-    w.navigate("https://github.com/webview/webview/issues/938");
-    // w.run(); // with or without wont avoid crash
 
-    while (!glfwWindowShouldClose(window))
-    {
-        glfwPollEvents();
-        w.process_events();
+    glfwMakeContextCurrent(window);
+
+    while (!glfwWindowShouldClose(window)) {
+        glClear(GL_COLOR_BUFFER_BIT);
         glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     glfwTerminate();
