@@ -1992,10 +1992,10 @@ public:
       //embed(m_window, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
     }
     m_widget = CreateWindowW(L"STATIC", nullptr, WS_CHILD,
-                              CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, m_window,
-                              nullptr, hInstance, nullptr);
+                             CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, m_window,
+                             nullptr, hInstance, nullptr);
     SetWindowLongPtr(m_widget, GWLP_USERDATA, (LONG_PTR)this);
-    SetWindowLongPtr(m_widget, GWLP_WNDPROC, 
+    SetWindowLongPtr(m_widget, GWLP_WNDPROC,
       (LONG_PTR)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
         auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
         switch (msg) {
