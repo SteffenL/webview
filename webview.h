@@ -1894,7 +1894,7 @@ private:
 
 class win32_edge_engine {
 public:
-  win32_edge_engine(bool debug, void *window) : m_debug(debug) {
+  win32_edge_engine(bool debug, void *window) {
     if (!is_webview2_available()) {
       return;
     }
@@ -1923,10 +1923,7 @@ public:
             }
             switch (msg) {
             case WM_SIZE: {
-              RECT rect{};
-              if (GetClientRect(hwnd, &rect)) {
-                MoveWindow(w->m_widget, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
-              }
+              w->resize_widget();
               break;
             }
             case WM_CLOSE:
@@ -1981,7 +1978,7 @@ public:
         }
         switch (msg) {
         case WM_SIZE:
-          w->resize_widget(hwnd);
+          w->resize_webview();
           break;
         default:
           return DefWindowProcW(hwnd, msg, wp, lp);
@@ -2090,7 +2087,6 @@ public:
       SetWindowPos(
           m_window, nullptr, r.left, r.top, r.right - r.left, r.bottom - r.top,
           SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_FRAMECHANGED);
-      resize_widget(m_window);
     }
   }
 
@@ -2113,19 +2109,6 @@ public:
     m_webview->NavigateToString(widen_string(html).c_str());
   }
 
-  void set_ready_callback(std::function<void()> fn) {
-    m_ready_callback = fn;
-  }
-
-  void resize_webview() {
-    if (m_controller == nullptr) {
-      return;
-    }
-    RECT bounds;
-    GetClientRect(m_widget, &bounds);
-    m_controller->put_Bounds(bounds);
-  }
-
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
     bool webview2_done{};
@@ -2144,7 +2127,7 @@ private:
 
     m_com_handler = new webview2_com_handler(
         wnd, cb,
-        [this, wnd, &webview2_done](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
+        [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
           webview2_done = true;
           if (!controller || !webview) {
             return false;
@@ -2158,12 +2141,12 @@ private:
           if (res != S_OK) {
             return false;
           }
-          res = settings->put_AreDevToolsEnabled(m_debug ? TRUE : FALSE);
+          res = settings->put_AreDevToolsEnabled(debug ? TRUE : FALSE);
           if (res != S_OK) {
             return false;
           }
           init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
-          resize_widget(wnd);
+          resize_webview();
           controller->put_IsVisible(TRUE);
           ShowWindow(m_widget, SW_SHOW);
           UpdateWindow(m_widget);
@@ -2178,7 +2161,7 @@ private:
     });
     m_com_handler->try_create_environment();
 
-    // Wait for WebView2 to finish initialization.
+    // Wait for WebView2 to finish initialization. It relies on a message loop.
     MSG msg;
     while (!webview2_done && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
       if (msg.message == WM_QUIT) {
@@ -2191,13 +2174,24 @@ private:
     return true;
   }
 
-  void resize_widget(HWND wnd) {
-    if (m_controller == nullptr) {
-      return;
+  void resize_widget() {
+    if (m_widget) {
+      RECT r{};
+      auto parent = GetParent(m_widget);
+      if (GetClientRect(parent, &r)) {
+        MoveWindow(m_widget, r.left, r.top, r.right - r.left, r.bottom - r.top, TRUE);
+      }
     }
-    RECT bounds;
-    GetClientRect(wnd, &bounds);
-    m_controller->put_Bounds(bounds);
+  }
+
+  void resize_webview() {
+    if (m_widget && m_controller) {
+      RECT bounds{};
+      auto parent = GetParent(m_widget);
+      if (GetClientRect(parent, &bounds)) {
+        m_controller->put_Bounds(bounds);
+      }
+    }
   }
 
   bool is_webview2_available() const noexcept {
@@ -2219,7 +2213,6 @@ private:
   // CreateCoreWebView2EnvironmentWithOptions.
   // Source: https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/webview2-idl#createcorewebview2environmentwithoptions
   com_init_wrapper m_com_init{COINIT_APARTMENTTHREADED};
-  bool m_debug = false;
   HWND m_window = nullptr;
   HWND m_widget = nullptr;
   POINT m_minsz = POINT{0, 0};
@@ -2229,7 +2222,6 @@ private:
   ICoreWebView2Controller *m_controller = nullptr;
   webview2_com_handler *m_com_handler = nullptr;
   mswebview2::loader m_webview2_loader;
-  std::function<void()> m_ready_callback;
   HWND m_message_window = nullptr;
 };
 
