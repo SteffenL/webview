@@ -525,20 +525,13 @@ namespace detail {
 
 class gtk_webkit_engine {
 public:
-  gtk_webkit_engine(bool debug, void *window)
-      : m_window(static_cast<GtkWidget *>(window)) {
-    if (gtk_init_check(nullptr, nullptr) == FALSE) {
-      return;
+  gtk_webkit_engine(bool debug, void *window) {
+    if (!window) {
+      if (gtk_init_check(nullptr, nullptr) == FALSE) {
+        return;
+      }
     }
-    m_window = static_cast<GtkWidget *>(window);
-    if (m_window == nullptr) {
-      m_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    }
-    g_signal_connect(G_OBJECT(m_window), "destroy",
-                     G_CALLBACK(+[](GtkWidget *, gpointer arg) {
-                       static_cast<gtk_webkit_engine *>(arg)->terminate();
-                     }),
-                     this);
+
     // Initialize webview widget
     m_webview = webkit_web_view_new();
     WebKitUserContentManager *manager =
@@ -557,7 +550,6 @@ public:
     init("window.external={invoke:function(s){window.webkit.messageHandlers."
          "external.postMessage(s);}}");
 
-    gtk_container_add(GTK_CONTAINER(m_window), GTK_WIDGET(m_webview));
     gtk_widget_grab_focus(GTK_WIDGET(m_webview));
 
     WebKitSettings *settings =
@@ -569,10 +561,22 @@ public:
       webkit_settings_set_enable_developer_extras(settings, true);
     }
 
-    gtk_widget_show_all(m_window);
+    if (window) {
+      m_window = static_cast<GtkWidget *>(window);
+    } else {
+      m_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+      g_signal_connect(G_OBJECT(m_window), "destroy",
+                      G_CALLBACK(+[](GtkWidget *, gpointer arg) {
+                        static_cast<gtk_webkit_engine *>(arg)->terminate();
+                      }),
+                      this);
+      gtk_container_add(GTK_CONTAINER(m_window), GTK_WIDGET(m_webview));
+      gtk_widget_show_all(m_window);
+    }
   }
   virtual ~gtk_webkit_engine() = default;
   void *window() { return (void *)m_window; }
+  void *widget() { return (void *)m_webview; }
   void run() { gtk_main(); }
   void terminate() { gtk_main_quit(); }
   void dispatch(std::function<void()> f) {
@@ -773,6 +777,7 @@ public:
   }
   virtual ~cocoa_wkwebview_engine() = default;
   void *window() { return (void *)m_window; }
+  void *widget() { return (void *)m_webview; }
   void terminate() {
     auto app = get_shared_application();
     objc::msg_send<void>(app, "terminate:"_sel, nullptr);
