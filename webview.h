@@ -122,7 +122,7 @@ WEBVIEW_API void
 webview_dispatch(webview_t w, void (*fn)(webview_t w, void *arg), void *arg);
 
 // Returns the native window provided to the library if any; otherwise, a
-// native top-level window created by the library.
+// native window created by the library.
 // The exact type depends on the backend:
 // - GTK: GtkWindow *
 // - Cocoa: NSWindow *
