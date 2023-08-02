@@ -1932,49 +1932,56 @@ public:
       wc.hInstance = hInstance;
       wc.lpszClassName = L"webview";
       wc.hIcon = icon;
-      wc.lpfnWndProc =
-          (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
-            auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-            if (!w) {
-              return DefWindowProcW(hwnd, msg, wp, lp);
-            }
-            switch (msg) {
-            case WM_SIZE: {
-              w->resize_widget();
-              break;
-            }
-            case WM_CLOSE:
-              DestroyWindow(hwnd);
-              break;
-            case WM_DESTROY:
-              w->terminate();
-              break;
-            case WM_GETMINMAXINFO: {
-              auto lpmmi = (LPMINMAXINFO)lp;
-              if (w == nullptr) {
-                return 0;
-              }
-              if (w->m_maxsz.x > 0 && w->m_maxsz.y > 0) {
-                lpmmi->ptMaxSize = w->m_maxsz;
-                lpmmi->ptMaxTrackSize = w->m_maxsz;
-              }
-              if (w->m_minsz.x > 0 && w->m_minsz.y > 0) {
-                lpmmi->ptMinTrackSize = w->m_minsz;
-              }
-            } break;
-            default:
-              return DefWindowProcW(hwnd, msg, wp, lp);
-            }
-            return 0;
-          });
+      wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
+                                     LPARAM lp) -> LRESULT {
+        win32_edge_engine *w{};
+
+        if (msg == WM_NCCREATE) {
+          auto *lpcs{reinterpret_cast<LPCREATESTRUCT>(lp)};
+          w = static_cast<win32_edge_engine *>(lpcs->lpCreateParams);
+          w->m_window = hwnd;
+          SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(w));
+        } else {
+          w = reinterpret_cast<win32_edge_engine *>(
+              GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+        }
+
+        if (!w) {
+          return DefWindowProcW(hwnd, msg, wp, lp);
+        }
+
+        switch (msg) {
+        case WM_SIZE: {
+          w->resize_widget();
+          break;
+        }
+        case WM_CLOSE:
+          DestroyWindow(hwnd);
+          break;
+        case WM_DESTROY:
+          w->terminate();
+          break;
+        case WM_GETMINMAXINFO: {
+          auto lpmmi = (LPMINMAXINFO)lp;
+          if (w->m_maxsz.x > 0 && w->m_maxsz.y > 0) {
+            lpmmi->ptMaxSize = w->m_maxsz;
+            lpmmi->ptMaxTrackSize = w->m_maxsz;
+          }
+          if (w->m_minsz.x > 0 && w->m_minsz.y > 0) {
+            lpmmi->ptMinTrackSize = w->m_minsz;
+          }
+        } break;
+        default:
+          return DefWindowProcW(hwnd, msg, wp, lp);
+        }
+        return 0;
+      });
       RegisterClassExW(&wc);
-      m_window = CreateWindowW(L"webview", L"", WS_OVERLAPPEDWINDOW,
-                               CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, nullptr,
-                               nullptr, hInstance, nullptr);
+      CreateWindowW(L"webview", L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+                    CW_USEDEFAULT, 640, 480, nullptr, nullptr, hInstance, this);
       if (m_window == nullptr) {
         return;
       }
-      SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR)this);
 
       ShowWindow(m_window, SW_SHOW);
       UpdateWindow(m_window);
@@ -1989,54 +1996,75 @@ public:
     widget_wc.cbSize = sizeof(WNDCLASSEX);
     widget_wc.hInstance = hInstance;
     widget_wc.lpszClassName = L"webview_widget";
-    widget_wc.lpfnWndProc =
-        (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
-          auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-          if (!w) {
-            return DefWindowProcW(hwnd, msg, wp, lp);
-          }
-          switch (msg) {
-          case WM_SIZE:
-            w->resize_webview();
-            break;
-          default:
-            return DefWindowProcW(hwnd, msg, wp, lp);
-          }
-          return 0;
-        });
+    widget_wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
+                                          LPARAM lp) -> LRESULT {
+      win32_edge_engine *w{};
+
+      if (msg == WM_NCCREATE) {
+        auto *lpcs{reinterpret_cast<LPCREATESTRUCT>(lp)};
+        w = static_cast<win32_edge_engine *>(lpcs->lpCreateParams);
+        w->m_widget = hwnd;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(w));
+      } else {
+        w = reinterpret_cast<win32_edge_engine *>(
+            GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+      }
+
+      if (!w) {
+        return DefWindowProcW(hwnd, msg, wp, lp);
+      }
+
+      switch (msg) {
+      case WM_SIZE:
+        w->resize_webview();
+        break;
+      default:
+        return DefWindowProcW(hwnd, msg, wp, lp);
+      }
+      return 0;
+    });
     auto widget_atom = RegisterClassExW(&widget_wc);
-    m_widget = CreateWindowW(L"webview_widget", nullptr, WS_CHILD, 0, 0, 0, 0,
-                             m_window, nullptr, hInstance, nullptr);
-    SetWindowLongPtr(m_widget, GWLP_USERDATA, (LONG_PTR)this);
+    CreateWindowW(L"webview_widget", nullptr, WS_CHILD, 0, 0, 0, 0, m_window,
+                  nullptr, hInstance, this);
 
     // Create a message-only window for internal messaging.
     WNDCLASSEXW message_wc{};
     message_wc.cbSize = sizeof(WNDCLASSEX);
     message_wc.hInstance = hInstance;
     message_wc.lpszClassName = L"webview_message";
-    message_wc.lpfnWndProc =
-        (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
-          auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-          if (!w) {
-            return DefWindowProcW(hwnd, msg, wp, lp);
-          }
-          switch (msg) {
-          case WM_APP:
-            if (auto f = (dispatch_fn_t *)(lp)) {
-              (*f)();
-              delete f;
-            }
-            break;
-          default:
-            return DefWindowProcW(hwnd, msg, wp, lp);
-          }
-          return 0;
-        });
+    message_wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
+                                           LPARAM lp) -> LRESULT {
+      win32_edge_engine *w{};
+
+      if (msg == WM_NCCREATE) {
+        auto *lpcs{reinterpret_cast<LPCREATESTRUCT>(lp)};
+        w = static_cast<win32_edge_engine *>(lpcs->lpCreateParams);
+        w->m_message_window = hwnd;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(w));
+      } else {
+        w = reinterpret_cast<win32_edge_engine *>(
+            GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+      }
+
+      if (!w) {
+        return DefWindowProcW(hwnd, msg, wp, lp);
+      }
+
+      switch (msg) {
+      case WM_APP:
+        if (auto f = (dispatch_fn_t *)(lp)) {
+          (*f)();
+          delete f;
+        }
+        break;
+      default:
+        return DefWindowProcW(hwnd, msg, wp, lp);
+      }
+      return 0;
+    });
     auto message_atom = RegisterClassExW(&message_wc);
-    m_message_window =
-        CreateWindowExW(0, L"webview_message", nullptr, 0, 0, 0, 0, 0,
-                        HWND_MESSAGE, nullptr, hInstance, nullptr);
-    SetWindowLongPtr(m_message_window, GWLP_USERDATA, (LONG_PTR)this);
+    CreateWindowExW(0, L"webview_message", nullptr, 0, 0, 0, 0, 0, HWND_MESSAGE,
+                    nullptr, hInstance, this);
 
     embed(
         m_widget, debug,
