@@ -99,10 +99,10 @@ typedef void *webview_t;
 // be enabled (if the platform supports them). The window parameter can be a
 // pointer to the native window handle. If it's non-null - then child WebView
 // is embedded into the given parent window. Otherwise a new window is created.
-// Depending on the platform, a GtkWindow, NSWindow or HWND pointer can be
-// passed here. Returns null on failure. Creation can fail for various reasons
-// such as when required runtime dependencies are missing or when window creation
-// fails.
+// Depending on the platform, a GtkWindow, NSWindow or HWND can be passed here.
+// For backward compatibility, the function also accepts a pointer to HWND.
+// Returns null on failure. Creation can fail for various reasons such as when
+// required runtime dependencies are missing or when window creation fails.
 WEBVIEW_API webview_t webview_create(int debug, void *window);
 
 // Destroys a webview and closes the native window.
@@ -121,10 +121,22 @@ WEBVIEW_API void webview_terminate(webview_t w);
 WEBVIEW_API void
 webview_dispatch(webview_t w, void (*fn)(webview_t w, void *arg), void *arg);
 
-// Returns a native window handle pointer. When using a GTK backend the pointer
-// is a GtkWindow pointer, when using a Cocoa backend the pointer is a NSWindow
-// pointer, when using a Win32 backend the pointer is a HWND pointer.
+// Returns the native window provided to the library if any; otherwise, a
+// native top-level window created by the library.
+// The exact type depends on the backend:
+// - GTK: GtkWindow *
+// - Cocoa: NSWindow *
+// - Windows: HWND
 WEBVIEW_API void *webview_get_window(webview_t w);
+
+// Returns a native widget with the underlying browser view.
+// The exact type depends on the backend:
+// - GTK: GtkWidget *
+// - Cocoa: NSView *
+// - Windows: HWND
+// While the returned pointer may be the underlying webview widget, you
+// shouldn't rely on derived types through this pointer.
+WEBVIEW_API void *webview_get_widget(webview_t w);
 
 // Updates the title of the native window. Must be called from the UI thread.
 WEBVIEW_API void webview_set_title(webview_t w, const char *title);
@@ -1962,7 +1974,9 @@ public:
       ShowWindow(m_window, SW_SHOW);
       UpdateWindow(m_window);
     } else {
-      m_window = *(static_cast<HWND *>(window));
+      m_window = IsWindow(static_cast<HWND>(window))
+        ? static_cast<HWND>(window)
+        : *(static_cast<HWND *>(window));
     }
 
     // Create a window that WebView2 will be embedded into.
@@ -2365,6 +2379,10 @@ WEBVIEW_API void *webview_get_window(webview_t w) {
   return static_cast<webview::webview *>(w)->window();
 }
 
+WEBVIEW_API void *webview_get_widget(webview_t w) {
+  return static_cast<webview::webview *>(w)->widget();
+}
+
 WEBVIEW_API void webview_set_title(webview_t w, const char *title) {
   static_cast<webview::webview *>(w)->set_title(title);
 }
@@ -2410,7 +2428,6 @@ WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
                                 const char *result) {
   static_cast<webview::webview *>(w)->resolve(seq, status, result);
 }
-
 
 WEBVIEW_API const webview_version_info_t *webview_version() {
   return &webview::detail::library_version_info;
