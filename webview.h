@@ -566,10 +566,10 @@ public:
     } else {
       m_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
       g_signal_connect(G_OBJECT(m_window), "destroy",
-                      G_CALLBACK(+[](GtkWidget *, gpointer arg) {
-                        static_cast<gtk_webkit_engine *>(arg)->terminate();
-                      }),
-                      this);
+                       G_CALLBACK(+[](GtkWidget *, gpointer arg) {
+                         static_cast<gtk_webkit_engine *>(arg)->terminate();
+                       }),
+                       this);
       gtk_container_add(GTK_CONTAINER(m_window), GTK_WIDGET(m_webview));
       gtk_widget_show_all(m_window);
     }
@@ -1980,8 +1980,8 @@ public:
       UpdateWindow(m_window);
     } else {
       m_window = IsWindow(static_cast<HWND>(window))
-        ? static_cast<HWND>(window)
-        : *(static_cast<HWND *>(window));
+                     ? static_cast<HWND>(window)
+                     : *(static_cast<HWND *>(window));
     }
 
     // Create a window that WebView2 will be embedded into.
@@ -1990,24 +1990,23 @@ public:
     widget_wc.hInstance = hInstance;
     widget_wc.lpszClassName = L"webview_widget";
     widget_wc.lpfnWndProc =
-      (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
-        auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-        if (!w) {
-          return DefWindowProcW(hwnd, msg, wp, lp);
-        }
-        switch (msg) {
-        case WM_SIZE:
-          w->resize_webview();
-          break;
-        default:
-          return DefWindowProcW(hwnd, msg, wp, lp);
-        }
-        return 0;
-      });
+        (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
+          auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+          if (!w) {
+            return DefWindowProcW(hwnd, msg, wp, lp);
+          }
+          switch (msg) {
+          case WM_SIZE:
+            w->resize_webview();
+            break;
+          default:
+            return DefWindowProcW(hwnd, msg, wp, lp);
+          }
+          return 0;
+        });
     auto widget_atom = RegisterClassExW(&widget_wc);
-    m_widget = CreateWindowW(L"webview_widget", nullptr, WS_CHILD,
-                             0, 0, 0, 0, m_window,
-                             nullptr, hInstance, nullptr);
+    m_widget = CreateWindowW(L"webview_widget", nullptr, WS_CHILD, 0, 0, 0, 0,
+                             m_window, nullptr, hInstance, nullptr);
     SetWindowLongPtr(m_widget, GWLP_USERDATA, (LONG_PTR)this);
 
     // Create a message-only window for internal messaging.
@@ -2016,30 +2015,32 @@ public:
     message_wc.hInstance = hInstance;
     message_wc.lpszClassName = L"webview_message";
     message_wc.lpfnWndProc =
-      (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
-        auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-        if (!w) {
-          return DefWindowProcW(hwnd, msg, wp, lp);
-        }
-        switch (msg) {
-        case WM_APP:
-          if (auto f = (dispatch_fn_t *)(lp)) {
-            (*f)();
-            delete f;
+        (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
+          auto w = (win32_edge_engine *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+          if (!w) {
+            return DefWindowProcW(hwnd, msg, wp, lp);
           }
-          break;
-        default:
-          return DefWindowProcW(hwnd, msg, wp, lp);
-        }
-        return 0;
-      });
+          switch (msg) {
+          case WM_APP:
+            if (auto f = (dispatch_fn_t *)(lp)) {
+              (*f)();
+              delete f;
+            }
+            break;
+          default:
+            return DefWindowProcW(hwnd, msg, wp, lp);
+          }
+          return 0;
+        });
     auto message_atom = RegisterClassExW(&message_wc);
-    m_message_window = CreateWindowExW(0, L"webview_message", nullptr, 0,
-                                       0, 0, 0, 0, HWND_MESSAGE,
-                                       nullptr, hInstance, nullptr);
+    m_message_window =
+        CreateWindowExW(0, L"webview_message", nullptr, 0, 0, 0, 0, 0,
+                        HWND_MESSAGE, nullptr, hInstance, nullptr);
     SetWindowLongPtr(m_message_window, GWLP_USERDATA, (LONG_PTR)this);
 
-    embed(m_widget, debug, std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
+    embed(
+        m_widget, debug,
+        std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
   }
 
   virtual ~win32_edge_engine() {
@@ -2164,7 +2165,8 @@ private:
           if (res != S_OK) {
             return false;
           }
-          init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+          init("window.external={invoke:s=>window.chrome.webview.postMessage(s)"
+               "}");
           resize_webview();
           controller->put_IsVisible(TRUE);
           ShowWindow(m_widget, SW_SHOW);
@@ -2198,7 +2200,8 @@ private:
       RECT r{};
       auto parent = GetParent(m_widget);
       if (GetClientRect(parent, &r)) {
-        MoveWindow(m_widget, r.left, r.top, r.right - r.left, r.bottom - r.top, TRUE);
+        MoveWindow(m_widget, r.left, r.top, r.right - r.left, r.bottom - r.top,
+                   TRUE);
       }
     }
   }
