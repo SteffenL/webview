@@ -2209,8 +2209,7 @@ private:
   void resize_webview() {
     if (m_widget && m_controller) {
       RECT bounds{};
-      auto parent = GetParent(m_widget);
-      if (GetClientRect(parent, &bounds)) {
+      if (GetClientRect(m_widget, &bounds)) {
         m_controller->put_Bounds(bounds);
       }
     }
