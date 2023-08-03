@@ -173,7 +173,7 @@ private:
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nShowCmd) {
-  // Create the top-level window
+  // Create the main window
   MainWindow window{
       L"app_window", L"Win32 Example", CW_USEDEFAULT, CW_USEDEFAULT, 480, 320};
   window.show();
