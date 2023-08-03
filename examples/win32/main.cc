@@ -1,22 +1,11 @@
 #include "webview.h"
 
 #include <commctrl.h>
-#include <errhandlingapi.h>
+#include <minwindef.h>
 #include <windows.h>
 
 #include <memory>
 #include <string>
-#include <winuser.h>
-
-struct app_context_t {
-  HINSTANCE hInstance{};
-  std::unique_ptr<webview::webview> w;
-  int counter{};
-  HWND window{};
-  HWND location_entry{};
-  HWND go_button{};
-  HWND counter_text{};
-};
 
 constexpr const auto html =
     R"html(<button id="increment">Tap me</button>
@@ -31,119 +20,154 @@ constexpr const auto html =
 
 enum control_id_t { ID_LOCATION_EDIT, ID_GO_BUTTON };
 
-LRESULT main_wndproc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-  app_context_t *app_context{};
-  if (uMsg == WM_NCCREATE) {
-    auto *lpcs{reinterpret_cast<LPCREATESTRUCT>(lParam)};
-    app_context = static_cast<app_context_t *>(lpcs->lpCreateParams);
-    app_context->window = hWnd;
-    SetWindowLongPtrW(hWnd, GWLP_USERDATA,
-                      reinterpret_cast<LONG_PTR>(app_context));
-  } else {
-    app_context = reinterpret_cast<app_context_t *>(
-        GetWindowLongPtrW(hWnd, GWLP_USERDATA));
+class MainWindow {
+public:
+  MainWindow(const wchar_t *class_name, const wchar_t *title, int width,
+             int height)
+      : m_instance{GetModuleHandle(nullptr)} {
+    WNDCLASSEXW wc{};
+    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.lpfnWndProc = wndproc_wrapper;
+    wc.hInstance = m_instance;
+    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+    wc.lpszClassName = class_name;
+    RegisterClassExW(&wc);
+    CreateWindowExW(0, class_name, title, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+                    CW_USEDEFAULT, width, height, nullptr, nullptr, m_instance,
+                    this);
   }
 
-  if (!app_context) {
-    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+  void show() {
+    ShowWindow(m_hwnd, SW_SHOW);
+    UpdateWindow(m_hwnd);
   }
 
-  switch (uMsg) {
-  case WM_CREATE: {
-    NONCLIENTMETRICSW ncm{};
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    auto default_font{CreateFontIndirectW(&ncm.lfMessageFont)};
-    ncm.lfMessageFont.lfHeight = -72;
-    auto counter_font{CreateFontIndirectW(&ncm.lfMessageFont)};
-
-    // TODO: Ctrl+A doesn't work in edit field
-    app_context->location_entry = CreateWindowExW(
-        WS_EX_CLIENTEDGE, L"Edit", nullptr, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
-        hWnd, nullptr, app_context->hInstance, nullptr);
-    SendMessageW(app_context->location_entry, WM_SETFONT,
-                 reinterpret_cast<WPARAM>(default_font), 0);
-    SetWindowTextW(app_context->location_entry,
-                   L"https://github.com/webview/webview");
-
-    app_context->go_button =
-        CreateWindowExW(0, L"Button", nullptr, WS_CHILD | WS_VISIBLE, 0, 0, 0,
-                        0, hWnd, nullptr, app_context->hInstance, nullptr);
-    SendMessageW(app_context->go_button, WM_SETFONT,
-                 reinterpret_cast<WPARAM>(default_font), 0);
-    SetWindowTextW(app_context->go_button, L"Go");
-
-    app_context->counter_text = CreateWindowExW(
-        0, L"Static", nullptr,
-        WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 0, 0, 0, 0, hWnd,
-        nullptr, app_context->hInstance, nullptr);
-    SendMessageW(app_context->counter_text, WM_SETFONT,
-                 reinterpret_cast<WPARAM>(counter_font), 0);
-    SetWindowTextW(app_context->counter_text, L"0");
-
-    app_context->w =
-        std::unique_ptr<webview::webview>{new webview::webview{false, hWnd}};
-
-    app_context->w->bind(
-        "increment", [app_context](const std::string & /*req*/) -> std::string {
-          auto text{std::to_string(++app_context->counter)};
-          SetWindowTextA(app_context->counter_text, text.c_str());
-          return "";
-        });
-
-    app_context->w->set_html(html);
-    break;
-  }
-
-  case WM_SIZE: {
-    static constexpr const int top_neight{20};
-    static constexpr const int button_width{40};
-    RECT main_rect{};
-    GetClientRect(hWnd, &main_rect);
-    auto main_width{main_rect.right - main_rect.left};
-    auto main_half_width{main_width / 2};
-    auto main_height{main_rect.bottom - main_rect.top};
-    auto location_entry_width = main_width - button_width;
-    MoveWindow(app_context->location_entry, main_rect.left, main_rect.top,
-               location_entry_width, top_neight, TRUE);
-    MoveWindow(app_context->go_button, main_rect.left + location_entry_width,
-               main_rect.top, button_width, top_neight, TRUE);
-    MoveWindow(static_cast<HWND>(app_context->w->widget()), main_rect.left,
-               main_rect.top + top_neight, main_width / 2,
-               main_height - top_neight, TRUE);
-    MoveWindow(app_context->counter_text, main_rect.left + main_half_width,
-               main_rect.top + top_neight, main_width / 2,
-               main_height - top_neight, TRUE);
-    InvalidateRect(app_context->counter_text, nullptr, TRUE);
-    break;
-  }
-
-  case WM_CLOSE:
-    DestroyWindow(hWnd);
-    break;
-
-  case WM_DESTROY:
-    PostQuitMessage(0);
-    break;
-
-  case WM_COMMAND:
-    if (reinterpret_cast<HWND>(lParam) == app_context->go_button) {
-      auto length{GetWindowTextLengthW(app_context->location_entry)};
-      std::wstring url(length + 1, 0);
-      GetWindowTextW(app_context->location_entry, url.data(), url.size());
-      url.resize(length);
-      // webview internals are used here for simplicity - you should use your
-      // own solution.
-      app_context->w->navigate(webview::detail::narrow_string(url));
+private:
+  static LRESULT wndproc_wrapper(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    MainWindow *self{};
+    if (msg == WM_NCCREATE) {
+      auto *lpcs{reinterpret_cast<LPCREATESTRUCT>(lp)};
+      self = static_cast<MainWindow *>(lpcs->lpCreateParams);
+      self->m_hwnd = hwnd;
+      SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
+    } else {
+      self = reinterpret_cast<MainWindow *>(
+          GetWindowLongPtrW(hwnd, GWLP_USERDATA));
     }
-    break;
 
-  default:
-    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+    if (!self) {
+      return DefWindowProcW(hwnd, msg, wp, lp);
+    }
+
+    return self->wndproc(msg, wp, lp);
   }
 
-  return 0;
-}
+  LRESULT wndproc(UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+    case WM_CREATE: {
+      NONCLIENTMETRICSW ncm{};
+      ncm.cbSize = sizeof(ncm);
+      SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+      auto default_font{CreateFontIndirectW(&ncm.lfMessageFont)};
+      ncm.lfMessageFont.lfHeight = -72;
+      auto counter_font{CreateFontIndirectW(&ncm.lfMessageFont)};
+
+      // TODO: Ctrl+A doesn't work in edit field
+      m_location_edit = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", nullptr,
+                                        WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
+                                        m_hwnd, nullptr, m_instance, nullptr);
+      SendMessageW(m_location_edit, WM_SETFONT,
+                   reinterpret_cast<WPARAM>(default_font), 0);
+      SetWindowTextW(m_location_edit, L"https://github.com/webview/webview");
+
+      m_go_button =
+          CreateWindowExW(0, L"Button", nullptr, WS_CHILD | WS_VISIBLE, 0, 0, 0,
+                          0, m_hwnd, nullptr, m_instance, nullptr);
+      SendMessageW(m_go_button, WM_SETFONT,
+                   reinterpret_cast<WPARAM>(default_font), 0);
+      SetWindowTextW(m_go_button, L"Go");
+
+      m_counter_static =
+          CreateWindowExW(0, L"Static", nullptr,
+                          WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 0,
+                          0, 0, 0, m_hwnd, nullptr, m_instance, nullptr);
+      SendMessageW(m_counter_static, WM_SETFONT,
+                   reinterpret_cast<WPARAM>(counter_font), 0);
+      SetWindowTextW(m_counter_static, L"0");
+
+      m_webview = std::unique_ptr<webview::webview>{
+          new webview::webview{false, m_hwnd}};
+
+      m_webview->bind("increment",
+                      [this](const std::string & /*req*/) -> std::string {
+                        auto text{std::to_string(++m_counter)};
+                        SetWindowTextA(m_counter_static, text.c_str());
+                        return "";
+                      });
+
+      m_webview->set_html(html);
+      break;
+    }
+
+    case WM_SIZE: {
+      static constexpr const int top_neight{20};
+      static constexpr const int button_width{40};
+      RECT main_rect{};
+      GetClientRect(m_hwnd, &main_rect);
+      auto main_width{main_rect.right - main_rect.left};
+      auto main_half_width{main_width / 2};
+      auto main_height{main_rect.bottom - main_rect.top};
+      auto location_edit_width = main_width - button_width;
+      MoveWindow(m_location_edit, main_rect.left, main_rect.top,
+                 location_edit_width, top_neight, TRUE);
+      MoveWindow(m_go_button, main_rect.left + location_edit_width,
+                 main_rect.top, button_width, top_neight, TRUE);
+      MoveWindow(static_cast<HWND>(m_webview->widget()), main_rect.left,
+                 main_rect.top + top_neight, main_width / 2,
+                 main_height - top_neight, TRUE);
+      MoveWindow(m_counter_static, main_rect.left + main_half_width,
+                 main_rect.top + top_neight, main_width / 2,
+                 main_height - top_neight, TRUE);
+      InvalidateRect(m_counter_static, nullptr, TRUE);
+      break;
+    }
+
+    case WM_CLOSE:
+      DestroyWindow(m_hwnd);
+      break;
+
+    case WM_DESTROY:
+      PostQuitMessage(0);
+      break;
+
+    case WM_COMMAND:
+      if (reinterpret_cast<HWND>(lp) == m_go_button) {
+        auto length{GetWindowTextLengthW(m_location_edit)};
+        std::wstring url(length + 1, 0);
+        GetWindowTextW(m_location_edit, url.data(), url.size());
+        url.resize(length);
+        // webview internals are used here for simplicity - you should use your
+        // own solution.
+        m_webview->navigate(webview::detail::narrow_string(url));
+      }
+      break;
+
+    default:
+      return DefWindowProcW(m_hwnd, msg, wp, lp);
+    }
+
+    return 0;
+  }
+
+  HINSTANCE m_instance{};
+  std::unique_ptr<webview::webview> m_webview;
+  int m_counter{};
+  HWND m_hwnd{};
+  HWND m_location_edit{};
+  HWND m_go_button{};
+  HWND m_counter_static{};
+};
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nShowCmd) {
@@ -152,23 +176,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   icc.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES;
   InitCommonControlsEx(&icc);
 
-  app_context_t app_context{};
-  app_context.hInstance = hInstance;
-
-  WNDCLASSEXW wc{};
-  wc.cbSize = sizeof(WNDCLASSEX);
-  wc.lpfnWndProc = main_wndproc;
-  wc.hInstance = hInstance;
-  wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-  wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
-  wc.lpszClassName = L"app_window";
-  RegisterClassExW(&wc);
-  auto window{CreateWindowExW(
-      0, L"app_window", L"Win32 Example", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-      CW_USEDEFAULT, 640, 480, nullptr, nullptr, hInstance, &app_context)};
-
-  ShowWindow(window, SW_SHOW);
-  UpdateWindow(window);
+  MainWindow window{L"app_window", L"Win32 Example", 640, 480};
+  window.show();
 
   MSG msg;
   while (GetMessageW(&msg, nullptr, 0, 0) > 0) {
