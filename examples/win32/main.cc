@@ -18,8 +18,6 @@ constexpr const auto html =
   });
 </script>)html";
 
-enum control_id_t { ID_LOCATION_EDIT, ID_GO_BUTTON };
-
 class MainWindow {
 public:
   MainWindow(const wchar_t *class_name, const wchar_t *title, int x, int y,
