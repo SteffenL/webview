@@ -69,7 +69,6 @@ private:
       ncm.lfMessageFont.lfHeight = -72;
       auto counter_font{CreateFontIndirectW(&ncm.lfMessageFont)};
 
-      // TODO: Ctrl+A doesn't work in edit field
       m_location_edit = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", nullptr,
                                         WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
                                         m_hwnd, nullptr, m_instance, nullptr);
