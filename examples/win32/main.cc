@@ -1,6 +1,5 @@
 #include "webview.h"
 
-#include <commctrl.h>
 #include <windows.h>
 
 #include <memory>
@@ -174,15 +173,11 @@ private:
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nShowCmd) {
-  INITCOMMONCONTROLSEX icc{};
-  icc.dwSize = sizeof(icc);
-  icc.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES;
-  InitCommonControlsEx(&icc);
-
   MainWindow window{
       L"app_window", L"Win32 Example", CW_USEDEFAULT, CW_USEDEFAULT, 480, 320};
   window.show();
 
+  // The message loop
   MSG msg;
   while (GetMessageW(&msg, nullptr, 0, 0) > 0) {
     TranslateMessage(&msg);
