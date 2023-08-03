@@ -180,7 +180,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   InitCommonControlsEx(&icc);
 
   MainWindow window{
-      L"app_window", L"Win32 Example", CW_USEDEFAULT, CW_USEDEFAULT, 640, 480};
+      L"app_window", L"Win32 Example", CW_USEDEFAULT, CW_USEDEFAULT, 480, 320};
   window.show();
 
   MSG msg;

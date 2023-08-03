@@ -26,7 +26,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
   // Create top-level window
   auto *window{gtk_application_window_new(app)};
   gtk_window_set_title(GTK_WINDOW(window), "GTK3 Example");
-  gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
+  gtk_window_set_default_size(GTK_WINDOW(window), 480, 320);
 
   // Create location entry
   auto *location_entry{gtk_entry_new()};

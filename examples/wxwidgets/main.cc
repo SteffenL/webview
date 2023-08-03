@@ -16,7 +16,9 @@ constexpr const auto html =
 
 class MyFrame : public wxFrame {
 public:
-  MyFrame() : wxFrame(nullptr, wxID_ANY, "wxWidgets Example") {
+  MyFrame()
+      : wxFrame(nullptr, wxID_ANY, "wxWidgets Example", wxDefaultPosition,
+                wxSize{480, 320}) {
     // Create location text control
     auto *locationTextCtrl =
         new wxTextCtrl{this, wxID_ANY, "https://github.com/webview/webview"};
