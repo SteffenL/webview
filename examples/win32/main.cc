@@ -1,7 +1,6 @@
 #include "webview.h"
 
 #include <commctrl.h>
-#include <minwindef.h>
 #include <windows.h>
 
 #include <memory>
