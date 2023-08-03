@@ -22,8 +22,8 @@ enum control_id_t { ID_LOCATION_EDIT, ID_GO_BUTTON };
 
 class MainWindow {
 public:
-  MainWindow(const wchar_t *class_name, const wchar_t *title, int width,
-             int height)
+  MainWindow(const wchar_t *class_name, const wchar_t *title, int x, int y,
+             int width, int height)
       : m_instance{GetModuleHandle(nullptr)} {
     WNDCLASSEXW wc{};
     wc.cbSize = sizeof(WNDCLASSEX);
@@ -33,9 +33,8 @@ public:
     wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
     wc.lpszClassName = class_name;
     RegisterClassExW(&wc);
-    CreateWindowExW(0, class_name, title, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-                    CW_USEDEFAULT, width, height, nullptr, nullptr, m_instance,
-                    this);
+    CreateWindowExW(0, class_name, title, WS_OVERLAPPEDWINDOW, x, y, width,
+                    height, nullptr, nullptr, m_instance, this);
   }
 
   void show() {
@@ -176,7 +175,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   icc.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES;
   InitCommonControlsEx(&icc);
 
-  MainWindow window{L"app_window", L"Win32 Example", 640, 480};
+  MainWindow window{
+      L"app_window", L"Win32 Example", CW_USEDEFAULT, CW_USEDEFAULT, 640, 480};
   window.show();
 
   MSG msg;
