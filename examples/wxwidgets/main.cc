@@ -17,6 +17,27 @@ constexpr const auto html =
 class MyFrame : public wxFrame {
 public:
   MyFrame() : wxFrame(nullptr, wxID_ANY, "wxWidgets Example") {
+    // Create location text control
+    auto *locationTextCtrl =
+        new wxTextCtrl{this, wxID_ANY, "https://github.com/webview/webview"};
+
+    // Create go button control
+    auto *goButton = new wxButton{this, wxID_ANY, "Go"};
+    goButton->Bind(
+        wxEVT_BUTTON, [this, locationTextCtrl](wxCommandEvent &event) {
+          m_webview->navigate(locationTextCtrl->GetValue().ToStdString());
+        });
+
+    // Create counter static text control
+    auto *counterText = new wxStaticText{
+        this,          wxID_ANY,
+        "0",           wxDefaultPosition,
+        wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL | wxST_NO_AUTORESIZE};
+    auto font{counterText->GetFont()};
+    font.SetPointSize(72);
+    counterText->SetFont(font);
+
+    // Create webview instance
     m_webview = std::unique_ptr<webview::webview>{
         new webview::webview{false, GetHandle()}};
 #ifdef wxHAS_NATIVE_WINDOW
@@ -26,22 +47,16 @@ public:
 #error wxWidgets >= 3.1 is required for wxNativeWindow.
 #endif
 
-    auto *locationTextCtrl =
-        new wxTextCtrl{this, wxID_ANY, "https://github.com/webview/webview"};
-    auto *goButton = new wxButton{this, wxID_ANY, "Go"};
-    goButton->Bind(
-        wxEVT_BUTTON, [this, locationTextCtrl](wxCommandEvent &event) {
-          m_webview->navigate(locationTextCtrl->GetValue().ToStdString());
+    m_webview->bind(
+        "increment",
+        [this, counterText](const std::string & /*req*/) -> std::string {
+          counterText->SetLabel(wxString::Format("%d", ++m_counter));
+          return "";
         });
 
-    auto *counterText = new wxStaticText{
-        this,          wxID_ANY,
-        "0",           wxDefaultPosition,
-        wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL | wxST_NO_AUTORESIZE};
-    auto font{counterText->GetFont()};
-    font.SetPointSize(72);
-    counterText->SetFont(font);
+    m_webview->set_html(html);
 
+    // Set up UI layout
     auto *topSizer = new wxBoxSizer{wxHORIZONTAL};
     topSizer->Add(locationTextCtrl, 1, wxEXPAND);
     topSizer->Add(goButton, 0, wxEXPAND);
@@ -55,15 +70,6 @@ public:
     sizer->Add(bottomSizer, 1, wxEXPAND);
     SetSizer(sizer);
     Layout();
-
-    m_webview->bind(
-        "increment",
-        [this, counterText](const std::string & /*req*/) -> std::string {
-          counterText->SetLabel(wxString::Format("%d", ++m_counter));
-          return "";
-        });
-
-    m_webview->set_html(html);
   }
 
 private:

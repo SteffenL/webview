@@ -22,24 +22,23 @@ constexpr const auto html =
 
 static void activate(GtkApplication *app, gpointer user_data) {
   auto *app_context{static_cast<app_context_t *>(user_data)};
+
+  // Create top-level window
   auto *window{gtk_application_window_new(app)};
   gtk_window_set_title(GTK_WINDOW(window), "GTK3 Example");
   gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
 
-  app_context->w = std::unique_ptr<webview::webview>{
-      new webview::webview{false, GTK_WINDOW(window)}};
-  auto *w{app_context->w.get()};
-
+  // Create location entry
   auto *location_entry{gtk_entry_new()};
   app_context->location_entry = GTK_ENTRY(location_entry);
   gtk_entry_set_text(GTK_ENTRY(location_entry),
                      "https://github.com/webview/webview");
 
-  auto *counter_text{
+  // Create counter label with custom styling
+  auto *counter_label{
       gtk_label_new(std::to_string(app_context->counter).c_str())};
-
   auto *style_provider = gtk_css_provider_new();
-  auto *style_context{gtk_widget_get_style_context(counter_text)};
+  auto *style_context{gtk_widget_get_style_context(counter_label)};
   gtk_style_context_add_provider(style_context,
                                  GTK_STYLE_PROVIDER(style_provider),
                                  GTK_STYLE_PROVIDER_PRIORITY_USER - 1);
@@ -47,6 +46,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
   gtk_css_provider_load_from_data(style_provider, css.c_str(), css.size(),
                                   nullptr);
 
+  // Create go button
   auto *go_button{gtk_button_new_with_label("Go")};
   g_signal_connect(G_OBJECT(go_button), "clicked",
                    G_CALLBACK(+[](GtkButton *self, gpointer user_data) {
@@ -57,6 +57,20 @@ static void activate(GtkApplication *app, gpointer user_data) {
                    }),
                    app_context);
 
+  // Create webview instance
+  app_context->w = std::unique_ptr<webview::webview>{
+      new webview::webview{false, GTK_WINDOW(window)}};
+
+  app_context->w->bind(
+      "increment", [=](const std::string & /*req*/) -> std::string {
+        gtk_label_set_text(GTK_LABEL(counter_label),
+                           std::to_string(++app_context->counter).c_str());
+        return "";
+      });
+
+  app_context->w->set_html(html);
+
+  // Set up UI layout
   auto *top_box{gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)};
   gtk_box_pack_start(GTK_BOX(top_box), GTK_WIDGET(location_entry), TRUE, TRUE,
                      0);
@@ -64,9 +78,9 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
   auto *bottom_box{gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)};
   gtk_box_set_homogeneous(GTK_BOX(bottom_box), TRUE);
-  gtk_box_pack_start(GTK_BOX(bottom_box), GTK_WIDGET(w->widget()), TRUE, TRUE,
-                     0);
-  gtk_box_pack_start(GTK_BOX(bottom_box), counter_text, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(bottom_box), GTK_WIDGET(app_context->w->widget()),
+                     TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(bottom_box), counter_label, TRUE, TRUE, 0);
 
   auto *box{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)};
   gtk_box_pack_start(GTK_BOX(box), top_box, FALSE, FALSE, 0);
@@ -74,14 +88,6 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
   gtk_container_add(GTK_CONTAINER(window), box);
   gtk_widget_show_all(window);
-
-  w->bind("increment", [=](const std::string & /*req*/) -> std::string {
-    gtk_label_set_text(GTK_LABEL(counter_text),
-                       std::to_string(++app_context->counter).c_str());
-    return "";
-  });
-
-  w->set_html(html);
 }
 
 int main(int argc, char **argv) {

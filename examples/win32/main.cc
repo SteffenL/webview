@@ -22,6 +22,7 @@ public:
   MainWindow(const wchar_t *class_name, const wchar_t *title, int x, int y,
              int width, int height)
       : m_instance{GetModuleHandle(nullptr)} {
+    // Create top-level window
     WNDCLASSEXW wc{};
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.lpfnWndProc = wndproc_wrapper;
@@ -62,6 +63,7 @@ private:
   LRESULT wndproc(UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
     case WM_CREATE: {
+      // Create fonts
       NONCLIENTMETRICSW ncm{};
       ncm.cbSize = sizeof(ncm);
       SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
@@ -69,6 +71,7 @@ private:
       ncm.lfMessageFont.lfHeight = -72;
       auto counter_font{CreateFontIndirectW(&ncm.lfMessageFont)};
 
+      // Crate the location edit control
       m_location_edit = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", nullptr,
                                         WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
                                         m_hwnd, nullptr, m_instance, nullptr);
@@ -76,6 +79,7 @@ private:
                    reinterpret_cast<WPARAM>(default_font), 0);
       SetWindowTextW(m_location_edit, L"https://github.com/webview/webview");
 
+      // Create the go button control
       m_go_button =
           CreateWindowExW(0, L"Button", nullptr, WS_CHILD | WS_VISIBLE, 0, 0, 0,
                           0, m_hwnd, nullptr, m_instance, nullptr);
@@ -83,6 +87,7 @@ private:
                    reinterpret_cast<WPARAM>(default_font), 0);
       SetWindowTextW(m_go_button, L"Go");
 
+      // Create the counter static control
       m_counter_static =
           CreateWindowExW(0, L"Static", nullptr,
                           WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 0,
@@ -91,6 +96,7 @@ private:
                    reinterpret_cast<WPARAM>(counter_font), 0);
       SetWindowTextW(m_counter_static, L"0");
 
+      // Create webview instance
       m_webview = std::unique_ptr<webview::webview>{
           new webview::webview{false, m_hwnd}};
 
@@ -106,6 +112,7 @@ private:
     }
 
     case WM_SIZE: {
+      // Update the UI layout
       static constexpr const int top_neight{20};
       static constexpr const int button_width{40};
       RECT main_rect{};
@@ -138,6 +145,7 @@ private:
 
     case WM_COMMAND:
       if (reinterpret_cast<HWND>(lp) == m_go_button) {
+        // Update the counter static control when the go button is pressed
         auto length{GetWindowTextLengthW(m_location_edit)};
         std::wstring url(length + 1, 0);
         GetWindowTextW(m_location_edit, url.data(), url.size());
