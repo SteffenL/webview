@@ -43,7 +43,7 @@ public:
     m_webview = std::unique_ptr<webview::webview>{
         new webview::webview{false, GetHandle()}};
 #ifdef wxHAS_NATIVE_WINDOW
-    auto *webviewWidget = new wxNativeWindow{
+    m_webviewWidget = new wxNativeWindow{
         this, wxID_ANY, static_cast<wxNativeWindowHandle>(m_webview->widget())};
 #else
 #error wxWidgets >= 3.1 is required for wxNativeWindow.
@@ -64,7 +64,7 @@ public:
     topSizer->Add(goButton, 0, wxEXPAND);
 
     auto *bottomSizer = new wxBoxSizer{wxHORIZONTAL};
-    bottomSizer->Add(webviewWidget, 1, wxEXPAND);
+    bottomSizer->Add(m_webviewWidget, 1, wxEXPAND);
     bottomSizer->Add(counterText, 1, wxALIGN_CENTER);
 
     auto *sizer = new wxBoxSizer{wxVERTICAL};
@@ -74,7 +74,21 @@ public:
     Layout();
   }
 
+  MyFrame(const MyFrame&) = delete;
+  MyFrame(MyFrame&&) = delete;
+  MyFrame& operator=(const MyFrame&) = delete;
+  MyFrame& operator=(MyFrame&&) = delete;
+
+  virtual ~MyFrame() {
+    webview::detail::m_log << "~MyFrame(): enter" << std::endl;
+    // Give wxWidgets a chance to dissociate itself with the webview widget
+    // before the widget is destroyed internally in the webview library.
+    m_webviewWidget->Destroy();
+    webview::detail::m_log << "~MyFrame(): leave" << std::endl;
+  }
+
 private:
+  wxNativeWindow *m_webviewWidget{};
   std::unique_ptr<webview::webview> m_webview;
   int m_counter{};
 };
