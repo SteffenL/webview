@@ -2204,22 +2204,12 @@ private:
         [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
           webview2_done = true;
           if (!controller || !webview) {
-            return false;
+            return;
           }
           controller->AddRef();
           webview->AddRef();
           m_controller = controller;
           m_webview = webview;
-          ICoreWebView2Settings *settings = nullptr;
-          auto res = m_webview->get_Settings(&settings);
-          if (res != S_OK) {
-            return false;
-          }
-          res = settings->put_AreDevToolsEnabled(debug ? TRUE : FALSE);
-          if (res != S_OK) {
-            return false;
-          }
-          return true;
         });
 
     m_com_handler->set_attempt_handler([&] {
@@ -2238,7 +2228,18 @@ private:
       DispatchMessageW(&msg);
     }
 
-    if (!m_webview || !m_controller) {
+    if (!m_controller || !m_webview) {
+      return false;
+    }
+
+    ICoreWebView2Settings *settings = nullptr;
+    auto res = m_webview->get_Settings(&settings);
+    if (res != S_OK) {
+      return false;
+    }
+
+    res = settings->put_AreDevToolsEnabled(debug ? TRUE : FALSE);
+    if (res != S_OK) {
       return false;
     }
 
