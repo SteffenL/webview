@@ -1968,9 +1968,10 @@ public:
           break;
         case WM_DESTROY:
           m_log << "window/lpfnWndProc: WM_DESTROY" << std::endl;
-          w->m_window = nullptr;
+          //w->m_window = nullptr;
           SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
-          w->terminate();
+          //w->terminate();
+          PostQuitMessage(0);
           break;
         case WM_GETMINMAXINFO: {
           m_log << "window/lpfnWndProc: WM_GETMINMAXINFO" << std::endl;
@@ -2037,7 +2038,7 @@ public:
         break;
       case WM_DESTROY:
         m_log << "widget/lpfnWndProc: WM_DESTROY" << std::endl;
-        w->m_widget = nullptr;
+        //w->m_widget = nullptr;
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
         break;
       default:
@@ -2086,7 +2087,7 @@ public:
         break;
       case WM_DESTROY:
         m_log << "message/lpfnWndProc: WM_DESTROY" << std::endl;
-        w->m_message_window = nullptr;
+        //w->m_message_window = nullptr;
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
         break;
       default:
@@ -2120,7 +2121,7 @@ public:
       m_controller = nullptr;
     }
     m_log << "~win32_edge_engine(): 3" << std::endl;
-    if (m_message_window) {
+    /*if (m_message_window) {
       m_log << "~win32_edge_engine(): destroying m_message_window" << std::endl;
       DestroyWindow(m_message_window);
       m_message_window = nullptr;
@@ -2130,7 +2131,7 @@ public:
       m_log << "~win32_edge_engine(): destroying m_widget" << std::endl;
       DestroyWindow(m_widget);
       m_widget = nullptr;
-    }
+    }*/
     m_log << "~win32_edge_engine(): 5" << std::endl;
     if (m_window) {
       if (m_owns_window) {
