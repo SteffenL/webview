@@ -1933,8 +1933,8 @@ public:
       wc.hInstance = hInstance;
       wc.lpszClassName = L"webview";
       wc.hIcon = icon;
-      wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
-                                     LPARAM lp) -> LRESULT {
+      wc.lpfnWndProc =
+          +[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
         win32_edge_engine *w{};
 
         if (msg == WM_NCCREATE) {
@@ -1979,7 +1979,7 @@ public:
           return DefWindowProcW(hwnd, msg, wp, lp);
         }
         return 0;
-      });
+      };
       RegisterClassExW(&wc);
       CreateWindowW(L"webview", L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
                     CW_USEDEFAULT, 640, 480, nullptr, nullptr, hInstance, this);
@@ -2000,8 +2000,8 @@ public:
     widget_wc.cbSize = sizeof(WNDCLASSEX);
     widget_wc.hInstance = hInstance;
     widget_wc.lpszClassName = L"webview_widget";
-    widget_wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
-                                          LPARAM lp) -> LRESULT {
+    widget_wc.lpfnWndProc =
+        +[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
       win32_edge_engine *w{};
 
       if (msg == WM_NCCREATE) {
@@ -2030,7 +2030,7 @@ public:
         return DefWindowProcW(hwnd, msg, wp, lp);
       }
       return 0;
-    });
+    };
     auto widget_atom = RegisterClassExW(&widget_wc);
     CreateWindowW(L"webview_widget", nullptr, WS_CHILD, 0, 0, 0, 0, m_window,
                   nullptr, hInstance, this);
@@ -2040,8 +2040,8 @@ public:
     message_wc.cbSize = sizeof(WNDCLASSEX);
     message_wc.hInstance = hInstance;
     message_wc.lpszClassName = L"webview_message";
-    message_wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
-                                           LPARAM lp) -> LRESULT {
+    message_wc.lpfnWndProc =
+        +[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
       win32_edge_engine *w{};
 
       if (msg == WM_NCCREATE) {
@@ -2073,7 +2073,7 @@ public:
         return DefWindowProcW(hwnd, msg, wp, lp);
       }
       return 0;
-    });
+    };
     auto message_atom = RegisterClassExW(&message_wc);
     CreateWindowExW(0, L"webview_message", nullptr, 0, 0, 0, 0, 0, HWND_MESSAGE,
                     nullptr, hInstance, this);
