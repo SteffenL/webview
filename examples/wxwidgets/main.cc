@@ -83,7 +83,7 @@ public:
     webview::detail::m_log << "~MyFrame(): enter" << std::endl;
     // Give wxWidgets a chance to dissociate itself with the webview widget
     // before the widget is destroyed internally in the webview library.
-    //m_webviewWidget->Destroy();
+    m_webviewWidget->Destroy();
     webview::detail::m_log << "~MyFrame(): leave" << std::endl;
   }
 

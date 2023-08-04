@@ -230,7 +230,6 @@ WEBVIEW_API const webview_version_info_t *webview_version();
 #include <array>
 #include <atomic>
 #include <cstdint>
-#include <fstream>
 #include <functional>
 #include <map>
 #include <string>
@@ -1744,8 +1743,6 @@ static constexpr auto permission_requested =
 } // namespace cast_info
 } // namespace mswebview2
 
-static inline std::ofstream m_log{"wxwidgets.log"};
-
 class webview2_com_handler
     : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
       public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
@@ -1938,7 +1935,6 @@ public:
       wc.hIcon = icon;
       wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
                                      LPARAM lp) -> LRESULT {
-        m_log << "window/lpfnWndProc: enter" << std::endl;
         win32_edge_engine *w{};
 
         if (msg == WM_NCCREATE) {
@@ -1952,29 +1948,24 @@ public:
         }
 
         if (!w) {
-          m_log << "window/lpfnWndProc: leave (!w)" << std::endl;
           return DefWindowProcW(hwnd, msg, wp, lp);
         }
 
         switch (msg) {
         case WM_SIZE: {
-          m_log << "window/lpfnWndProc: WM_SIZE" << std::endl;
           w->resize_widget();
           break;
         }
         case WM_CLOSE:
-          m_log << "window/lpfnWndProc: WM_CLOSE" << std::endl;
           DestroyWindow(hwnd);
           break;
         case WM_DESTROY:
-          m_log << "window/lpfnWndProc: WM_DESTROY" << std::endl;
-          //w->m_window = nullptr;
+          w->m_window = nullptr;
           SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
           //w->terminate();
           PostQuitMessage(0);
           break;
         case WM_GETMINMAXINFO: {
-          m_log << "window/lpfnWndProc: WM_GETMINMAXINFO" << std::endl;
           auto lpmmi = (LPMINMAXINFO)lp;
           if (w->m_maxsz.x > 0 && w->m_maxsz.y > 0) {
             lpmmi->ptMaxSize = w->m_maxsz;
@@ -1985,10 +1976,8 @@ public:
           }
         } break;
         default:
-          m_log << "window/lpfnWndProc: leave (default)" << std::endl;
           return DefWindowProcW(hwnd, msg, wp, lp);
         }
-        m_log << "window/lpfnWndProc: leave (0)" << std::endl;
         return 0;
       });
       RegisterClassExW(&wc);
@@ -2013,7 +2002,6 @@ public:
     widget_wc.lpszClassName = L"webview_widget";
     widget_wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
                                           LPARAM lp) -> LRESULT {
-      m_log << "widget/lpfnWndProc: enter" << std::endl;
       win32_edge_engine *w{};
 
       if (msg == WM_NCCREATE) {
@@ -2027,25 +2015,20 @@ public:
       }
 
       if (!w) {
-        m_log << "widget/lpfnWndProc: leave (!w)" << std::endl;
         return DefWindowProcW(hwnd, msg, wp, lp);
       }
 
       switch (msg) {
       case WM_SIZE:
-        m_log << "widget/lpfnWndProc: WM_SIZE" << std::endl;
         w->resize_webview();
         break;
       case WM_DESTROY:
-        m_log << "widget/lpfnWndProc: WM_DESTROY" << std::endl;
-        //w->m_widget = nullptr;
+        w->m_widget = nullptr;
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
         break;
       default:
-        m_log << "widget/lpfnWndProc: leave (default)" << std::endl;
         return DefWindowProcW(hwnd, msg, wp, lp);
       }
-      m_log << "widget/lpfnWndProc: leave (0)" << std::endl;
       return 0;
     });
     auto widget_atom = RegisterClassExW(&widget_wc);
@@ -2059,7 +2042,6 @@ public:
     message_wc.lpszClassName = L"webview_message";
     message_wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
                                            LPARAM lp) -> LRESULT {
-      m_log << "message/lpfnWndProc: enter" << std::endl;
       win32_edge_engine *w{};
 
       if (msg == WM_NCCREATE) {
@@ -2073,28 +2055,23 @@ public:
       }
 
       if (!w) {
-        m_log << "message/lpfnWndProc: leave (!w)" << std::endl;
         return DefWindowProcW(hwnd, msg, wp, lp);
       }
 
       switch (msg) {
       case WM_APP:
-        m_log << "message/lpfnWndProc: WM_APP" << std::endl;
         if (auto f = (dispatch_fn_t *)(lp)) {
           (*f)();
           delete f;
         }
         break;
       case WM_DESTROY:
-        m_log << "message/lpfnWndProc: WM_DESTROY" << std::endl;
-        //w->m_message_window = nullptr;
+        w->m_message_window = nullptr;
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
         break;
       default:
-        m_log << "message/lpfnWndProc: leave (default)" << std::endl;
         return DefWindowProcW(hwnd, msg, wp, lp);
       }
-      m_log << "message/lpfnWndProc: leave (0)" << std::endl;
       return 0;
     });
     auto message_atom = RegisterClassExW(&message_wc);
@@ -2106,43 +2083,31 @@ public:
         std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
   }
 
+  static inline int sm_refcount{};
+
   virtual ~win32_edge_engine() {
-    m_log << "~win32_edge_engine(): enter" << std::endl;
-    m_log << "~win32_edge_engine(): 1" << std::endl;
     if (m_webview) {
-      m_log << "~win32_edge_engine(): destroying m_webview" << std::endl;
       m_webview->Release();
       m_webview = nullptr;
     }
-    m_log << "~win32_edge_engine(): 2" << std::endl;
     if (m_controller) {
-      m_log << "~win32_edge_engine(): destroying m_controller" << std::endl;
       m_controller->Release();
       m_controller = nullptr;
     }
-    m_log << "~win32_edge_engine(): 3" << std::endl;
-    /*if (m_message_window) {
-      m_log << "~win32_edge_engine(): destroying m_message_window" << std::endl;
+    if (m_message_window) {
       DestroyWindow(m_message_window);
       m_message_window = nullptr;
     }
-    m_log << "~win32_edge_engine(): 4" << std::endl;
     if (m_widget) {
-      m_log << "~win32_edge_engine(): destroying m_widget" << std::endl;
       DestroyWindow(m_widget);
       m_widget = nullptr;
-    }*/
-    m_log << "~win32_edge_engine(): 5" << std::endl;
+    }
     if (m_window) {
       if (m_owns_window) {
-        m_log << "~win32_edge_engine(): destroying m_window" << std::endl;
         DestroyWindow(m_window);
       }
-      m_log << "~win32_edge_engine(): clearing m_window" << std::endl;
       m_window = nullptr;
     }
-    m_log << "~win32_edge_engine(): 6" << std::endl;
-    m_log << "~win32_edge_engine(): leave" << std::endl;
   }
 
   win32_edge_engine(const win32_edge_engine &other) = delete;
