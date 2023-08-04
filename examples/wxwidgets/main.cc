@@ -1,3 +1,18 @@
+/**
+ * UI Framework Integration Example for wxWidgets >= 3.1.
+ *
+ * This example is provided as a proof of concept. wxWidgets has built-in
+ * support for rendering web documents (wxWebView) which is probably a better
+ * solution.
+ *
+ * SteffenL (2023-08-04):
+ * This example tends to crash with wxWidgets 3.2.2.1 if the app is running
+ * while shutting down Windows 10 (build 19045.3208). The destructor of MyFrame
+ * was observed to be called twice for unknown reasons. This doesn't appear to
+ * happen with wxWidgets 3.1.7. Closing the app normally or sending
+ * WM_QUERYENDSESSION/WM_ENDSESSION shows no abnormality.
+ */
+
 #include "webview.h"
 #include <memory>
 #include <wx/nativewin.h>
