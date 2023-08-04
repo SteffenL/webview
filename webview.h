@@ -2083,9 +2083,11 @@ public:
         std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
   }
 
-  static inline int sm_refcount{};
-
   virtual ~win32_edge_engine() {
+    if (m_com_handler) {
+      m_com_handler->Release();
+      m_com_handler = nullptr;
+    }
     if (m_webview) {
       m_webview->Release();
       m_webview = nullptr;
@@ -2197,7 +2199,7 @@ private:
     wchar_t userDataFolder[MAX_PATH];
     PathCombineW(userDataFolder, dataPath, currentExeName);
 
-    auto *com_handler = new webview2_com_handler(
+    m_com_handler = new webview2_com_handler(
         wnd, cb,
         [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
           webview2_done = true;
@@ -2220,11 +2222,11 @@ private:
           return true;
         });
 
-    com_handler->set_attempt_handler([&] {
+    m_com_handler->set_attempt_handler([&] {
       return m_webview2_loader.create_environment_with_options(
-          nullptr, userDataFolder, nullptr, com_handler);
+          nullptr, userDataFolder, nullptr, m_com_handler);
     });
-    com_handler->try_create_environment();
+    m_com_handler->try_create_environment();
 
     // Wait for WebView2 to finish initialization. It relies on a message loop.
     MSG msg;
@@ -2235,8 +2237,6 @@ private:
       TranslateMessage(&msg);
       DispatchMessageW(&msg);
     }
-
-    com_handler->Release();
 
     if (!m_webview || !m_controller) {
       return false;
@@ -2301,6 +2301,7 @@ private:
   DWORD m_main_thread = GetCurrentThreadId();
   ICoreWebView2 *m_webview = nullptr;
   ICoreWebView2Controller *m_controller = nullptr;
+  webview2_com_handler *m_com_handler = nullptr;
   mswebview2::loader m_webview2_loader;
 };
 
