@@ -1,3 +1,11 @@
+/**
+ * UI Framework Integration Example for GTK3.
+ *
+ * This example is provided as a proof of concept. Since the underlying browser
+ * engine used in the webview library is WebKitGTK, you may consider using it
+ * directly instead.
+ */
+
 #include "webview.h"
 #include <gtk/gtk.h>
 #include <memory>

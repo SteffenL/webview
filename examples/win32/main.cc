@@ -1,3 +1,9 @@
+/**
+ * UI Framework Integration Example for native Windows API (Win32).
+ *
+ * This example is provided as a proof of concept.
+ */
+
 #include "webview.h"
 
 #include <windows.h>
