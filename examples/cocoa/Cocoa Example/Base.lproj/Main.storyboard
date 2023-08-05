@@ -710,8 +710,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="336-BO-mnH">
-                                <rect key="frame" x="0.0" y="249" width="418" height="21"/>
+                            <textField translatesAutoresizingMaskIntoConstraints="NO" id="336-BO-mnH">
+                                <rect key="frame" x="0.0" y="249" width="442" height="21"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="5Sp-eB-qrg">
                                     <font key="font" usesAppearanceFont="YES"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -720,15 +720,15 @@
                             </textField>
                             <textField translatesAutoresizingMaskIntoConstraints="NO" id="GlG-KF-4sC">
                                 <rect key="frame" x="238" y="0.0" width="244" height="249"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="cfe-Nv-mow">
-                                    <font key="font" metaFont="system"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" alignment="left" title="0" id="cfe-Nv-mow">
+                                    <font key="font" metaFont="system" size="72"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="D99-YV-dbe">
-                                <rect key="frame" x="411" y="242" width="76" height="33"/>
-                                <buttonCell key="cell" type="push" title="Button" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="RVB-Aa-hSM">
+                            <button translatesAutoresizingMaskIntoConstraints="NO" id="D99-YV-dbe">
+                                <rect key="frame" x="435" y="242" width="52" height="33"/>
+                                <buttonCell key="cell" type="push" title="Go" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="RVB-Aa-hSM">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
