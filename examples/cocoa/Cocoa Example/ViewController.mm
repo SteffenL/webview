@@ -22,5 +22,9 @@
     // Update the view, if already loaded.
 }
 
+- (IBAction)goButtonPressed:(NSButton *)sender {
+    
+}
+
 
 @end

@@ -724,6 +724,9 @@
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
+                                <connections>
+                                    <action selector="goButtonPressed:" target="XfG-lQ-9wD" id="wwU-bp-s3H"/>
+                                </connections>
                             </button>
                             <customView translatesAutoresizingMaskIntoConstraints="NO" id="lZT-zz-2Qu">
                                 <rect key="frame" x="0.0" y="0.0" width="240" height="249"/>
@@ -767,6 +770,12 @@
                             <constraint firstItem="336-BO-mnH" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="rLw-xq-3Eo"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="counterTextField" destination="GlG-KF-4sC" id="4Ag-8r-s4S"/>
+                        <outlet property="goButton" destination="D99-YV-dbe" id="ShZ-40-P69"/>
+                        <outlet property="locationTextField" destination="336-BO-mnH" id="oIs-kw-h2X"/>
+                        <outlet property="webContainer" destination="lZT-zz-2Qu" id="vl5-D4-4fY"/>
+                    </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
