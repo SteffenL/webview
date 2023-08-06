@@ -710,7 +710,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField translatesAutoresizingMaskIntoConstraints="NO" id="336-BO-mnH">
+                            <textField ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="336-BO-mnH">
                                 <rect key="frame" x="0.0" y="249" width="442" height="21"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="5Sp-eB-qrg">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -718,7 +718,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <button translatesAutoresizingMaskIntoConstraints="NO" id="D99-YV-dbe">
+                            <button verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="D99-YV-dbe">
                                 <rect key="frame" x="435" y="242" width="52" height="33"/>
                                 <buttonCell key="cell" type="push" title="Go" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="RVB-Aa-hSM">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -728,16 +728,16 @@
                                     <action selector="goButtonPressed:" target="XfG-lQ-9wD" id="wwU-bp-s3H"/>
                                 </connections>
                             </button>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="lZT-zz-2Qu">
+                            <customView ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lZT-zz-2Qu">
                                 <rect key="frame" x="0.0" y="0.0" width="240" height="249"/>
                             </customView>
-                            <box borderType="none" title="Box" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="L0X-fm-UBx">
+                            <box ambiguous="YES" borderType="none" title="Box" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="L0X-fm-UBx">
                                 <rect key="frame" x="237" y="-4" width="246" height="255"/>
-                                <view key="contentView" id="yV3-i5-YAH">
+                                <view key="contentView" ambiguous="YES" id="yV3-i5-YAH">
                                     <rect key="frame" x="0.0" y="0.0" width="246" height="255"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textField translatesAutoresizingMaskIntoConstraints="NO" id="GlG-KF-4sC">
+                                        <textField ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GlG-KF-4sC">
                                             <rect key="frame" x="97" y="85" width="52" height="85"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="0" id="cfe-Nv-mow">
                                                 <font key="font" metaFont="system" size="72"/>
