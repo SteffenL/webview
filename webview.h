@@ -675,9 +675,27 @@ using browser_engine = detail::gtk_webkit_engine;
 // ====================================================================
 //
 
+#include <WebKit/WebKit.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <objc/NSObjCRuntime.h>
 #include <objc/objc-runtime.h>
+
+#ifdef __has_feature
+#if __has_feature(objc_arc)
+#define WEBVIEW_OBJC_ARC 1
+#endif
+#endif
+#ifndef WEBVIEW_OBJC_ARC
+#define WEBVIEW_OBJC_ARC 0
+#endif
+
+#ifdef __OBJC__
+#define WEBVIEW_OBJC_WEAK __weak
+#define WEBVIEW_OBJC_STRONG __strong
+#else
+#define WEBVIEW_OBJC_WEAK
+#define WEBVIEW_OBJC_STRONG
+#endif
 
 namespace webview {
 namespace detail {
@@ -721,6 +739,14 @@ private:
   id m_pool{};
 };
 
+#if WEBVIEW_OBJC_ARC
+#define WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN() @autoreleasepool {
+#define WEBVIEW_OBJC_AUTORELEASEPOOL_END() }
+#else
+#define WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN() webview::detail::objc::autoreleasepool _webview_objc_autoreleasepool
+#define WEBVIEW_OBJC_AUTORELEASEPOOL_END()
+#endif
+
 } // namespace objc
 
 enum NSBackingStoreType : NSUInteger { NSBackingStoreBuffered = 2 };
@@ -753,25 +779,16 @@ inline id operator"" _str(const char *s, std::size_t) {
   return objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel, s);
 }
 
-//#ifdef __OBJC__
-//#define OBJC_WEAK __weak
-//#define OBJC_STRONG __strong
-//#else
-#define OBJC_WEAK
-#define OBJC_STRONG
-//#endif
-
 class cocoa_wkwebview_engine {
 public:
   cocoa_wkwebview_engine(bool debug, void *window)
-    : m_debug{debug}, m_window_ptr{window}, m_owns_window{!window} {
-        if (window) {
-            m_window = CFBridgingRelease(window);
-        }
+    : m_debug{debug}, m_window{*static_cast<id WEBVIEW_OBJC_WEAK *>(window)}, m_owns_window{!window} {
     auto app = get_shared_application();
     auto delegate = create_app_delegate();
-    objc_setAssociatedObject(delegate, "webview", CFBridgingRelease(this),
+        NSValue *self_value{objc::msg_send<NSValue *>("NSValue"_cls, "valueWithPointer:"_sel, this)};
+    objc_setAssociatedObject(delegate, "_webview", self_value,
                              OBJC_ASSOCIATION_ASSIGN);
+        //objc::msg_send<void>(self_value, "release"_sel);
     objc::msg_send<void>(app, "setDelegate:"_sel, delegate);
 
     // See comments related to application lifecycle in create_app_delegate().
@@ -787,8 +804,17 @@ public:
     }
   }
   virtual ~cocoa_wkwebview_engine() = default;
-  void *window() { return (void *)m_window_ptr; }
-  void *widget() { return (void *)m_webview_ptr; }
+  void *window() {
+      auto *value = static_cast<NSValue *>(m_window);
+      auto *ptr = objc::msg_send<void *>(value, "pointerValue"_sel);
+      return ptr;
+      
+  }
+    void *widget() {
+        auto *value = static_cast<NSValue *>(m_webview);
+        auto *ptr = objc::msg_send<void *>(value, "pointerValue"_sel);
+        return ptr;
+    }
   void terminate() {
     auto app = get_shared_application();
     objc::msg_send<void>(app, "terminate:"_sel, nullptr);
@@ -834,9 +860,9 @@ public:
     objc::msg_send<void>(m_window, "center"_sel);
   }
   void navigate(const std::string &url) {
-    objc::autoreleasepool pool;
+      WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN();
 
-    auto nsurl = objc::msg_send<id>(
+    auto nsurl = objc::msg_send<NSURL *>(
         "NSURL"_cls, "URLWithString:"_sel,
         objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel,
                            url.c_str()));
@@ -844,14 +870,17 @@ public:
     objc::msg_send<void>(
         m_webview, "loadRequest:"_sel,
         objc::msg_send<id>("NSURLRequest"_cls, "requestWithURL:"_sel, nsurl));
+      
+      WEBVIEW_OBJC_AUTORELEASEPOOL_END();
   }
   void set_html(const std::string &html) {
-    objc::autoreleasepool pool;
+      WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN();
     objc::msg_send<void>(m_webview, "loadHTMLString:baseURL:"_sel,
                          objc::msg_send<id>("NSString"_cls,
                                             "stringWithUTF8String:"_sel,
                                             html.c_str()),
                          nullptr);
+      WEBVIEW_OBJC_AUTORELEASEPOOL_END();
   }
   void init(const std::string &js) {
     // Equivalent Obj-C:
@@ -890,9 +919,9 @@ private:
     // add this method.
     if (!m_owns_window) {
       class_addMethod(cls, "applicationDidFinishLaunching:"_sel,
-                      (IMP)(+[](id self, SEL, id notification) {
-                        auto app =
-                            objc::msg_send<id>(notification, "object"_sel);
+                      (IMP)(+[](id self, SEL, NSNotification *notification) {
+                        auto *app =
+                            objc::msg_send<NSApplication *>(notification, "object"_sel);
                         auto w = get_associated_webview(self);
                         w->on_application_did_finish_launching(self, app);
                       }),
@@ -915,8 +944,11 @@ private:
         "v@:@@");
     objc_registerClassPair(cls);
     auto instance = objc::msg_send<id>((id)cls, "new"_sel);
-    objc_setAssociatedObject(instance, "webview", CFBridgingRelease(this),
+      NSValue *self_value{objc::msg_send<NSValue *>("NSValue"_cls, "valueWithPointer:"_sel, this)};
+    objc_setAssociatedObject(instance, "_webview", self_value,
                              OBJC_ASSOCIATION_ASSIGN);
+      //objc::msg_send<void>(self_value, "release"_sel);
+      //objc::msg_send<void>(instance, "release"_sel);
     return instance;
   }
   static id create_webkit_ui_delegate() {
@@ -964,12 +996,25 @@ private:
     objc_registerClassPair(cls);
     return objc::msg_send<id>((id)cls, "new"_sel);
   }
-  static id get_shared_application() {
+  static NSApplication *get_shared_application() {
     return objc::msg_send<id>("NSApplication"_cls, "sharedApplication"_sel);
   }
-  static cocoa_wkwebview_engine *get_associated_webview(id object) {
-    auto w =
-        (cocoa_wkwebview_engine *)CFBridgingRetain(objc_getAssociatedObject(object, "webview"));
+  template<typename T>
+  static cocoa_wkwebview_engine *get_associated_webview(T *object) {
+      /*WEBVIEW_OBJC_WEAK*/ auto assoc_obj = objc_getAssociatedObject(object, "_webview");
+      if (!objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
+          return nullptr;
+      }
+      //auto pointer_value_ivar = class_getInstanceVariable("NSValue"_cls, "pointerValue");
+      //auto* ptr = object_getIvar(assoc_obj, pointer_value_ivar);
+      //auto pointer_value_property = class_getProperty("NSValue"_cls, "value");
+      //auto i = class_getProperty("NSValue"_cls, "pointerValue");
+      //i = class_getProperty("NSValue"_cls, "getPointerValue");
+      //i = class_getProperty("NSValue"_cls, "value");
+      //auto pointer_value_getter = sel_getUid(property_copyAttributeValue(pointer_value_property, "G"));
+      //auto *ptr = objc::msg_send<void *>(assoc_obj, pointer_value_getter);
+      auto *ptr = ((NSValue *)assoc_obj).pointerValue;
+      auto *w = static_cast<cocoa_wkwebview_engine *>(ptr);
     assert(w);
     return w;
   }
@@ -986,7 +1031,7 @@ private:
         objc::msg_send<BOOL>(bundle_path, "hasSuffix:"_sel, ".app"_str);
     return !!bundled;
   }
-  void on_application_did_finish_launching(id /*delegate*/, id app) {
+  void on_application_did_finish_launching(id /*delegate*/, NSApplication *app) {
     // See comments related to application lifecycle in create_app_delegate().
     if (m_owns_window) {
       // Stop the main run loop so that we can return
@@ -1014,51 +1059,48 @@ private:
 
     // Main window
     if (m_owns_window) {
-      m_window = objc::msg_send<id>("NSWindow"_cls, "alloc"_sel);
+      m_window = objc::msg_send<NSWindow *>("NSWindow"_cls, "alloc"_sel);
       auto style = NSWindowStyleMaskTitled;
-        m_window = objc::msg_send<id>(
+        m_window = objc::msg_send<NSWindow *>(
                                           m_window, "initWithContentRect:styleMask:backing:defer:"_sel,
           CGRectMake(0, 0, 0, 0), style, NSBackingStoreBuffered, NO);
-        m_window_ptr = CFBridgingRetain(m_window);
-    } else {
-      //m_window = CFBridgingRelease(m_parent_window);
     }
-    //m_window_ptr = CFBridgingRetain(m_window);
 
     // Webview
-    auto config = objc::msg_send<id>("WKWebViewConfiguration"_cls, "new"_sel);
+    auto config = objc::msg_send<WKWebViewConfiguration *>("WKWebViewConfiguration"_cls, "new"_sel);
     m_manager = objc::msg_send<id>(config, "userContentController"_sel);
     m_webview = objc::msg_send<id>("WKWebView"_cls, "alloc"_sel);
-    m_webview_ptr = CFBridgingRetain(m_webview);
+      auto preferences = objc::msg_send<WKPreferences *>(config, "preferences"_sel);
+      objc::msg_send<void>(preferences, "retain"_sel);
 
     if (m_debug) {
       // Equivalent Obj-C:
       // [[config preferences] setValue:@YES forKey:@"developerExtrasEnabled"];
       objc::msg_send<id>(
-          objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
+                         preferences, "setValue:forKey:"_sel,
           objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
           "developerExtrasEnabled"_str);
     }
 
     // Equivalent Obj-C:
     // [[config preferences] setValue:@YES forKey:@"fullScreenEnabled"];
-    objc::msg_send<id>(
-        objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
-        objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
+    auto y = objc::msg_send<NSNumber *>("NSNumber"_cls, "numberWithBool:"_sel, YES);
+    objc::msg_send<id>(preferences, "setValue:forKey:"_sel,
+        y,
         "fullScreenEnabled"_str);
 
     // Equivalent Obj-C:
     // [[config preferences] setValue:@YES forKey:@"javaScriptCanAccessClipboard"];
     objc::msg_send<id>(
-        objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
-        objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
+                       preferences, "setValue:forKey:"_sel,
+        objc::msg_send<NSNumber *>("NSNumber"_cls, "numberWithBool:"_sel, YES),
         "javaScriptCanAccessClipboard"_str);
 
     // Equivalent Obj-C:
     // [[config preferences] setValue:@YES forKey:@"DOMPasteAllowed"];
     objc::msg_send<id>(
-        objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
-        objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
+                       preferences, "setValue:forKey:"_sel,
+        objc::msg_send<NSNumber *>("NSNumber"_cls, "numberWithBool:"_sel, YES),
         "DOMPasteAllowed"_str);
 
     auto ui_delegate = create_webkit_ui_delegate();
@@ -1107,8 +1149,6 @@ private:
     bool m_debug{};
     id m_window{};
     id m_webview{};
-  const void *m_window_ptr{};
-  const void *m_webview_ptr{};
     id m_manager{};
   bool m_owns_window{};
 };

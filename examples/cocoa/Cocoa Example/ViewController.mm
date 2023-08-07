@@ -10,10 +10,16 @@
 
 @implementation ViewController
 
+std::unique_ptr<webview::webview> m_webview;
+
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     // Do any additional setup after loading the view.
+
+    auto *container{(__bridge void *) _webContainer};
+    //m_webview = std::unique_ptr<webview::webview>(new webview::webview{false, container});
+    webview::webview w{false, container};
 }
 
 
@@ -24,10 +30,8 @@
 }
 
 - (IBAction)goButtonPressed:(NSButton *)sender {
-    auto *container{(__bridge_retained void *) _webContainer};
-    webview::webview w{false, container};
     auto *url{_locationTextField.stringValue};
-    w.navigate(std::string{url.UTF8String, [url lengthOfBytesUsingEncoding:NSUTF8StringEncoding]});
+    m_webview->navigate(std::string{url.UTF8String, [url lengthOfBytesUsingEncoding:NSUTF8StringEncoding]});
 }
 
 
