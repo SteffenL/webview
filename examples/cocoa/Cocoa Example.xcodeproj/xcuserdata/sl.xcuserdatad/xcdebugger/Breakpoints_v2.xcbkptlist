@@ -16,7 +16,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1062"
             endingLineNumber = "1062"
-            landmarkName = "on_application_did_finish_launching(, app)"
+            landmarkName = "is_app_bundled()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -64,8 +64,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "808"
             endingLineNumber = "808"
-            landmarkName = "window()"
-            landmarkType = "7">
+            landmarkName = "cocoa_wkwebview_engine"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -80,8 +80,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "814"
             endingLineNumber = "814"
-            landmarkName = "widget()"
-            landmarkType = "7">
+            landmarkName = "cocoa_wkwebview_engine"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -96,7 +96,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "948"
             endingLineNumber = "948"
-            landmarkName = "create_script_message_handler()"
+            landmarkName = "create_app_delegate()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -112,7 +112,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1005"
             endingLineNumber = "1005"
-            landmarkName = "get_associated_webview(object)"
+            landmarkName = "create_webkit_ui_delegate()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

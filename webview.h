@@ -782,15 +782,16 @@ inline id operator"" _str(const char *s, std::size_t) {
 class cocoa_wkwebview_engine {
 public:
   cocoa_wkwebview_engine(bool debug, void *window)
-      : m_debug{debug}, m_window{*static_cast<id WEBVIEW_OBJC_WEAK *>(window)},
+      : m_debug{debug}, m_window{window ? *static_cast<id WEBVIEW_OBJC_WEAK *>(
+                                              window)
+                                        : nullptr},
         m_owns_window{!window} {
     auto app = get_shared_application();
     auto delegate = create_app_delegate();
-    id self_value{
-        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this)};
-    objc_setAssociatedObject(delegate, "webview", self_value,
-                             OBJC_ASSOCIATION_ASSIGN);
-    // objc::msg_send<void>(self_value, "release"_sel);
+    objc_setAssociatedObject(
+        delegate, "webview",
+        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+        OBJC_ASSOCIATION_RETAIN);
     objc::msg_send<void>(app, "setDelegate:"_sel, delegate);
 
     // See comments related to application lifecycle in create_app_delegate().
@@ -917,11 +918,11 @@ private:
     class_addProtocol(cls, objc_getProtocol("NSTouchBarProvider"));
     class_addMethod(cls, "applicationShouldTerminateAfterLastWindowClosed:"_sel,
                     (IMP)(+[](id, SEL, id) -> BOOL { return 1; }), "c@:@");
-    // If the library was not initialized with an existing window then the user
+    // If the library was initialized with an existing window then the user
     // is likely managing the application lifecycle and we would not get the
     // "applicationDidFinishLaunching:" message and therefore do not need to
     // add this method.
-    if (!m_owns_window) {
+    if (m_owns_window) {
       class_addMethod(cls, "applicationDidFinishLaunching:"_sel,
                       (IMP)(+[](id self, SEL, id notification) {
                         auto *app =
@@ -936,7 +937,7 @@ private:
   }
   id create_script_message_handler() {
     auto cls = objc_allocateClassPair((Class) "NSResponder"_cls,
-                                      "WebkitScriptMessageHandler", 0);
+                                      "WebviewWKScriptMessageHandler", 0);
     class_addProtocol(cls, objc_getProtocol("WKScriptMessageHandler"));
     class_addMethod(
         cls, "userContentController:didReceiveScriptMessage:"_sel,
@@ -948,12 +949,10 @@ private:
         "v@:@@");
     objc_registerClassPair(cls);
     auto instance = objc::msg_send<id>((id)cls, "new"_sel);
-    id self_value{
-        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this)};
-    objc_setAssociatedObject(instance, "webview", self_value,
-                             OBJC_ASSOCIATION_ASSIGN);
-    // objc::msg_send<void>(self_value, "release"_sel);
-    // objc::msg_send<void>(instance, "release"_sel);
+    objc_setAssociatedObject(
+        instance, "webview",
+        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+        OBJC_ASSOCIATION_RETAIN);
     return instance;
   }
   static id create_webkit_ui_delegate() {
@@ -1004,25 +1003,14 @@ private:
   static id get_shared_application() {
     return objc::msg_send<id>("NSApplication"_cls, "sharedApplication"_sel);
   }
-  template <typename T>
-  static cocoa_wkwebview_engine *get_associated_webview(T *object) {
+  static cocoa_wkwebview_engine *get_associated_webview(id object) {
     /*WEBVIEW_OBJC_WEAK*/ auto assoc_obj =
         objc_getAssociatedObject(object, "webview");
     if (!objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
       return nullptr;
     }
-    // auto pointer_value_ivar = class_getInstanceVariable("NSValue"_cls,
-    // "pointerValue"); auto* ptr = object_getIvar(assoc_obj,
-    // pointer_value_ivar); auto pointer_value_property =
-    // class_getProperty("NSValue"_cls, "value"); auto i =
-    // class_getProperty("NSValue"_cls, "pointerValue"); i =
-    // class_getProperty("NSValue"_cls, "getPointerValue"); i =
-    // class_getProperty("NSValue"_cls, "value"); auto pointer_value_getter =
-    // sel_getUid(property_copyAttributeValue(pointer_value_property, "G"));
-    // auto *ptr = objc::msg_send<void *>(assoc_obj, pointer_value_getter);
-    // auto *ptr = ((NSValue *)assoc_obj).pointerValue;
-    void *ptr = nullptr;
-    auto *w = static_cast<cocoa_wkwebview_engine *>(ptr);
+    cocoa_wkwebview_engine *w{};
+    objc::msg_send<void>(assoc_obj, "getValue:size:"_sel, &w, sizeof(w));
     assert(w);
     return w;
   }
@@ -1079,7 +1067,6 @@ private:
     m_manager = objc::msg_send<id>(config, "userContentController"_sel);
     m_webview = objc::msg_send<id>("WKWebView"_cls, "alloc"_sel);
     auto preferences = objc::msg_send<id>(config, "preferences"_sel);
-    objc::msg_send<void>(preferences, "retain"_sel);
 
     if (m_debug) {
       // Equivalent Obj-C:
