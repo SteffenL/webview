@@ -808,13 +808,11 @@ public:
   }
   virtual ~cocoa_wkwebview_engine() = default;
   void *window() {
-    auto *value = static_cast<id>(m_window);
-    auto *ptr = objc::msg_send<void *>(value, "pointerValue"_sel);
+    auto *ptr = static_cast<void *>(m_window);
     return ptr;
   }
   void *widget() {
-    auto *value = static_cast<id>(m_webview);
-    auto *ptr = objc::msg_send<void *>(value, "pointerValue"_sel);
+    auto *ptr = static_cast<void *>(m_webview);
     return ptr;
   }
   void terminate() {

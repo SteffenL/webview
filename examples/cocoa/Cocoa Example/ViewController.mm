@@ -17,9 +17,14 @@ std::unique_ptr<webview::webview> m_webview;
 
     // Do any additional setup after loading the view.
 
-    auto *container{(__bridge void *) _webContainer};
-    //m_webview = std::unique_ptr<webview::webview>(new webview::webview{false, container});
-    webview::webview w{false, container};
+    //auto *container{(__bridge void *) _webContainer};
+    NSWindow *window = _webContainer.window; //[[NSApplication sharedApplication] mainWindow];
+    m_webview = std::unique_ptr<webview::webview>(new webview::webview{false, window});
+    NSView *widget = (NSView *)m_webview->widget();
+    widget.bounds = _webContainer.bounds;
+    widget.autoresizesSubviews = YES;
+    widget.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    [_webContainer addSubview:(NSView *)m_webview->widget()];
 }
 
 
