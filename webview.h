@@ -753,18 +753,29 @@ inline id operator"" _str(const char *s, std::size_t) {
   return objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel, s);
 }
 
+//#ifdef __OBJC__
+//#define OBJC_WEAK __weak
+//#define OBJC_STRONG __strong
+//#else
+#define OBJC_WEAK
+#define OBJC_STRONG
+//#endif
+
 class cocoa_wkwebview_engine {
 public:
   cocoa_wkwebview_engine(bool debug, void *window)
-      : m_debug{debug}, m_parent_window{window} {
+    : m_debug{debug}, m_window_ptr{window}, m_owns_window{!window} {
+        if (window) {
+            m_window = CFBridgingRelease(window);
+        }
     auto app = get_shared_application();
     auto delegate = create_app_delegate();
-    objc_setAssociatedObject(delegate, "webview", (id)this,
+    objc_setAssociatedObject(delegate, "webview", CFBridgingRelease(this),
                              OBJC_ASSOCIATION_ASSIGN);
     objc::msg_send<void>(app, "setDelegate:"_sel, delegate);
 
     // See comments related to application lifecycle in create_app_delegate().
-    if (window) {
+    if (!m_owns_window) {
       on_application_did_finish_launching(delegate, app);
     } else {
       // Start the main run loop so that the app delegate gets the
@@ -776,8 +787,8 @@ public:
     }
   }
   virtual ~cocoa_wkwebview_engine() = default;
-  void *window() { return (void *)m_window; }
-  void *widget() { return (void *)m_webview; }
+  void *window() { return (void *)m_window_ptr; }
+  void *widget() { return (void *)m_webview_ptr; }
   void terminate() {
     auto app = get_shared_application();
     objc::msg_send<void>(app, "terminate:"_sel, nullptr);
@@ -877,7 +888,7 @@ private:
     // is likely managing the application lifecycle and we would not get the
     // "applicationDidFinishLaunching:" message and therefore do not need to
     // add this method.
-    if (!m_parent_window) {
+    if (!m_owns_window) {
       class_addMethod(cls, "applicationDidFinishLaunching:"_sel,
                       (IMP)(+[](id self, SEL, id notification) {
                         auto app =
@@ -904,7 +915,7 @@ private:
         "v@:@@");
     objc_registerClassPair(cls);
     auto instance = objc::msg_send<id>((id)cls, "new"_sel);
-    objc_setAssociatedObject(instance, "webview", (id)this,
+    objc_setAssociatedObject(instance, "webview", CFBridgingRelease(this),
                              OBJC_ASSOCIATION_ASSIGN);
     return instance;
   }
@@ -958,7 +969,7 @@ private:
   }
   static cocoa_wkwebview_engine *get_associated_webview(id object) {
     auto w =
-        (cocoa_wkwebview_engine *)objc_getAssociatedObject(object, "webview");
+        (cocoa_wkwebview_engine *)CFBridgingRetain(objc_getAssociatedObject(object, "webview"));
     assert(w);
     return w;
   }
@@ -977,7 +988,7 @@ private:
   }
   void on_application_did_finish_launching(id /*delegate*/, id app) {
     // See comments related to application lifecycle in create_app_delegate().
-    if (!m_parent_window) {
+    if (m_owns_window) {
       // Stop the main run loop so that we can return
       // from the constructor.
       objc::msg_send<void>(app, "stop:"_sel, nullptr);
@@ -1002,20 +1013,23 @@ private:
     }
 
     // Main window
-    if (!m_parent_window) {
+    if (m_owns_window) {
       m_window = objc::msg_send<id>("NSWindow"_cls, "alloc"_sel);
       auto style = NSWindowStyleMaskTitled;
-      m_window = objc::msg_send<id>(
-          m_window, "initWithContentRect:styleMask:backing:defer:"_sel,
+        m_window = objc::msg_send<id>(
+                                          m_window, "initWithContentRect:styleMask:backing:defer:"_sel,
           CGRectMake(0, 0, 0, 0), style, NSBackingStoreBuffered, NO);
+        m_window_ptr = CFBridgingRetain(m_window);
     } else {
-      m_window = (id)m_parent_window;
+      //m_window = CFBridgingRelease(m_parent_window);
     }
+    //m_window_ptr = CFBridgingRetain(m_window);
 
     // Webview
     auto config = objc::msg_send<id>("WKWebViewConfiguration"_cls, "new"_sel);
     m_manager = objc::msg_send<id>(config, "userContentController"_sel);
     m_webview = objc::msg_send<id>("WKWebView"_cls, "alloc"_sel);
+    m_webview_ptr = CFBridgingRetain(m_webview);
 
     if (m_debug) {
       // Equivalent Obj-C:
@@ -1085,14 +1099,18 @@ private:
         },
       };
       )"");
-    objc::msg_send<void>(m_window, "setContentView:"_sel, m_webview);
-    objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
+      if (m_owns_window) {
+          objc::msg_send<void>(m_window, "setContentView:"_sel, m_webview);
+          objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
+      }
   }
-  bool m_debug;
-  void *m_parent_window;
-  id m_window;
-  id m_webview;
-  id m_manager;
+    bool m_debug{};
+    id m_window{};
+    id m_webview{};
+  const void *m_window_ptr{};
+  const void *m_webview_ptr{};
+    id m_manager{};
+  bool m_owns_window{};
 };
 
 } // namespace detail

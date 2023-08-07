@@ -24,7 +24,10 @@
 }
 
 - (IBAction)goButtonPressed:(NSButton *)sender {
-    
+    auto *container{(__bridge_retained void *) _webContainer};
+    webview::webview w{false, container};
+    auto *url{_locationTextField.stringValue};
+    w.navigate(std::string{url.UTF8String, [url lengthOfBytesUsingEncoding:NSUTF8StringEncoding]});
 }
 
 
