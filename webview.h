@@ -741,10 +741,12 @@ private:
 #if WEBVIEW_OBJC_ARC
 #define WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN() @autoreleasepool {
 #define WEBVIEW_OBJC_AUTORELEASEPOOL_END() }
+#define WEBVIEW_OBJC_BRIDGE_CAST(T, ptr) (__bridge T)(ptr)
 #else
 #define WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN()                                   \
   webview::detail::objc::autoreleasepool _webview_objc_autoreleasepool
 #define WEBVIEW_OBJC_AUTORELEASEPOOL_END()
+#define WEBVIEW_OBJC_BRIDGE_CAST(T, ptr) static_cast<T>(ptr)
 #endif
 
 } // namespace objc
@@ -808,11 +810,11 @@ public:
   }
   virtual ~cocoa_wkwebview_engine() = default;
   void *window() {
-    auto *ptr = static_cast<void *>(m_window);
+    auto *ptr = WEBVIEW_OBJC_BRIDGE_CAST(void *, m_window);
     return ptr;
   }
   void *widget() {
-    auto *ptr = static_cast<void *>(m_webview);
+    auto *ptr = WEBVIEW_OBJC_BRIDGE_CAST(void *, m_webview);
     return ptr;
   }
   void terminate() {

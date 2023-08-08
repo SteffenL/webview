@@ -31,8 +31,8 @@ int m_counter{};
 
     _locationTextField.stringValue = @"https://github.com/webview/webview";
 
-    m_webview = std::unique_ptr<webview::webview>(new webview::webview{false, _webContainer.window});
-    NSView *widget = (NSView *)m_webview->widget();
+    m_webview = std::unique_ptr<webview::webview>(new webview::webview{false, (__bridge void *)_webContainer.window});
+    NSView *widget = (__bridge NSView *)m_webview->widget();
     widget.translatesAutoresizingMaskIntoConstraints = NO;
     [_webContainer addSubview:widget];
     NSDictionary *views = NSDictionaryOfVariableBindings(widget);
