@@ -9,4 +9,7 @@ webview-example
 *.exe
 *.o
 
+# Xcode
+xcuserdata/
+
 examples/scrape/scrape
