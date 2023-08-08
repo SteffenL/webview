@@ -779,8 +779,8 @@ public:
     }
   }
   virtual ~cocoa_wkwebview_engine() = default;
-  void *window() { return static_cast<void *>(m_window); }
-  void *widget() { return static_cast<void *>(m_webview); }
+  void *window() { return (void *)m_window; }
+  void *widget() { return (void *)m_webview; }
   void terminate() {
     id app = get_shared_application();
     objc::msg_send<void>(app, "terminate:"_sel, nullptr);
