@@ -847,10 +847,7 @@ public:
   }
   void init(const std::string &js) {
     // Equivalent Obj-C:
-    // [m_manager addUserScript:[[WKUserScript alloc] initWithSource:[NSString
-    // stringWithUTF8String:js.c_str()]
-    // injectionTime:WKUserScriptInjectionTimeAtDocumentStart
-    // forMainFrameOnly:YES]]
+    // [m_manager addUserScript:[[WKUserScript alloc] initWithSource:[NSString stringWithUTF8String:js.c_str()] injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES]]
     objc::msg_send<void>(
         m_manager, "addUserScript:"_sel,
         objc::msg_send<id>(objc::msg_send<id>("WKUserScript"_cls, "alloc"_sel),
@@ -1044,8 +1041,7 @@ private:
         "fullScreenEnabled"_str);
 
     // Equivalent Obj-C:
-    // [[config preferences] setValue:@YES
-    // forKey:@"javaScriptCanAccessClipboard"];
+    // [[config preferences] setValue:@YES forKey:@"javaScriptCanAccessClipboard"];
     objc::msg_send<id>(
         preferences, "setValue:forKey:"_sel,
         objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
@@ -1198,8 +1194,7 @@ inline std::string narrow_string(const std::wstring &input) {
 }
 
 // Parses a version string with 1-4 integral components, e.g. "1.2.3.4".
-// Missing or invalid components default to 0, and excess components are
-// ignored.
+// Missing or invalid components default to 0, and excess components are ignored.
 template <typename T>
 std::array<unsigned int, 4>
 parse_version(const std::basic_string<T> &version) noexcept {
@@ -1894,8 +1889,7 @@ public:
     // WebView creation fails with HRESULT_FROM_WIN32(ERROR_INVALID_STATE) if
     // a running instance using the same user data folder exists, and the
     // Environment objects have different EnvironmentOptions.
-    // Source:
-    // https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2environment?view=webview2-1.0.1150.38
+    // Source: https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2environment?view=webview2-1.0.1150.38
     if (m_attempts < m_max_attempts) {
       ++m_attempts;
       auto res = m_attempt_handler();
@@ -2233,7 +2227,7 @@ private:
     });
     m_com_handler->try_create_environment();
 
-    // Wait for WebView2 to finish initialization. It relies on a message loop.
+    // Pump the message loop until WebView2 has finished initialization.
     MSG msg;
     while (!webview2_done && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
       if (msg.message == WM_QUIT) {
@@ -2306,8 +2300,7 @@ private:
 
   // The app is expected to call CoInitializeEx before
   // CreateCoreWebView2EnvironmentWithOptions.
-  // Source:
-  // https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/webview2-idl#createcorewebview2environmentwithoptions
+  // Source: https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/webview2-idl#createcorewebview2environmentwithoptions
   com_init_wrapper m_com_init{COINIT_APARTMENTTHREADED};
   bool m_owns_window{};
   HWND m_window = nullptr;
