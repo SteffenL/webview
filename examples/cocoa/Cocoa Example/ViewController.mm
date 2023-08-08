@@ -22,6 +22,7 @@ static constexpr const auto html =
 @implementation ViewController
 
 std::unique_ptr<webview::webview> m_webview;
+int m_counter{};
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -43,7 +44,14 @@ std::unique_ptr<webview::webview> m_webview;
                                                                           options:0
                                                                           metrics:nil
                                                                             views:views]];
-    m_webview->set_html(html);
+
+    m_webview->bind(
+        "increment", [=](const std::string & /*req*/) -> std::string {
+            _counterTextField.stringValue = [NSString stringWithUTF8String:std::to_string(++m_counter).c_str()];
+          return "";
+        });
+
+      m_webview->set_html(html);
 }
 
 - (void)setRepresentedObject:(id)representedObject {
