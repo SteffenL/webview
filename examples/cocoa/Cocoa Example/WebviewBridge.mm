@@ -28,7 +28,7 @@ std::unique_ptr<webview::webview> _webview;
 }
 
 - (void)navigate:(NSString *)url {
-    
+    _webview->navigate(std::string{url.UTF8String, [url lengthOfBytesUsingEncoding:NSUTF8StringEncoding]});
 }
 
 - (void)bindWithName:(NSString *)name block:(NSString *(^)(NSString * req))block {

@@ -65,8 +65,7 @@ static constexpr const auto html =
 }
 
 - (IBAction)goButtonPressed:(NSButton *)sender {
-    /*NSString *url = _locationTextField.stringValue;
-    m_webview->navigate(std::string{url.UTF8String, [url lengthOfBytesUsingEncoding:NSUTF8StringEncoding]});*/
+    [_bridge navigate:_locationTextField.stringValue];
 }
 
 
