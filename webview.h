@@ -679,23 +679,6 @@ using browser_engine = detail::gtk_webkit_engine;
 #include <objc/NSObjCRuntime.h>
 #include <objc/objc-runtime.h>
 
-#ifdef __has_feature
-#if __has_feature(objc_arc)
-#define WEBVIEW_OBJC_ARC 1
-#endif
-#endif
-#ifndef WEBVIEW_OBJC_ARC
-#define WEBVIEW_OBJC_ARC 0
-#endif
-
-#ifdef __OBJC__
-#define WEBVIEW_OBJC_WEAK __weak
-#define WEBVIEW_OBJC_STRONG __strong
-#else
-#define WEBVIEW_OBJC_WEAK
-#define WEBVIEW_OBJC_STRONG
-#endif
-
 namespace webview {
 namespace detail {
 namespace objc {
@@ -738,17 +721,6 @@ private:
   id m_pool{};
 };
 
-#if WEBVIEW_OBJC_ARC
-#define WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN() @autoreleasepool {
-#define WEBVIEW_OBJC_AUTORELEASEPOOL_END() }
-#define WEBVIEW_OBJC_BRIDGE_CAST(T, ptr) (__bridge T)(ptr)
-#else
-#define WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN()                                   \
-  webview::detail::objc::autoreleasepool _webview_objc_autoreleasepool
-#define WEBVIEW_OBJC_AUTORELEASEPOOL_END()
-#define WEBVIEW_OBJC_BRIDGE_CAST(T, ptr) static_cast<T>(ptr)
-#endif
-
 } // namespace objc
 
 enum NSBackingStoreType : NSUInteger { NSBackingStoreBuffered = 2 };
@@ -784,9 +756,7 @@ inline id operator"" _str(const char *s, std::size_t) {
 class cocoa_wkwebview_engine {
 public:
   cocoa_wkwebview_engine(bool debug, void *window)
-      : m_debug{debug}, m_window{window ? *static_cast<id WEBVIEW_OBJC_WEAK *>(
-                                              window)
-                                        : nullptr},
+      : m_debug{debug}, m_window{static_cast<id>(window)},
         m_owns_window{!window} {
     id app = get_shared_application();
     id delegate = create_app_delegate();
@@ -810,11 +780,11 @@ public:
   }
   virtual ~cocoa_wkwebview_engine() = default;
   void *window() {
-    auto *ptr = WEBVIEW_OBJC_BRIDGE_CAST(void *, m_window);
+    auto *ptr = static_cast<void *>(m_window);
     return ptr;
   }
   void *widget() {
-    auto *ptr = WEBVIEW_OBJC_BRIDGE_CAST(void *, m_webview);
+    auto *ptr = static_cast<void *>(m_webview);
     return ptr;
   }
   void terminate() {
@@ -862,7 +832,7 @@ public:
     objc::msg_send<void>(m_window, "center"_sel);
   }
   void navigate(const std::string &url) {
-    WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN();
+    objc::autoreleasepool pool;
 
     id nsurl = objc::msg_send<id>(
         "NSURL"_cls, "URLWithString:"_sel,
@@ -872,17 +842,14 @@ public:
     objc::msg_send<void>(
         m_webview, "loadRequest:"_sel,
         objc::msg_send<id>("NSURLRequest"_cls, "requestWithURL:"_sel, nsurl));
-
-    WEBVIEW_OBJC_AUTORELEASEPOOL_END();
   }
   void set_html(const std::string &html) {
-    WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN();
+    objc::autoreleasepool pool;
     objc::msg_send<void>(m_webview, "loadHTMLString:baseURL:"_sel,
                          objc::msg_send<id>("NSString"_cls,
                                             "stringWithUTF8String:"_sel,
                                             html.c_str()),
                          nullptr);
-    WEBVIEW_OBJC_AUTORELEASEPOOL_END();
   }
   void init(const std::string &js) {
     // Equivalent Obj-C:
