@@ -706,11 +706,11 @@
         <scene sceneID="hIz-AP-VOD">
             <objects>
                 <viewController id="XfG-lQ-9wD" customClass="ViewController" sceneMemberID="viewController">
-                    <view key="view" id="m2S-Jp-Qdl">
+                    <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
                         <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="336-BO-mnH">
+                            <textField horizontalHuggingPriority="251" verticalCompressionResistancePriority="751" translatesAutoresizingMaskIntoConstraints="NO" id="336-BO-mnH">
                                 <rect key="frame" x="0.0" y="249" width="442" height="21"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="5Sp-eB-qrg">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -718,7 +718,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <button verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="D99-YV-dbe">
+                            <button verticalHuggingPriority="750" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="751" translatesAutoresizingMaskIntoConstraints="NO" id="D99-YV-dbe">
                                 <rect key="frame" x="435" y="242" width="52" height="33"/>
                                 <buttonCell key="cell" type="push" title="Go" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="RVB-Aa-hSM">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -728,50 +728,47 @@
                                     <action selector="goButtonPressed:" target="XfG-lQ-9wD" id="wwU-bp-s3H"/>
                                 </connections>
                             </button>
-                            <customView ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lZT-zz-2Qu">
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="lZT-zz-2Qu">
                                 <rect key="frame" x="0.0" y="0.0" width="240" height="249"/>
                             </customView>
-                            <box ambiguous="YES" borderType="none" title="Box" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="L0X-fm-UBx">
-                                <rect key="frame" x="237" y="-4" width="246" height="255"/>
-                                <view key="contentView" ambiguous="YES" id="yV3-i5-YAH">
-                                    <rect key="frame" x="0.0" y="0.0" width="246" height="255"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                    <subviews>
-                                        <textField ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GlG-KF-4sC">
-                                            <rect key="frame" x="97" y="85" width="52" height="85"/>
-                                            <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="0" id="cfe-Nv-mow">
-                                                <font key="font" metaFont="system" size="72"/>
-                                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            </textFieldCell>
-                                        </textField>
-                                    </subviews>
-                                    <constraints>
-                                        <constraint firstItem="GlG-KF-4sC" firstAttribute="centerY" secondItem="yV3-i5-YAH" secondAttribute="centerY" id="AGC-3y-5mU"/>
-                                        <constraint firstItem="GlG-KF-4sC" firstAttribute="centerX" secondItem="yV3-i5-YAH" secondAttribute="centerX" id="dEt-7u-qXi"/>
-                                    </constraints>
-                                </view>
-                            </box>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="L6C-CD-cse">
+                                <rect key="frame" x="240" y="0.0" width="240" height="249"/>
+                                <subviews>
+                                    <textField translatesAutoresizingMaskIntoConstraints="NO" id="E2N-CW-poa">
+                                        <rect key="frame" x="94" y="82" width="52" height="85"/>
+                                        <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="0" id="hPg-3S-fjB">
+                                            <font key="font" metaFont="system" size="72"/>
+                                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                    </textField>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="E2N-CW-poa" firstAttribute="centerY" secondItem="L6C-CD-cse" secondAttribute="centerY" id="KvE-I1-pf2"/>
+                                    <constraint firstItem="E2N-CW-poa" firstAttribute="centerX" secondItem="L6C-CD-cse" secondAttribute="centerX" id="a8S-JM-VKQ"/>
+                                </constraints>
+                            </customView>
                         </subviews>
                         <constraints>
+                            <constraint firstItem="L6C-CD-cse" firstAttribute="leading" secondItem="lZT-zz-2Qu" secondAttribute="trailing" id="2TO-8H-Sz3"/>
                             <constraint firstItem="336-BO-mnH" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" id="7JT-vu-GUF"/>
-                            <constraint firstAttribute="bottom" secondItem="L0X-fm-UBx" secondAttribute="bottom" id="8WW-rp-Ivq"/>
+                            <constraint firstAttribute="trailing" secondItem="L6C-CD-cse" secondAttribute="trailing" id="D8J-wy-dc0"/>
                             <constraint firstAttribute="trailing" secondItem="lZT-zz-2Qu" secondAttribute="trailing" multiplier="2" id="IBU-XN-DWM"/>
-                            <constraint firstAttribute="trailing" secondItem="L0X-fm-UBx" secondAttribute="trailing" id="MGz-jR-yBa"/>
+                            <constraint firstItem="lZT-zz-2Qu" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="Pwi-LH-u5H"/>
                             <constraint firstItem="D99-YV-dbe" firstAttribute="leading" secondItem="336-BO-mnH" secondAttribute="trailing" id="Tgw-TE-6xL"/>
                             <constraint firstAttribute="trailing" secondItem="D99-YV-dbe" secondAttribute="trailing" id="YEK-2z-Fgj"/>
-                            <constraint firstItem="L0X-fm-UBx" firstAttribute="top" secondItem="lZT-zz-2Qu" secondAttribute="top" id="e0l-Fo-NiS"/>
                             <constraint firstItem="336-BO-mnH" firstAttribute="bottom" secondItem="D99-YV-dbe" secondAttribute="bottom" id="fsR-0l-Iwd"/>
                             <constraint firstAttribute="bottom" secondItem="lZT-zz-2Qu" secondAttribute="bottom" id="hQy-uI-qre"/>
-                            <constraint firstItem="336-BO-mnH" firstAttribute="leading" secondItem="lZT-zz-2Qu" secondAttribute="leading" id="hv9-Hn-NCx"/>
+                            <constraint firstItem="336-BO-mnH" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="hv9-Hn-NCx"/>
                             <constraint firstItem="336-BO-mnH" firstAttribute="top" secondItem="D99-YV-dbe" secondAttribute="top" id="mf8-dv-lGC"/>
                             <constraint firstItem="lZT-zz-2Qu" firstAttribute="top" secondItem="336-BO-mnH" secondAttribute="bottom" id="o4P-Se-jLa"/>
-                            <constraint firstItem="L0X-fm-UBx" firstAttribute="leading" secondItem="lZT-zz-2Qu" secondAttribute="trailing" id="pGi-Hv-kEf"/>
+                            <constraint firstAttribute="bottom" secondItem="L6C-CD-cse" secondAttribute="bottom" id="opR-UD-RiM"/>
+                            <constraint firstItem="L6C-CD-cse" firstAttribute="top" secondItem="336-BO-mnH" secondAttribute="bottom" id="q7v-8c-2PJ"/>
                             <constraint firstItem="336-BO-mnH" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="rLw-xq-3Eo"/>
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="counterTextField" destination="GlG-KF-4sC" id="4Ag-8r-s4S"/>
+                        <outlet property="counterTextField" destination="E2N-CW-poa" id="VtV-hA-8q9"/>
                         <outlet property="goButton" destination="D99-YV-dbe" id="ShZ-40-P69"/>
                         <outlet property="locationTextField" destination="336-BO-mnH" id="oIs-kw-h2X"/>
                         <outlet property="webContainer" destination="lZT-zz-2Qu" id="vl5-D4-4fY"/>
@@ -779,7 +776,7 @@
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="74" y="763"/>
+            <point key="canvasLocation" x="75" y="763"/>
         </scene>
     </scenes>
 </document>
