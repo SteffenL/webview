@@ -1,15 +1,15 @@
 //
-//  ViewController.m
+//  ViewController.mm
 //  Cocoa Example
 //
 //  Created by Steffen on 2023/08/05.
 //
 
 #import "ViewController.h"
-#include "webview.h"
+#import "WebviewBridge.h"
 
 static constexpr const auto html =
-    R"html(<button id="increment">Tap me</button>
+    @R"html(<button id="increment">Tap me</button>
 <script>
   const [incrementElement] = document.querySelectorAll("#increment");
   document.addEventListener("DOMContentLoaded", () => {
@@ -19,10 +19,10 @@ static constexpr const auto html =
   });
 </script>)html";
 
-@implementation ViewController
-
-std::unique_ptr<webview::webview> m_webview;
-int m_counter{};
+@implementation ViewController {
+    WebviewBridge *_bridge;
+    NSNumber *_counter;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -30,9 +30,10 @@ int m_counter{};
     // Do any additional setup after loading the view.
 
     _locationTextField.stringValue = @"https://github.com/webview/webview";
+    _bridge = [[WebviewBridge alloc] initWithDebug:NO window:_webContainer.window];
+    _counter = @0;
 
-    m_webview = std::unique_ptr<webview::webview>(new webview::webview{false, (__bridge void *)_webContainer.window});
-    NSView *widget = (__bridge NSView *)m_webview->widget();
+    NSView *widget = _bridge.widget;
     widget.translatesAutoresizingMaskIntoConstraints = NO;
     [_webContainer addSubview:widget];
     NSDictionary *views = NSDictionaryOfVariableBindings(widget);
@@ -45,13 +46,16 @@ int m_counter{};
                                                                           metrics:nil
                                                                             views:views]];
 
-    m_webview->bind(
-        "increment", [=](const std::string & /*req*/) -> std::string {
-            _counterTextField.stringValue = [NSString stringWithUTF8String:std::to_string(++m_counter).c_str()];
-          return "";
-        });
+    __block typeof(self->_counter) counter = _counter;
+    __block typeof(self->_counterTextField) counterTextField = _counterTextField;
+    [_bridge bindWithName: @"increment" block:^(NSString * req) {
+        counter = [NSNumber numberWithInt:counter.intValue + 1];
+        counterTextField.stringValue = counter.stringValue;
+        return @"";
+    }];
 
-      m_webview->set_html(html);
+    [_bridge setHTML:html];
+
 }
 
 - (void)setRepresentedObject:(id)representedObject {
@@ -61,8 +65,8 @@ int m_counter{};
 }
 
 - (IBAction)goButtonPressed:(NSButton *)sender {
-    NSString *url = _locationTextField.stringValue;
-    m_webview->navigate(std::string{url.UTF8String, [url lengthOfBytesUsingEncoding:NSUTF8StringEncoding]});
+    /*NSString *url = _locationTextField.stringValue;
+    m_webview->navigate(std::string{url.UTF8String, [url lengthOfBytesUsingEncoding:NSUTF8StringEncoding]});*/
 }
 
 
