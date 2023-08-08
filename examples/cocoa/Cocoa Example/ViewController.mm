@@ -27,18 +27,24 @@ std::unique_ptr<webview::webview> m_webview;
     [super viewDidLoad];
 
     // Do any additional setup after loading the view.
-    
+
     _locationTextField.stringValue = @"https://github.com/webview/webview";
 
     m_webview = std::unique_ptr<webview::webview>(new webview::webview{false, _webContainer.window});
     NSView *widget = (NSView *)m_webview->widget();
-    widget.frame = _webContainer.bounds;
-    widget.autoresizesSubviews = YES;
-    widget.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    widget.translatesAutoresizingMaskIntoConstraints = NO;
     [_webContainer addSubview:widget];
+    NSDictionary *views = NSDictionaryOfVariableBindings(widget);
+    [_webContainer addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[widget]|"
+                                                                          options:0
+                                                                          metrics:nil
+                                                                            views:views]];
+    [_webContainer addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[widget]|"
+                                                                          options:0
+                                                                          metrics:nil
+                                                                            views:views]];
     m_webview->set_html(html);
 }
-
 
 - (void)setRepresentedObject:(id)representedObject {
     [super setRepresentedObject:representedObject];
@@ -47,7 +53,7 @@ std::unique_ptr<webview::webview> m_webview;
 }
 
 - (IBAction)goButtonPressed:(NSButton *)sender {
-    auto *url{_locationTextField.stringValue};
+    NSString *url = _locationTextField.stringValue;
     m_webview->navigate(std::string{url.UTF8String, [url lengthOfBytesUsingEncoding:NSUTF8StringEncoding]});
 }
 
