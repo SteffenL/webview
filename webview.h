@@ -788,8 +788,8 @@ public:
                                               window)
                                         : nullptr},
         m_owns_window{!window} {
-    auto app = get_shared_application();
-    auto delegate = create_app_delegate();
+    id app = get_shared_application();
+    id delegate = create_app_delegate();
     objc_setAssociatedObject(
         delegate, "webview",
         objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
@@ -818,11 +818,11 @@ public:
     return ptr;
   }
   void terminate() {
-    auto app = get_shared_application();
+    id app = get_shared_application();
     objc::msg_send<void>(app, "terminate:"_sel, nullptr);
   }
   void run() {
-    auto app = get_shared_application();
+    id app = get_shared_application();
     objc::msg_send<void>(app, "run"_sel);
   }
   void dispatch(std::function<void()> f) {
@@ -864,7 +864,7 @@ public:
   void navigate(const std::string &url) {
     WEBVIEW_OBJC_AUTORELEASEPOOL_BEGIN();
 
-    auto nsurl = objc::msg_send<id>(
+    id nsurl = objc::msg_send<id>(
         "NSURL"_cls, "URLWithString:"_sel,
         objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel,
                            url.c_str()));
@@ -925,8 +925,7 @@ private:
     if (m_owns_window) {
       class_addMethod(cls, "applicationDidFinishLaunching:"_sel,
                       (IMP)(+[](id self, SEL, id notification) {
-                        auto *app =
-                            objc::msg_send<id>(notification, "object"_sel);
+                        id app = objc::msg_send<id>(notification, "object"_sel);
                         auto w = get_associated_webview(self);
                         w->on_application_did_finish_launching(self, app);
                       }),
@@ -948,7 +947,7 @@ private:
         }),
         "v@:@@");
     objc_registerClassPair(cls);
-    auto instance = objc::msg_send<id>((id)cls, "new"_sel);
+    id instance = objc::msg_send<id>((id)cls, "new"_sel);
     objc_setAssociatedObject(
         instance, "webview",
         objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
@@ -969,7 +968,7 @@ private:
               objc::msg_send<BOOL>(parameters, "allowsDirectories"_sel);
 
           // Show a panel for selecting files.
-          auto panel = objc::msg_send<id>("NSOpenPanel"_cls, "openPanel"_sel);
+          id panel = objc::msg_send<id>("NSOpenPanel"_cls, "openPanel"_sel);
           objc::msg_send<void>(panel, "setCanChooseFiles:"_sel, YES);
           objc::msg_send<void>(panel, "setCanChooseDirectories:"_sel,
                                allows_directories);
@@ -986,9 +985,9 @@ private:
                         : nullptr;
 
           // Invoke the completion handler block.
-          auto sig = objc::msg_send<id>("NSMethodSignature"_cls,
-                                        "signatureWithObjCTypes:"_sel, "v@?@");
-          auto invocation = objc::msg_send<id>(
+          id sig = objc::msg_send<id>("NSMethodSignature"_cls,
+                                      "signatureWithObjCTypes:"_sel, "v@?@");
+          id invocation = objc::msg_send<id>(
               "NSInvocation"_cls, "invocationWithMethodSignature:"_sel, sig);
           objc::msg_send<void>(invocation, "setTarget:"_sel,
                                completion_handler);
@@ -1004,8 +1003,7 @@ private:
     return objc::msg_send<id>("NSApplication"_cls, "sharedApplication"_sel);
   }
   static cocoa_wkwebview_engine *get_associated_webview(id object) {
-    /*WEBVIEW_OBJC_WEAK*/ auto assoc_obj =
-        objc_getAssociatedObject(object, "webview");
+    id assoc_obj = objc_getAssociatedObject(object, "webview");
     if (!objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
       return nullptr;
     }
@@ -1018,11 +1016,11 @@ private:
     return objc::msg_send<id>("NSBundle"_cls, "mainBundle"_sel);
   }
   static bool is_app_bundled() noexcept {
-    auto bundle = get_main_bundle();
+    id bundle = get_main_bundle();
     if (!bundle) {
       return false;
     }
-    auto bundle_path = objc::msg_send<id>(bundle, "bundlePath"_sel);
+    id bundle_path = objc::msg_send<id>(bundle, "bundlePath"_sel);
     auto bundled =
         objc::msg_send<BOOL>(bundle_path, "hasSuffix:"_sel, ".app"_str);
     return !!bundled;
@@ -1063,10 +1061,10 @@ private:
     }
 
     // Webview
-    auto config = objc::msg_send<id>("WKWebViewConfiguration"_cls, "new"_sel);
+    id config = objc::msg_send<id>("WKWebViewConfiguration"_cls, "new"_sel);
     m_manager = objc::msg_send<id>(config, "userContentController"_sel);
     m_webview = objc::msg_send<id>("WKWebView"_cls, "alloc"_sel);
-    auto preferences = objc::msg_send<id>(config, "preferences"_sel);
+    id preferences = objc::msg_send<id>(config, "preferences"_sel);
 
     if (m_debug) {
       // Equivalent Obj-C:
@@ -1079,9 +1077,10 @@ private:
 
     // Equivalent Obj-C:
     // [[config preferences] setValue:@YES forKey:@"fullScreenEnabled"];
-    auto y = objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES);
-    objc::msg_send<id>(preferences, "setValue:forKey:"_sel, y,
-                       "fullScreenEnabled"_str);
+    objc::msg_send<id>(
+        preferences, "setValue:forKey:"_sel,
+        objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
+        "fullScreenEnabled"_str);
 
     // Equivalent Obj-C:
     // [[config preferences] setValue:@YES
@@ -1098,7 +1097,7 @@ private:
         objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
         "DOMPasteAllowed"_str);
 
-    auto ui_delegate = create_webkit_ui_delegate();
+    id ui_delegate = create_webkit_ui_delegate();
     objc::msg_send<void>(m_webview, "initWithFrame:configuration:"_sel,
                          CGRectMake(0, 0, 0, 0), config);
     objc::msg_send<void>(m_webview, "setUIDelegate:"_sel, ui_delegate);
@@ -1125,7 +1124,7 @@ private:
 #endif
     }
 
-    auto script_message_handler = create_script_message_handler();
+    id script_message_handler = create_script_message_handler();
     objc::msg_send<void>(m_manager, "addScriptMessageHandler:name:"_sel,
                          script_message_handler, "external"_str);
 
