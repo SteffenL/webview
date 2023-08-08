@@ -756,8 +756,8 @@ inline id operator"" _str(const char *s, std::size_t) {
 class cocoa_wkwebview_engine {
 public:
   cocoa_wkwebview_engine(bool debug, void *window)
-      : m_debug{debug}, m_window{static_cast<id>(window)},
-        m_owns_window{!window} {
+      : m_debug{debug}, m_window{static_cast<id>(window)}, m_owns_window{
+                                                               !window} {
     id app = get_shared_application();
     id delegate = create_app_delegate();
     objc_setAssociatedObject(
@@ -779,14 +779,8 @@ public:
     }
   }
   virtual ~cocoa_wkwebview_engine() = default;
-  void *window() {
-    auto *ptr = static_cast<void *>(m_window);
-    return ptr;
-  }
-  void *widget() {
-    auto *ptr = static_cast<void *>(m_webview);
-    return ptr;
-  }
+  void *window() { return static_cast<void *>(m_window); }
+  void *widget() { return static_cast<void *>(m_webview); }
   void terminate() {
     id app = get_shared_application();
     objc::msg_send<void>(app, "terminate:"_sel, nullptr);
