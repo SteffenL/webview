@@ -31,7 +31,7 @@ std::unique_ptr<webview::webview> _webview;
 
 - (void)bindWithName:(NSString *)name block:(NSString *(^)(NSString * req))block {
     const std::string name_{name.UTF8String, [name lengthOfBytesUsingEncoding:NSUTF8StringEncoding]};
-    id retainedBlock{(id)_Block_copy(block)}; //objc_retainBlock()
+    id retainedBlock{(id)_Block_copy(block)}; // objc_retainBlock()
     _webview->bind(name_, [=](const std::string& req_) -> std::string {
         if (!retainedBlock) {
             return {};
@@ -39,7 +39,6 @@ std::unique_ptr<webview::webview> _webview;
         NSString *req{[NSString stringWithUTF8String:req_.c_str()]};
         auto typedRetainedBlock = (NSString *(^)(NSString * req))retainedBlock;
         NSString *res{typedRetainedBlock(req)};
-        //[retainedBlock release]; // causes crash the 2nd time around
         std::string res_{res.UTF8String, [res lengthOfBytesUsingEncoding:NSUTF8StringEncoding]};
         return res_;
     });
