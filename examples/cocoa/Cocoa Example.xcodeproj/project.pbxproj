@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		738BDF562A8226E7000A20DD /* WebviewBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 738BDF552A8226E7000A20DD /* WebviewBridge.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		73C2352B2A7E8CBE006876EF /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 73C2352A2A7E8CBE006876EF /* AppDelegate.m */; };
-		73C2352E2A7E8CBE006876EF /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 73C2352D2A7E8CBE006876EF /* ViewController.mm */; };
+		73C2352E2A7E8CBE006876EF /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 73C2352D2A7E8CBE006876EF /* ViewController.m */; };
 		73C235302A7E8CC1006876EF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 73C2352F2A7E8CC1006876EF /* Assets.xcassets */; };
 		73C235332A7E8CC1006876EF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 73C235312A7E8CC1006876EF /* Main.storyboard */; };
 		73C235352A7E8CC1006876EF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 73C235342A7E8CC1006876EF /* main.m */; };
@@ -22,7 +22,7 @@
 		73C235292A7E8CBE006876EF /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		73C2352A2A7E8CBE006876EF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		73C2352C2A7E8CBE006876EF /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		73C2352D2A7E8CBE006876EF /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
+		73C2352D2A7E8CBE006876EF /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		73C2352F2A7E8CC1006876EF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		73C235322A7E8CC1006876EF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		73C235342A7E8CC1006876EF /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -62,7 +62,7 @@
 				73C235292A7E8CBE006876EF /* AppDelegate.h */,
 				73C2352A2A7E8CBE006876EF /* AppDelegate.m */,
 				73C2352C2A7E8CBE006876EF /* ViewController.h */,
-				73C2352D2A7E8CBE006876EF /* ViewController.mm */,
+				73C2352D2A7E8CBE006876EF /* ViewController.m */,
 				73C2352F2A7E8CC1006876EF /* Assets.xcassets */,
 				73C235312A7E8CC1006876EF /* Main.storyboard */,
 				73C235342A7E8CC1006876EF /* main.m */,
@@ -142,7 +142,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				73C2352E2A7E8CBE006876EF /* ViewController.mm in Sources */,
+				73C2352E2A7E8CBE006876EF /* ViewController.m in Sources */,
 				738BDF562A8226E7000A20DD /* WebviewBridge.mm in Sources */,
 				73C235352A7E8CC1006876EF /* main.m in Sources */,
 				73C2352B2A7E8CBE006876EF /* AppDelegate.m in Sources */,

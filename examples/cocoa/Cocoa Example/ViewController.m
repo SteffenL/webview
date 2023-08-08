@@ -1,21 +1,21 @@
 //
-//  ViewController.mm
+//  ViewController.m
 //  Cocoa Example
 //
 
 #import "ViewController.h"
 #import "WebviewBridge.h"
 
-static constexpr const auto html =
-    @R"html(<button id="increment">Tap me</button>
-<script>
-  const [incrementElement] = document.querySelectorAll("#increment");
-  document.addEventListener("DOMContentLoaded", () => {
-    incrementElement.addEventListener("click", () => {
-      window.increment();
-    });
-  });
-</script>)html";
+static NSString *html =
+@"<button id=\"increment\">Tap me</button>\n"
+"<script>\n"
+"  const [incrementElement] = document.querySelectorAll(\"#increment\");\n"
+"  document.addEventListener(\"DOMContentLoaded\", () => {\n"
+"    incrementElement.addEventListener(\"click\", () => {\n"
+"      window.increment();\n"
+"    });\n"
+"  });\n"
+"</script>";
 
 @implementation ViewController {
     WebviewBridge *_bridge;
