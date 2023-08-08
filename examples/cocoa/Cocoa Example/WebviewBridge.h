@@ -2,8 +2,6 @@
 //  WebviewBridge.h
 //  Cocoa Example
 //
-//  Created by Steffen on 2023/08/08.
-//
 
 #import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>

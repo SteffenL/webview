@@ -2,8 +2,6 @@
 //  WebviewBridge.mm
 //  Cocoa Example
 //
-//  Created by Steffen on 2023/08/08.
-//
 
 #import "WebviewBridge.h"
 #include "webview.h"
