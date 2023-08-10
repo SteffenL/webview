@@ -123,6 +123,56 @@ typedef enum {
   WEBVIEW_VISIBILITY_HIDDEN
 } webview_visibility_t;
 
+enum {
+  // Used to specify a default coordinate.
+  WEBVIEW_COORD_DEFAULT = 1 << 31
+};
+
+// Location in 2D space.
+typedef struct {
+  int x;
+  int y;
+} webview_point_t;
+
+// Dimensions in 2D space.
+typedef struct {
+  int width;
+  int height;
+} webview_size_t;
+
+// Window size flags.
+typedef enum {
+  // The rectangle of a window within its own own space.
+  WEBVIEW_SIZE_BOUNDS = 0,
+  // The rectangle of a window's frame.
+  WEBVIEW_SIZE_FRAME = 1,
+} webview_size_flag_t;
+
+// Location and dimentions of a rectangle.
+typedef struct {
+  // Origin of the rectangle.
+  // @see WEBVIEW_COORD_DEFAULT
+  webview_point_t origin;
+  // Size of the rectangle.
+  webview_size_t size;
+} webview_rect_t;
+
+// Window size constraint.
+typedef struct {
+  // Specify WEBVIEW_TRUE to use this constraint; otherwise WEBVIEW_FALSE.
+  webview_bool_t use;
+  webview_size_t size;
+} webview_size_constraint_t;
+
+typedef enum {
+  // The index of the lower bounds.
+  WEBVIEW_SIZE_CONSTRAINT_INDEX_LOWER,
+  // The index of the upper bounds.
+  WEBVIEW_SIZE_CONSTRAINT_INDEX_UPPER,
+  // The number of values in this enum.
+  WEBVIEW_SIZE_CONSTRAINT_INDEX_COUNT
+} webview_size_constraint_index_t;
+
 // Options for webview_create_with_options().
 typedef struct {
   // Minimum required library version. This can be used to change the available
@@ -142,6 +192,13 @@ typedef struct {
   void *window;
   // Initial visibility of the window.
   webview_visibility_t visibility;
+  // Flags for modifying the window's initial size.
+  webview_size_flag_t size_flags;
+  // Initial location and dimentions of the window.
+  webview_rect_t bounds;
+  // Window dimentions constraints.
+  // @see webview_size_constraint_index_t
+  webview_size_constraint_t size_constraints[WEBVIEW_SIZE_CONSTRAINT_INDEX_COUNT];
 } webview_create_options_t;
 
 // Error codes returned to callers of the API.
@@ -377,6 +434,16 @@ public:
 
   create_options_builder &visibility(webview_visibility_t value) noexcept {
     m_options.visibility = value;
+    return *this;
+  }
+
+  create_options_builder &bounds(int width, int height) noexcept {
+    m_options.visibility = value;
+    return *this;
+  }
+
+  create_options_builder &size(int width, int height, webview_hint_t hints) noexcept {
+    m_options.size = value;
     return *this;
   }
 
