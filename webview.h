@@ -2337,7 +2337,7 @@ public:
       }
       return 0;
     };
-    auto message_atom = RegisterClassExW(&message_wc);
+    RegisterClassExW(&message_wc);
     CreateWindowExW(0, L"webview_message", nullptr, 0, 0, 0, 0, 0, HWND_MESSAGE,
                     nullptr, hInstance, this);
 
@@ -2521,8 +2521,7 @@ private:
   void resize_widget() {
     if (m_widget) {
       RECT r{};
-      auto parent = GetParent(m_widget);
-      if (GetClientRect(parent, &r)) {
+      if (GetClientRect(GetParent(m_widget), &r)) {
         MoveWindow(m_widget, r.left, r.top, r.right - r.left, r.bottom - r.top,
                    TRUE);
       }
