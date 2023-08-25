@@ -15,30 +15,17 @@ constexpr const auto primary_html =
   });
 </script>)html";
 
-#if defined(__APPLE__)
-using native_window_t = id;
-using native_widget_t = id;
-#error Not implemented yet
-#elif defined(__unix__)
-using native_window_t = GtkWidget *;
-using native_widget_t = GtkWidget *;
-#elif defined(_WIN32)
-using native_window_t = HWND;
-using native_widget_t = HWND;
-#else
-#error Unsupported platform
-#endif
-
-native_window_t create_native_window() {
+void *create_native_window() {
 #if defined(__APPLE__)
 #error Not implemented yet
 #elif defined(__unix__)
   auto *native_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   return native_window;
 #elif defined(_WIN32)
+  HINSTANCE hInstance = GetModuleHandle(nullptr);
   WNDCLASSEXW wc{};
   wc.cbSize = sizeof(WNDCLASSEX);
-  wc.hInstance = hInst;
+  wc.hInstance = hInstance;
   wc.lpszClassName = L"example_window";
   wc.lpfnWndProc = +[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
     switch (msg) {
@@ -61,7 +48,7 @@ native_window_t create_native_window() {
   RegisterClassExW(&wc);
   auto native_window =
       CreateWindowW(L"example_window", L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-                    CW_USEDEFAULT, 0, 0, nullptr, nullptr, hInst, nullptr);
+                    CW_USEDEFAULT, 0, 0, nullptr, nullptr, hInstance, nullptr);
   return native_window;
 #else
 #error Unsupported platform
@@ -75,9 +62,10 @@ void add_widget(void *widget, void *window) {
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(widget));
   gtk_widget_show_all(GTK_WIDGET(window));
 #elif defined(_WIN32)
-  SetParent(widget, window);
-  ShowWindow(window, SW_SHOW);
-  UpdateWindow(window);
+  auto window_ = static_cast<HWND>(window);
+  SetParent(static_cast<HWND>(widget), window_);
+  ShowWindow(window_, SW_SHOW);
+  UpdateWindow(window_);
 #else
 #error Unsupported platform
 #endif
@@ -86,7 +74,7 @@ void add_widget(void *widget, void *window) {
 constexpr const auto secondary_html = R"html(<div>Secondary window</div>)html";
 
 #ifdef _WIN32
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE /*hPrevInst*/,
+int WINAPI WinMain(HINSTANCE /*hInst*/, HINSTANCE /*hPrevInst*/,
                    LPSTR /*lpCmdLine*/, int /*nCmdShow*/) {
 #else
 int main() {
