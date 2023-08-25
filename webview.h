@@ -2151,9 +2151,6 @@ public:
     if (!is_webview2_available()) {
       return;
     }
-    if (!m_com_init.is_initialized()) {
-      return;
-    }
     HINSTANCE hInstance = GetModuleHandle(nullptr);
     if (!window) {
       m_com_init = {COINIT_APARTMENTTHREADED};
