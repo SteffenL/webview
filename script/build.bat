@@ -83,31 +83,38 @@ goto :main
 :get_runtime_link_flags
     setlocal
     set out_var=%~1
-    set link=%~2
-    set type=%~3
-    set flags=/nodefaultlib
-    rem set flags=
-    if "%link%" == "shared" (
-        if "%type%" == "release" (
-            set flags=%flags% /MD
-        ) else if "%type%" == "debug" (
-            set flags=%flags% /MDd
+    set lib=%~2
+    set link=%~3
+    set type=%~4
+    set flags=
+    if "%lib%" == "msvcrt" (
+        if "%link%" == "shared" (
+            if "%type%" == "release" (
+                set flags=%flags% /MD
+            ) else if "%type%" == "debug" (
+                set flags=%flags% /MDd
+            ) else (
+                echo ERROR: Invalid build type.>&2
+                endlocal & exit /b 1
+            )
+        ) else if "%link%" == "static" (
+            if "%type%" == "release" (
+                set flags=%flags% /MT
+            ) else if "%type%" == "debug" (
+                set flags=%flags% /MTd
+            ) else (
+                echo ERROR: Invalid build type.>&2
+                endlocal & exit /b 1
+            )
         ) else (
-            echo ERROR: Invalid build type.>&2
+            echo ERROR: Invalid runtime library linking.>&2
             endlocal & exit /b 1
         )
-    ) else if "%link%" == "static" (
-        if "%type%" == "release" (
-            set flags=%flags% /MT
-        ) else if "%type%" == "debug" (
-            set flags=%flags% /MTd
-        ) else (
-            echo ERROR: Invalid build type.>&2
-            endlocal & exit /b 1
-        )
+    ) else if "%lib%" == "ucrt" (
+        rem This is the default
     ) else (
-        echo ERROR: Invalid runtime library linking.>&2
-        endlocal & exit /b 1
+            echo ERROR: Invalid runtime library.>&2
+            endlocal & exit /b 1
     )
     endlocal & set "%out_var%=%flags%"
     goto :eof
@@ -161,7 +168,7 @@ goto :main
 
     echo Building shared library...
     set shared_lib_args=/D "WEBVIEW_API=__declspec(dllexport)"
-    echo "%cxx_compiler%" %cxx_compile_flags% %shared_lib_args% "%project_dir%\webview.cc" "/Fo%build_dir%\library"\ %cxx_link_flags% /link %runtime_link_flags% /DLL "/out:%build_dir%\library\webview%shared_lib_suffix%" || exit /b 1
+    echo "%cxx_compiler%" %cxx_compile_flags% %shared_lib_args% "%project_dir%\webview.cc" "/Fo%build_dir%\library"\ %cxx_link_flags% /link /DLL "/out:%build_dir%\library\webview%shared_lib_suffix%" || exit /b 1
     goto :eof
 
 :task_build_examples
@@ -248,6 +255,8 @@ rem Default build type unless overridden
 if not defined BUILD_TYPE set build_type=release
 rem Default runtime library linking unless overridden
 if not defined RUNTIME_LINK set runtime_link=shared
+rem Default runtime library unless overridden
+if not defined RUNTIME_LIBRARY set runtime_library=ucrt
 
 call :dirname project_dir "%~dpf0" || exit /b
 call :dirname project_dir "%project_dir%" || exit /b
@@ -260,7 +269,7 @@ if defined BUILD_DIR (
 )
 
 rem Get runtime library link flags
-call :get_runtime_link_flags runtime_link_flags "%runtime_link%" "%build_type%" || exit /b
+call :get_runtime_link_flags runtime_link_flags "%runtime_library%" "%runtime_link%" "%build_type%" || exit /b
 
 rem Set compile optimization flags
 set compile_optimization_flags=/O2
@@ -271,8 +280,7 @@ set libs_dir=%external_dir%\libs
 set tools_dir=%external_dir%\tools
 set warning_flags=/W4
 set common_compile_flags=%warning_flags% /utf-8 /I "%project_dir%" /Zi %compile_optimization_flags%
-set common_link_flags=%warning_flags% 
-rem %runtime_link_flags%
+set common_link_flags=%warning_flags% %runtime_link_flags%
 set c_compile_flags=%common_compile_flags%
 set c_link_flags=%common_link_flags%
 set cxx_compile_flags=%common_compile_flags% /EHsc
