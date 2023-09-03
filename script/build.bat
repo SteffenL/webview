@@ -80,6 +80,38 @@ goto :main
     endlocal & set "%out_var%=%vc_dir%"
     goto :eof
 
+:get_runtime_link_flags
+    setlocal
+    set out_var=%~1
+    set link=%~2
+    set type=%~3
+    set flags=/nodefaultlib
+    rem set flags=
+    if "%link%" == "shared" (
+        if "%type%" == "release" (
+            set flags=%flags% /MD
+        ) else if "%type%" == "debug" (
+            set flags=%flags% /MDd
+        ) else (
+            echo ERROR: Invalid build type.>&2
+            endlocal & exit /b 1
+        )
+    ) else if "%link%" == "static" (
+        if "%type%" == "release" (
+            set flags=%flags% /MT
+        ) else if "%type%" == "debug" (
+            set flags=%flags% /MTd
+        ) else (
+            echo ERROR: Invalid build type.>&2
+            endlocal & exit /b 1
+        )
+    ) else (
+        echo ERROR: Invalid runtime library linking.>&2
+        endlocal & exit /b 1
+    )
+    endlocal & set "%out_var%=%flags%"
+    goto :eof
+
 :activate_msvc
     where cl.exe > nul 2>&1 && goto :eof || cmd /c exit 0
     call :find_msvc vc_dir || goto :eof
@@ -130,22 +162,22 @@ goto :main
 
     echo Building shared library...
     set shared_lib_args=/D "WEBVIEW_API=__declspec(dllexport)"
-    "%cxx_compiler%" %cxx_compile_flags% %shared_lib_args% "%project_dir%\webview.cc" "/Fo%build_dir%\library"\ %cxx_link_flags% /link /DLL "/out:%build_dir%\library\webview%shared_lib_suffix%" || exit /b 1
+    echo "%cxx_compiler%" %cxx_compile_flags% %shared_lib_args% "%project_dir%\webview.cc" "/Fo%build_dir%\library"\ %cxx_link_flags% /link %runtime_link_flags% /DLL "/out:%build_dir%\library\webview%shared_lib_suffix%" || exit /b 1
 
-    if not exist "%build_dir%\examples\c" mkdir "%build_dir%\examples\c"
-    if not exist "%build_dir%\examples\cc" mkdir "%build_dir%\examples\cc"
-
-    echo Building C++ examples...
-    "%cxx_compiler%" %cxx_compile_flags% "%project_dir%\examples\basic.cc" "/Fo%build_dir%\examples\cc"\ %cxx_link_flags% /link "/out:%build_dir%\examples\cc\basic%exe_suffix%" || exit /b 1
-    "%cxx_compiler%" %cxx_compile_flags% "%project_dir%\examples\bind.cc" "/Fo%build_dir%\examples\cc"\ %cxx_link_flags% /link "/out:%build_dir%\examples\cc\bind%exe_suffix%" || exit /b 1
-
-    echo Building C examples...
-    "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\webview.cc" "/Fo%build_dir%\library\webview.obj" %cxx_link_flags% || exit /b 1
-    "%c_compiler%" %c_compile_flags% "%project_dir%\examples\basic.c" "%build_dir%\library\webview.obj" "/Fo%build_dir%\examples\c"\ %c_link_flags% /link "/out:%build_dir%\examples\c\basic%exe_suffix%" || exit /b 1
-    "%c_compiler%" %c_compile_flags% "%project_dir%\examples\bind.c" "%build_dir%\library\webview.obj" "/Fo%build_dir%\examples\c"\ %c_link_flags% /link "/out:%build_dir%\examples\c\bind%exe_suffix%" || exit /b 1
-
-    echo Building test app...
-    "%cxx_compiler%" %cxx_compile_flags% "%project_dir%\webview_test.cc" "/Fo%build_dir%"\ %cxx_link_flags% /link "/out:%build_dir%\webview_test%exe_suffix%" || exit /b 1
+rem    if not exist "%build_dir%\examples\c" mkdir "%build_dir%\examples\c"
+rem    if not exist "%build_dir%\examples\cc" mkdir "%build_dir%\examples\cc"
+rem
+rem     echo Building C++ examples...
+rem     "%cxx_compiler%" %cxx_compile_flags% "%project_dir%\examples\basic.cc" "/Fo%build_dir%\examples\cc"\ %cxx_link_flags% /link "/out:%build_dir%\examples\cc\basic%exe_suffix%" || exit /b 1
+rem     "%cxx_compiler%" %cxx_compile_flags% "%project_dir%\examples\bind.cc" "/Fo%build_dir%\examples\cc"\ %cxx_link_flags% /link "/out:%build_dir%\examples\cc\bind%exe_suffix%" || exit /b 1
+rem 
+rem     echo Building C examples...
+rem     "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\webview.cc" "/Fo%build_dir%\library\webview.obj" || exit /b 1
+rem     "%c_compiler%" %c_compile_flags% "%project_dir%\examples\basic.c" "%build_dir%\library\webview.obj" "/Fo%build_dir%\examples\c"\ %c_link_flags% /link "/out:%build_dir%\examples\c\basic%exe_suffix%" || exit /b 1
+rem     "%c_compiler%" %c_compile_flags% "%project_dir%\examples\bind.c" "%build_dir%\library\webview.obj" "/Fo%build_dir%\examples\c"\ %c_link_flags% /link "/out:%build_dir%\examples\c\bind%exe_suffix%" || exit /b 1
+rem 
+rem     echo Building test app...
+rem     "%cxx_compiler%" %cxx_compile_flags% "%project_dir%\webview_test.cc" "/Fo%build_dir%"\ %cxx_link_flags% /link "/out:%build_dir%\webview_test%exe_suffix%" || exit /b 1
     goto :eof
 
 :task_test
@@ -156,6 +188,8 @@ goto :main
 :task_info
     echo -- Target architecture: %target_arch%
     echo -- Build directory: %build_dir%
+    echo -- Build type: %build_type%
+    echo -- Runtime library linking: %runtime_link%
     echo -- C standard: %c_std%
     echo -- C compiler: %c_compiler%
     echo -- C compiler flags: %c_compile_flags%
@@ -192,6 +226,10 @@ rem Default C compiler
 set c_compiler=cl
 rem Default C++ compiler
 set cxx_compiler=cl
+rem Default build type unless overridden
+if not defined BUILD_TYPE set build_type=release
+rem Default runtime library linking unless overridden
+if not defined RUNTIME_LINK set runtime_link=shared
 
 call :dirname project_dir "%~dpf0" || exit /b
 call :dirname project_dir "%project_dir%" || exit /b
@@ -203,12 +241,20 @@ if defined BUILD_DIR (
     set build_dir=%project_dir%\build
 )
 
+rem Get runtime library link flags
+call :get_runtime_link_flags runtime_link_flags "%runtime_link%" "%build_type%" || exit /b
+
+rem Set compile optimization flags
+set compile_optimization_flags=/O2
+if "%build_type%" == "debug" set compile_optimization_flags=/Od
+
 set external_dir=%build_dir%\external
 set libs_dir=%external_dir%\libs
 set tools_dir=%external_dir%\tools
 set warning_flags=/W4
-set common_compile_flags=%warning_flags% /utf-8 /I "%project_dir%"
-set common_link_flags=%warning_flags%
+set common_compile_flags=%warning_flags% /utf-8 /I "%project_dir%" /Zi %compile_optimization_flags%
+set common_link_flags=%warning_flags% 
+rem %runtime_link_flags%
 set c_compile_flags=%common_compile_flags%
 set c_link_flags=%common_link_flags%
 set cxx_compile_flags=%common_compile_flags% /EHsc
