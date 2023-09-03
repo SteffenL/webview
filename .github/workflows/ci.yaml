@@ -110,10 +110,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run clang-format
-        uses: DoozyX/clang-format-lint-action@v0.6
+        uses: DoozyX/clang-format-lint-action@v0.16.2
         with:
           source: '.'
-          exclude: './script'
+          exclude: './build ./script'
           extensions: 'h,cc'
-          clangFormatVersion: 9
+          clangFormatVersion: 12
           style: file
