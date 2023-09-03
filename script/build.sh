@@ -2,7 +2,18 @@
 
 unix_realpath_wrapper() {
     if [[ "${host_os}" == "macos" ]]; then
-        readlink -f "${1}" || return 1
+        # Only modern macOS supports the -f parameter.
+        if command -v readlink &> /dev/null && readlink -f "${0}" >/dev/null 2>&1; then
+            readlink -f "${1}" || return 1
+            return 0
+        fi
+        # Try greadlink from coreutils (homebrew)
+        if command -v greadlink &> /dev/null; then
+            greadlink -f "${1}" || return 1
+            return 0
+        fi
+        # Fallback
+        echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
     else
         realpath "${1}" || return 1
     fi
@@ -107,7 +118,7 @@ task_check() {
     clang-tidy "${project_dir}/webview_test.cc" -- "${cxx_compile_flags[@]}" "${cxx_link_flags[@]}" || return 1
 }
 
-task_build() {
+task_build_library() {
     mkdir -p "${build_dir}/library" || true
 
     echo "Building shared library..."
@@ -120,7 +131,9 @@ task_build() {
         shared_lib_args+=(-shared '-DWEBVIEW_API=__attribute__ ((visibility ("default")))')
     fi
     "${cxx_compiler}" "${cxx_compile_flags[@]}" "${shared_lib_args[@]}" "${project_dir}/webview.cc" "${cxx_link_flags[@]}" -o "${build_dir}/library/${lib_prefix}webview${shared_lib_suffix}" || return 1
+}
 
+task_build_examples() {
     mkdir -p "${build_dir}/examples/c" "${build_dir}/examples/cc" || true
 
     echo "Building C++ examples..."
@@ -133,9 +146,18 @@ task_build() {
     "${c_compiler}" -c "${c_compile_flags[@]}" "${project_dir}/examples/bind.c" -o "${build_dir}/examples/c/bind.o" || return 1
     "${cxx_compiler}" "${cxx_compile_flags[@]}" "${build_dir}/examples/c/basic.o" "${build_dir}/webview.o" "${cxx_link_flags[@]}" -o "${build_dir}/examples/c/basic${exe_suffix}" || return 1
     "${cxx_compiler}" "${cxx_compile_flags[@]}" "${build_dir}/examples/c/bind.o" "${build_dir}/webview.o" "${cxx_link_flags[@]}" -o "${build_dir}/examples/c/bind${exe_suffix}" || return 1
+}
 
+task_build_tests() {
     echo "Building test app..."
     "${cxx_compiler}" "${cxx_compile_flags[@]}" "${project_dir}/webview_test.cc" "${cxx_link_flags[@]}" -o "${build_dir}/webview_test${exe_suffix}" || return 1
+}
+
+task_build() {
+    local tasks=(build:library build:examples build:tests)
+    for task in "${tasks[@]}"; do
+        run_task "${task}" || return 1
+    done
 }
 
 task_test() {
