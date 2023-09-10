@@ -179,7 +179,7 @@ goto :main
     echo Building shared library...
     set shared_lib_args=/D "WEBVIEW_API=__declspec(dllexport)"
     "%cxx_compiler%" /c %cxx_compile_flags% %shared_lib_args% "%project_dir%\webview.cc" "/Fo%build_dir%\library\webview.obj" %cxx_dll_flag% || exit /b 1
-    "%cxx_linker%" "%build_dir%\library\webview.obj" "/OUT:%build_dir%\library\webview%shared_lib_suffix%" "/IMPLIB:%build_dir%\library\webview%shared_lib_suffix%.lib" /DLL || exit /b 1
+    "%cxx_compiler%" "%build_dir%\library\webview.obj" /link /DLL "/OUT:%build_dir%\library\webview%shared_lib_suffix%" "/IMPLIB:%build_dir%\library\webview%shared_lib_suffix%.lib" || exit /b 1
     goto :eof
 
 :task_build_examples
