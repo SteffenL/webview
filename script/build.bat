@@ -162,7 +162,8 @@ goto :main
 
     echo Building shared library...
     set shared_lib_args=/D "WEBVIEW_API=__declspec(dllexport)"
-    "%cxx_compiler%" %cxx_compile_flags% %shared_lib_args% "%project_dir%\webview.cc" "/Fo%build_dir%\library"\ %cxx_link_flags% /link /DLL "/out:%build_dir%\library\webview%shared_lib_suffix%" || exit /b 1
+    "%cxx_compiler%" /c %cxx_compile_flags% %shared_lib_args% "%project_dir%\webview.cc" "/Fo%build_dir%\library\webview.obj" || exit /b 1
+    "%cxx_compiler%" "%build_dir%\library\webview.obj" "/Fe:%build_dir%\library\webview%shared_lib_suffix%" %cxx_link_flags% /LD || exit /b 1
     goto :eof
 
 :task_build_examples
@@ -171,13 +172,20 @@ goto :main
     if not exist "%build_dir%\examples\cc" mkdir "%build_dir%\examples\cc"
 
     echo Building C++ examples...
-    "%cxx_compiler%" %cxx_compile_flags% "%project_dir%\examples\basic.cc" "/Fo%build_dir%\examples\cc"\ %cxx_link_flags% /link "/out:%build_dir%\examples\cc\basic%exe_suffix%" || exit /b 1
-    "%cxx_compiler%" %cxx_compile_flags% "%project_dir%\examples\bind.cc" "/Fo%build_dir%\examples\cc"\ %cxx_link_flags% /link "/out:%build_dir%\examples\cc\bind%exe_suffix%" || exit /b 1
+rem    "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\examples\basic.cc" "/Fo%build_dir%\examples\cc\basic.obj" || exit /b 1
+rem    "%cxx_compiler%" "%build_dir%\examples\cc\basic.obj" "/Fe:%build_dir%\examples\cc\basic%exe_suffix%" %cxx_link_flags% || exit /b 1
+rem
+rem    "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\examples\bind.cc" "/Fo%build_dir%\examples\cc\bind.obj" || exit /b 1
+rem    "%cxx_compiler%" "%build_dir%\examples\cc\bind.obj" "/Fe:%build_dir%\examples\cc\bind%exe_suffix%" %cxx_link_flags% || exit /b 1
 
     echo Building C examples...
-    "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\webview.cc" "/Fo%build_dir%\library\webview.obj" || exit /b 1
-    "%c_compiler%" %c_compile_flags% "%project_dir%\examples\basic.c" "%build_dir%\library\webview.obj" "/Fo%build_dir%\examples\c"\ %c_link_flags% /link "/out:%build_dir%\examples\c\basic%exe_suffix%" || exit /b 1
-    "%c_compiler%" %c_compile_flags% "%project_dir%\examples\bind.c" "%build_dir%\library\webview.obj" "/Fo%build_dir%\examples\c"\ %c_link_flags% /link "/out:%build_dir%\examples\c\bind%exe_suffix%" || exit /b 1
+    "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\webview.cc" "/Fo%build_dir%\examples\c\webview.obj" || exit /b 1
+
+    "%c_compiler%" /c %c_compile_flags% "%project_dir%\examples\basic.c" "/Fo%build_dir%\examples\c\basic.obj" || exit /b 1
+    "%c_compiler%" "%build_dir%\examples\c\webview.obj" "%build_dir%\examples\c\basic.obj" "/Fe%build_dir%\examples\c\basic%exe_suffix%" %c_link_flags% || exit /b 1
+
+    "%c_compiler%" /c %c_compile_flags% /D_CRT_SECURE_NO_WARNINGS "%project_dir%\examples\bind.c" "/Fo%build_dir%\examples\c\bind.obj" || exit /b 1
+    "%c_compiler%" "%build_dir%\examples\c\webview.obj" "%build_dir%\examples\c\bind.obj" "/Fe%build_dir%\examples\c\bind%exe_suffix%" %c_link_flags% || exit /b 1
     goto :eof
 
 :task_build_tests
