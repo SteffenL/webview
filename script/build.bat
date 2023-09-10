@@ -208,7 +208,6 @@ goto :main
     echo -- Target architecture: %target_arch%
     echo -- Build directory: %build_dir%
     echo -- Build type: %build_type%
-    echo -- Runtime library: %runtime_library%
     echo -- Runtime library linking: %runtime_link%
     echo -- C standard: %c_std%
     echo -- C compiler: %c_compiler%
