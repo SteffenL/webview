@@ -172,11 +172,11 @@ goto :main
     if not exist "%build_dir%\examples\cc" mkdir "%build_dir%\examples\cc"
 
     echo Building C++ examples...
-rem    "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\examples\basic.cc" "/Fo%build_dir%\examples\cc\basic.obj" || exit /b 1
-rem    "%cxx_compiler%" "%build_dir%\examples\cc\basic.obj" "/Fe:%build_dir%\examples\cc\basic%exe_suffix%" %cxx_link_flags% || exit /b 1
-rem
-rem    "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\examples\bind.cc" "/Fo%build_dir%\examples\cc\bind.obj" || exit /b 1
-rem    "%cxx_compiler%" "%build_dir%\examples\cc\bind.obj" "/Fe:%build_dir%\examples\cc\bind%exe_suffix%" %cxx_link_flags% || exit /b 1
+    "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\examples\basic.cc" "/Fo%build_dir%\examples\cc\basic.obj" || exit /b 1
+    "%cxx_compiler%" "%build_dir%\examples\cc\basic.obj" "/Fe:%build_dir%\examples\cc\basic%exe_suffix%" %cxx_link_flags% || exit /b 1
+
+    "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\examples\bind.cc" "/Fo%build_dir%\examples\cc\bind.obj" || exit /b 1
+    "%cxx_compiler%" "%build_dir%\examples\cc\bind.obj" "/Fe:%build_dir%\examples\cc\bind%exe_suffix%" %cxx_link_flags% || exit /b 1
 
     echo Building C examples...
     "%cxx_compiler%" /c %cxx_compile_flags% "%project_dir%\webview.cc" "/Fo%build_dir%\examples\c\webview.obj" || exit /b 1
