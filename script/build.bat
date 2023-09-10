@@ -108,7 +108,23 @@ goto :main
         echo ERROR: Invalid runtime library linkage.>&2
         endlocal & exit /b 1
     )
-    endlocal & set "%out_var%=%flags%"
+    endlocal & set "%out_var%=%flag%"
+    goto :eof
+
+:cxx_dll_flag
+    setlocal
+    set out_var=%~1
+    set type=%~2
+    set flag=
+    if "%type%" == "release" (
+        set flag=/LD
+    ) else if "%type%" == "debug" (
+        set flag=/LDd
+    ) else (
+        echo ERROR: Invalid build type.>&2
+        endlocal & exit /b 1
+    )
+    endlocal & set "%out_var%=%flag%"
     goto :eof
 
 :activate_msvc
@@ -162,8 +178,8 @@ goto :main
 
     echo Building shared library...
     set shared_lib_args=/D "WEBVIEW_API=__declspec(dllexport)"
-    "%cxx_compiler%" /c %cxx_compile_flags% %shared_lib_args% "%project_dir%\webview.cc" "/Fo%build_dir%\library\webview.obj" || exit /b 1
-    "%cxx_compiler%" "%build_dir%\library\webview.obj" "/Fe:%build_dir%\library\webview%shared_lib_suffix%" %cxx_link_flags% /LD || exit /b 1
+    "%cxx_compiler%" /c %cxx_compile_flags% %shared_lib_args% "%project_dir%\webview.cc" "/Fo%build_dir%\library\webview.obj" %cxx_dll_flag% || exit /b 1
+    "%cxx_linker%" "%build_dir%\library\webview.obj" "/OUT:%build_dir%\library\webview%shared_lib_suffix%" "/IMPLIB:%build_dir%\library\webview%shared_lib_suffix%.lib" /DLL || exit /b 1
     goto :eof
 
 :task_build_examples
@@ -224,6 +240,7 @@ goto :main
     echo -- C++ standard: %cxx_std%
     echo -- C++ compiler: %cxx_compiler%
     echo -- C++ compiler flags: %cxx_compile_flags%
+    echo -- C++ linker: %cxx_linker%
     echo -- C++ linker flags: %cxx_link_flags%
     goto :eof
 
@@ -253,6 +270,8 @@ rem Default C compiler
 set c_compiler=cl
 rem Default C++ compiler
 set cxx_compiler=cl
+rem Default C++ linker
+set cxx_linker=link
 rem Default build type unless overridden
 if not defined BUILD_TYPE set build_type=release
 rem Default runtime library linkage unless overridden
@@ -270,6 +289,9 @@ if defined BUILD_DIR (
 
 rem Get runtime library link flags
 call :get_runtime_link_flags runtime_link_flags "%runtime_link%" "%build_type%" || exit /b
+
+rem C++ compiler/linker flag for shared libraries
+call :cxx_dll_flag cxx_dll_flag "%build_type%" || exit /b
 
 rem Set compile optimization flags
 set compile_optimization_flags=/O2
