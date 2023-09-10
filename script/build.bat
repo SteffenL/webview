@@ -83,43 +83,37 @@ goto :main
 :get_runtime_link_flags
     setlocal
     set out_var=%~1
-    set lib=%~2
-    set link=%~3
-    set type=%~4
-    set flags=
-    if "%lib%" == "msvcrt" (
-        if "%link%" == "shared" (
-            if "%type%" == "release" (
-                set flags=%flags% /MD
-            ) else if "%type%" == "debug" (
-                set flags=%flags% /MDd
-            ) else (
-                echo ERROR: Invalid build type.>&2
-                endlocal & exit /b 1
-            )
-        ) else if "%link%" == "static" (
-            if "%type%" == "release" (
-                set flags=%flags% /MT
-            ) else if "%type%" == "debug" (
-                set flags=%flags% /MTd
-            ) else (
-                echo ERROR: Invalid build type.>&2
-                endlocal & exit /b 1
-            )
+    set link=%~2
+    set type=%~3
+    set flag=
+    if "%link%" == "shared" (
+        if "%type%" == "release" (
+            set flag=/MD
+        ) else if "%type%" == "debug" (
+            set flag=/MDd
         ) else (
-            echo ERROR: Invalid runtime library linking.>&2
+            echo ERROR: Invalid build type.>&2
             endlocal & exit /b 1
         )
-    ) else if "%lib%" == "ucrt" (
-        rem This is the default
-    ) else (
-            echo ERROR: Invalid runtime library.>&2
+    ) else if "%link%" == "static" (
+        if "%type%" == "release" (
+            set flag=/MT
+        ) else if "%type%" == "debug" (
+            set flag=/MTd
+        ) else (
+            echo ERROR: Invalid build type.>&2
             endlocal & exit /b 1
+        )
+    ) else (
+        echo ERROR: Invalid runtime library linkage.>&2
+        endlocal & exit /b 1
     )
     endlocal & set "%out_var%=%flags%"
     goto :eof
 
 :activate_msvc
+    rem Skip if already activated with the same target architecture.
+    if "%VSCMD_ARG_TGT_ARCH%" == "%~1" goto :eof
     where cl.exe > nul 2>&1 && goto :eof || cmd /c exit 0
     call :find_msvc vc_dir || goto :eof
     call "%vc_dir%\Common7\Tools\vsdevcmd.bat" -no_logo -arch=%~1 || goto :eof
@@ -254,10 +248,8 @@ rem Default C++ compiler
 set cxx_compiler=cl
 rem Default build type unless overridden
 if not defined BUILD_TYPE set build_type=release
-rem Default runtime library linking unless overridden
+rem Default runtime library linkage unless overridden
 if not defined RUNTIME_LINK set runtime_link=shared
-rem Default runtime library unless overridden
-if not defined RUNTIME_LIBRARY set runtime_library=ucrt
 
 call :dirname project_dir "%~dpf0" || exit /b
 call :dirname project_dir "%project_dir%" || exit /b
@@ -270,7 +262,7 @@ if defined BUILD_DIR (
 )
 
 rem Get runtime library link flags
-call :get_runtime_link_flags runtime_link_flags "%runtime_library%" "%runtime_link%" "%build_type%" || exit /b
+call :get_runtime_link_flags runtime_link_flags "%runtime_link%" "%build_type%" || exit /b
 
 rem Set compile optimization flags
 set compile_optimization_flags=/O2
