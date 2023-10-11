@@ -103,6 +103,14 @@ macro(webview_init)
     endif()
 
     webview_find_dependencies()
+
+    add_custom_target(checks
+        COMMAND "${CMAKE_COMMAND}"
+            -D "ROOT_DIR=${WEBVIEW_ROOT_DIR}"
+            -D "DIRECTORIES=${WEBVIEW_EXAMPLE_DIR};${WEBVIEW_INCLUDE_DIR};${WEBVIEW_SRC_DIR};${WEBVIEW_TEST_DIR}"
+            -D "CLANG_FORMAT_EXE=${WEBVIEW_CLANG_FORMAT_EXE}"
+            -P "${WEBVIEW_CMAKE_DIR}/scripts/checks.cmake"
+        VERBATIM)
 endmacro()
 
 macro(webview_extract_version)

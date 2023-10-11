@@ -15,8 +15,15 @@ inputs:
     description: 'CMake target for building all tests'
     required: true
     default: tests
+  checks:
+    description: 'Whether to run checks'
+    required: true
+    default: true
   cc:
     description: 'Sets CMAKE_C_COMPILER'
+    required: false
+  clang-format:
+    description: 'clang-format executable'
     required: false
   cxx:
     description: 'Sets CMAKE_CXX_COMPILER'
@@ -114,6 +121,30 @@ runs:
         install: base-devel
         pacboy: cmake:p python:p python-pip:p python-lxml:p toolchain:p
 
+    - name: Configure project
+      uses: ./.github/workflows/cmake/configure
+      with:
+        build-dir: ${{ inputs.build-dir }}
+        source-dir: ${{ inputs.source-dir }}
+        build-type: ${{ inputs.build-type }}
+        cc: ${{ inputs.cc }}
+        cxx: ${{ inputs.cxx }}
+        standard: ${{ inputs.standard }}
+        generator: ${{ inputs.generator }}
+        generator-platform: ${{ inputs.generator-platform }}
+        toolchain-file: ${{ inputs.toolchain-file }}
+        osx-architectures: ${{ inputs.osx-architectures }}
+        shell: ${{ inputs.shell }}
+
+    - name: Run checks
+      if: fromJSON(inputs.checks)
+      uses: ./.github/workflows/cmake/build
+      with:
+        build-dir: ${{ inputs.build-dir }}
+        build-type: ${{ inputs.build-type }}
+        target: checks
+        shell: ${{ inputs.shell }}
+
     - name: Configure tests
       uses: ./.github/workflows/cmake/configure
       with:
@@ -145,21 +176,6 @@ runs:
         build-dir: ${{ inputs.test-build-dir }}
         build-type: ${{ inputs.test-build-type }}
         test-wrapper-cmd: ${{ inputs.test-wrapper-cmd }}
-        shell: ${{ inputs.shell }}
-
-    - name: Configure project
-      uses: ./.github/workflows/cmake/configure
-      with:
-        build-dir: ${{ inputs.build-dir }}
-        source-dir: ${{ inputs.source-dir }}
-        build-type: ${{ inputs.build-type }}
-        cc: ${{ inputs.cc }}
-        cxx: ${{ inputs.cxx }}
-        standard: ${{ inputs.standard }}
-        generator: ${{ inputs.generator }}
-        generator-platform: ${{ inputs.generator-platform }}
-        toolchain-file: ${{ inputs.toolchain-file }}
-        osx-architectures: ${{ inputs.osx-architectures }}
         shell: ${{ inputs.shell }}
 
     - name: Build project

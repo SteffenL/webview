@@ -50,7 +50,9 @@ jobs:
             cc: clang-15
             cxx: clang++-15
             gcov: llvm-cov-15 gcov
+            clang-format: clang-format-15
             standard: 11
+            checks: true
             test-coverage: true
             apt-packages: clang-15
           - image: ubuntu-22.04
@@ -58,6 +60,7 @@ jobs:
             cxx: g++-12
             gcov: gcov-12
             standard: 11
+            checks: false
             test-coverage: false
             apt-packages: gcc-12 g++-12
     steps:
@@ -65,10 +68,12 @@ jobs:
       - uses: ./.github/workflows/cmake
         with:
           cc: ${{ matrix.cc }}
+          clang-format: ${{ matrix.clang-format }}
           cxx: ${{ matrix.cxx }}
           gcov: ${{ matrix.gcov }}
           standard: ${{ matrix.standard }}
           generator: Ninja
+          checks: ${{ matrix.checks }}
           test-coverage: ${{ matrix.test-coverage }}
           test-coverage-name: main_linux_${{ matrix.cc }}_cxx${{ matrix.standard }}
           test-wrapper-cmd: xvfb-run
@@ -87,48 +92,59 @@ jobs:
             cxx: clang++-8
             gcov: llvm-cov-8 gcov
             standard: 11
+            checks: false
             apt-packages: clang-8
           - image: ubuntu-22.04
             cc: clang-15
             cxx: clang++-15
             gcov: llvm-cov-15 gcov
+            clang-format: clang-format-15
             standard: 14
+            checks: true
             apt-packages: clang-15
           - image: ubuntu-22.04
             cc: clang-15
             cxx: clang++-15
             gcov: llvm-cov-15 gcov
+            clang-format: clang-format-15
             standard: 17
+            checks: true
             apt-packages: clang-15
           - image: ubuntu-22.04
             cc: clang-15
             cxx: clang++-15
             gcov: llvm-cov-15 gcov
+            clang-format: clang-format-15
             standard: 20
+            checks: true
             apt-packages: clang-15
           - image: ubuntu-20.04
             cc: gcc-7
             cxx: g++-7
             gcov: gcov-7
             standard: 11
+            checks: false
             apt-packages: gcc-7 g++-7
           - image: ubuntu-22.04
             cc: gcc-12
             cxx: g++-12
             gcov: gcov-12
             standard: 14
+            checks: false
             apt-packages: gcc-12 g++-12
           - image: ubuntu-22.04
             cc: gcc-12
             cxx: g++-12
             gcov: gcov-12
             standard: 17
+            checks: false
             apt-packages: gcc-12 g++-12
           - image: ubuntu-22.04
             cc: gcc-12
             cxx: g++-12
             gcov: gcov-12
             standard: 20
+            checks: false
             apt-packages: gcc-12 g++-12
     steps:
       - uses: actions/checkout@v3
@@ -139,6 +155,7 @@ jobs:
           gcov: ${{ matrix.gcov }}
           standard: ${{ matrix.standard }}
           generator: Ninja
+          checks: ${{ matrix.checks }}
           test-coverage: false
           test-wrapper-cmd: xvfb-run
           apt-packages: ${{ matrix.apt-packages }}
@@ -160,6 +177,7 @@ jobs:
           toolchain-file: ${{ github.workspace }}/build_system/cmake/toolchains/${{ matrix.toolchain-file }}.cmake
           standard: ${{ matrix.standard }}
           generator: Ninja
+          checks: false
           test: false
           apt-packages: mingw-w64
           install-wrapper-cmd: sudo
@@ -187,6 +205,7 @@ jobs:
           toolchain-file: ${{ github.workspace }}/build_system/cmake/toolchains/${{ matrix.toolchain-file }}.cmake
           standard: ${{ matrix.standard }}
           generator: Ninja
+          checks: false
           test: false
           apt-packages: mingw-w64
           install-wrapper-cmd: sudo
@@ -199,11 +218,13 @@ jobs:
         include:
           - image: macos-12
             standard: 11
+            checks: true
             test-coverage: true
             osx-architectures: x86_64
             distributable: false
           - image: macos-12
             standard: 11
+            checks: false
             # While we can get coverage for universal binaries, keep it simple by
             # avoiding the need to specify the architecture to get coverage for.
             test-coverage: false
@@ -217,6 +238,7 @@ jobs:
           cxx: clang++
           standard: ${{ matrix.standard }}
           generator: Xcode
+          checks: ${{ matrix.checks }}
           test-coverage: ${{ matrix.test-coverage }}
           test-coverage-name: main_macos_cxx${{ matrix.standard }}
           osx-architectures: ${{ matrix.osx-architectures }}
@@ -246,6 +268,7 @@ jobs:
           cxx: clang++
           standard: ${{ matrix.standard }}
           generator: Xcode
+          checks: true
           test-coverage: false
           install-wrapper-cmd: sudo
 
@@ -259,12 +282,14 @@ jobs:
             cc: clang
             cxx: clang++
             standard: 14
+            checks: true
             test-coverage: true
             msys2-system: CLANG64
           - image: windows-2022
             cc: gcc
             cxx: g++
             standard: 14
+            checks: false
             test-coverage: false
             msys2-system: UCRT64
     steps:
@@ -275,6 +300,7 @@ jobs:
           cxx: ${{ matrix.cxx }}
           standard: ${{ matrix.standard }}
           generator: MSYS Makefiles
+          checks: ${{ matrix.checks }}
           test-coverage: ${{ matrix.test-coverage }}
           test-coverage-name: main_win_msys2_${{ matrix.msys2-system }}_${{ matrix.cc }}_cxx${{ matrix.standard }}
           msys2-system: ${{ matrix.msys2-system }}
@@ -332,6 +358,7 @@ jobs:
           cxx: ${{ matrix.cxx }}
           standard: ${{ matrix.standard }}
           generator: MSYS Makefiles
+          checks: false
           test-coverage: false
           msys2-system: ${{ matrix.msys2-system }}
           shell: msys2 {0}
@@ -368,6 +395,7 @@ jobs:
           standard: ${{ matrix.standard }}
           generator: ${{ matrix.generator }}
           generator-platform: ${{ matrix.generator-platform }}
+          checks: false
           test: ${{ matrix.test }}
           test-coverage: false
           distributable: true
@@ -404,5 +432,6 @@ jobs:
           standard: ${{ matrix.standard }}
           generator: ${{ matrix.generator }}
           generator-platform: ${{ matrix.generator-platform }}
+          checks: false
           test: ${{ matrix.test }}
           test-coverage: false
