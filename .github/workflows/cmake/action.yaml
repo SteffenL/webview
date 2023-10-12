@@ -147,7 +147,7 @@ runs:
       with:
         build-dir: ${{ inputs.build-dir }}
         build-type: ${{ inputs.build-type }}
-        target: checks
+        target: check
         shell: ${{ inputs.shell }}
 
     - name: Configure tests
