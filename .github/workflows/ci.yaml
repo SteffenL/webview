@@ -225,12 +225,14 @@ jobs:
         include:
           - image: macos-12
             standard: 11
+            generator: Ninja
             checks: true
             test-coverage: true
             osx-architectures: x86_64
             distributable: false
           - image: macos-12
             standard: 11
+            generator: Xcode
             checks: false
             # While we can get coverage for universal binaries, keep it simple by
             # avoiding the need to specify the architecture to get coverage for.
@@ -244,7 +246,7 @@ jobs:
           cc: clang
           cxx: clang++
           standard: ${{ matrix.standard }}
-          generator: Xcode
+          generator: ${{ matrix.generator }}
           checks: ${{ matrix.checks }}
           test-coverage: ${{ matrix.test-coverage }}
           test-coverage-name: main_macos_cxx${{ matrix.standard }}
