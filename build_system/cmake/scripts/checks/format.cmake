@@ -7,6 +7,10 @@ endif()
 find_program(DIFF_EXE diff)
 find_program(GIT_EXE git)
 
+if(NOT FOUND_CLANG_FORMAT_EXE OR NOT (DIFF_EXE OR GIT_EXE))
+    message(WARNING "clang-format check cannot run due to missing program(s) (need clang-format and either diff or git)")
+endif()
+
 find_program(SH_EXE sh)
 if(WIN32 AND NOT SH_EXE)
     find_program(CMD_EXE cmd REQUIRED)
@@ -30,10 +34,6 @@ else()
 endif()
 
 file(GLOB_RECURSE DISCOVERED_FILES RELATIVE "${ROOT_DIR}" "${ROOT_DIR}/*.h" "${ROOT_DIR}/*.cc")
-
-if(NOT FOUND_CLANG_FORMAT_EXE OR NOT (DIFF_EXE OR GIT_EXE))
-    message(FATAL_ERROR "clang-format check cannot run due to missing program(s) (need clang-format and either diff or git)")
-endif()
 
 file(TO_CMAKE_PATH "${ROOT_DIR}" ROOT_DIR_CMAKE)
 file(REAL_PATH "${ROOT_DIR_CMAKE}" ROOT_DIR_CMAKE)

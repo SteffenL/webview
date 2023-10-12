@@ -12,7 +12,7 @@ if(FOUND_CLANG_TIDY_EXE)
 endif()
 
 if(NOT RUN_CLANG_TIDY_EXE)
-    message(FATAL_ERROR "clang-tidy check cannot run due to missing program(s) (need run-clang-tidy)")
+    message(WARNING "clang-tidy check cannot run due to missing program(s) (need run-clang-tidy)")
 endif()
 
 execute_process(
