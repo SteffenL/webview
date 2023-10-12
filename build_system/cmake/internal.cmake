@@ -99,6 +99,8 @@ macro(webview_init)
             endif()
         endif()
 
+        set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
         webview_set_install_rpath()
     endif()
 
