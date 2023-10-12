@@ -13,6 +13,7 @@ endif()
 
 if(NOT RUN_CLANG_TIDY_EXE)
     message(WARNING "clang-tidy check cannot run due to missing program(s) (need run-clang-tidy)")
+    return()
 endif()
 
 execute_process(

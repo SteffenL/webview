@@ -115,11 +115,6 @@ runs:
         sudo apt-get install "${packages[@]}" -y
       shell: bash
 
-    - name: Install dependencies (macOS)
-      if: runner.os == 'macOS' && inputs.generator == 'Ninja'
-      run: brew install ninja
-      shell: bash
-
     - name: Set up MSYS2
       if: runner.os == 'Windows' && inputs.msys2-system != ''
       uses: msys2/setup-msys2@v2

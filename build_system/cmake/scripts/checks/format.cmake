@@ -9,6 +9,7 @@ find_program(GIT_EXE git)
 
 if(NOT FOUND_CLANG_FORMAT_EXE OR NOT (DIFF_EXE OR GIT_EXE))
     message(WARNING "clang-format check cannot run due to missing program(s) (need clang-format and either diff or git)")
+    return()
 endif()
 
 find_program(SH_EXE sh)
