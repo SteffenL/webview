@@ -117,7 +117,9 @@ runs:
 
     - name: Install dependencies (macOS)
       if: runner.os == 'macOS' && inputs.generator == 'Ninja'
-      run: brew install llvm ninja
+      run: |
+        brew install llvm ninja
+        echo "PATH=/usr/local/opt/llvm/bin:$PATH" >> "${GITHUB_PATH}"
       shell: bash
 
     - name: Set up MSYS2
