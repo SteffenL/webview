@@ -1,6 +1,13 @@
 set(WEBVIEW_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 include("${WEBVIEW_CMAKE_DIR}/webview.cmake")
 
+set(WEBVIEW_BUILD_DIR "${CMAKE_BINARY_DIR}")
+set(WEBVIEW_ROOT_DIR "${WEBVIEW_CMAKE_DIR}/../..")
+set(WEBVIEW_EXAMPLE_DIR "${WEBVIEW_ROOT_DIR}/examples")
+set(WEBVIEW_INCLUDE_DIR "${WEBVIEW_ROOT_DIR}/include")
+set(WEBVIEW_SRC_DIR "${WEBVIEW_ROOT_DIR}/src")
+set(WEBVIEW_TEST_DIR "${WEBVIEW_ROOT_DIR}/tests")
+
 macro(webview_init)
     include(CheckCXXSourceCompiles)
     include(GNUInstallDirs)
@@ -18,12 +25,6 @@ macro(webview_init)
 
     webview_options()
     webview_internal_options()
-
-    set(WEBVIEW_ROOT_DIR "${WEBVIEW_CMAKE_DIR}/../..")
-    set(WEBVIEW_EXAMPLE_DIR "${WEBVIEW_ROOT_DIR}/examples")
-    set(WEBVIEW_INCLUDE_DIR "${WEBVIEW_ROOT_DIR}/include")
-    set(WEBVIEW_SRC_DIR "${WEBVIEW_ROOT_DIR}/src")
-    set(WEBVIEW_TEST_DIR "${WEBVIEW_ROOT_DIR}/tests")
 
     # Version 0.x of the library can't guarantee backward compatibility.
     if(WEBVIEW_VERSION_NUMBER VERSION_LESS 1.0)
@@ -106,13 +107,23 @@ macro(webview_init)
 
     webview_find_dependencies()
 
-    add_custom_target(checks
+    add_custom_target(check_format
         COMMAND "${CMAKE_COMMAND}"
-            -D "ROOT_DIR=${WEBVIEW_ROOT_DIR}"
-            -D "DIRECTORIES=${WEBVIEW_EXAMPLE_DIR};${WEBVIEW_INCLUDE_DIR};${WEBVIEW_SRC_DIR};${WEBVIEW_TEST_DIR}"
             -D "CLANG_FORMAT_EXE=${WEBVIEW_CLANG_FORMAT_EXE}"
-            -P "${WEBVIEW_CMAKE_DIR}/scripts/checks.cmake"
+            -D "EXCLUDE_DIRS=${WEBVIEW_BUILD_DIR}"
+            -D "ROOT_DIR=${WEBVIEW_ROOT_DIR}"
+            -P "${WEBVIEW_CMAKE_DIR}/scripts/checks/format.cmake"
         VERBATIM)
+
+    add_custom_target(check_tidy
+        COMMAND "${CMAKE_COMMAND}"
+            -D "BUILD_DIR=${WEBVIEW_BUILD_DIR}"
+            -D "CLANG_TIDY_EXE=${WEBVIEW_CLANG_TIDY_EXE}"
+            -D "ROOT_DIR=${WEBVIEW_ROOT_DIR}"
+            -P "${WEBVIEW_CMAKE_DIR}/scripts/checks/tidy.cmake"
+        VERBATIM)
+
+    add_custom_target(check DEPENDS check_format check_tidy)
 endmacro()
 
 macro(webview_extract_version)

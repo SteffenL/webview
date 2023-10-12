@@ -25,6 +25,9 @@ inputs:
   clang-format:
     description: 'clang-format executable'
     required: false
+  clang-tidy:
+    description: 'clang-tidy executable'
+    required: false
   cxx:
     description: 'Sets CMAKE_CXX_COMPILER'
     required: false
@@ -128,6 +131,8 @@ runs:
         source-dir: ${{ inputs.source-dir }}
         build-type: ${{ inputs.build-type }}
         cc: ${{ inputs.cc }}
+        clang-format: ${{ inputs.clang-format }}
+        clang-tidy: ${{ inputs.clang-tidy }}
         cxx: ${{ inputs.cxx }}
         standard: ${{ inputs.standard }}
         generator: ${{ inputs.generator }}
@@ -152,6 +157,8 @@ runs:
         source-dir: ${{ inputs.source-dir }}
         build-type: ${{ inputs.test-build-type }}
         cc: ${{ inputs.cc }}
+        clang-format: ${{ inputs.clang-format }}
+        clang-tidy: ${{ inputs.clang-tidy }}
         cxx: ${{ inputs.cxx }}
         standard: ${{ inputs.standard }}
         generator: ${{ inputs.generator }}
@@ -226,6 +233,8 @@ runs:
         source-dir: ${{ inputs.package-test-source-dir }}
         build-type: ${{ inputs.build-type }}
         cc: ${{ inputs.cc }}
+        clang-format: ${{ inputs.clang-format }}
+        clang-tidy: ${{ inputs.clang-tidy }}
         cxx: ${{ inputs.cxx }}
         standard: ${{ inputs.standard }}
         generator: ${{ inputs.generator }}

@@ -14,6 +14,9 @@ inputs:
   clang-format:
     description: 'clang-format executable, sets WEBVIEW_CLANG_FORMAT_EXE'
     required: false
+  clang-tidy:
+    description: 'clang-tidy executable, sets WEBVIEW_CLANG_TIDY_EXE'
+    required: false
   cxx:
     description: 'Sets CMAKE_CXX_COMPILER'
     required: false
@@ -71,6 +74,9 @@ runs:
         fi
         if [[ ! -z "${{ inputs.clang-format }}" ]]; then
           configure_args+=("-DWEBVIEW_CLANG_FORMAT_EXE=${{ inputs.clang-format }}")
+        fi
+        if [[ ! -z "${{ inputs.clang-tidy }}" ]]; then
+          configure_args+=("-DWEBVIEW_CLANG_TIDY_EXE=${{ inputs.clang-tidy }}")
         fi
         result=0
         cmake -G "${{ inputs.generator }}" -B "${{ inputs.build-dir }}" -S "${{ inputs.source-dir }}" "${configure_args[@]}" || result=1

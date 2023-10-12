@@ -51,6 +51,7 @@ jobs:
             cxx: clang++-15
             gcov: llvm-cov-15 gcov
             clang-format: clang-format-15
+            clang-tidy: clang-tidy-15
             standard: 11
             checks: true
             test-coverage: true
@@ -69,6 +70,7 @@ jobs:
         with:
           cc: ${{ matrix.cc }}
           clang-format: ${{ matrix.clang-format }}
+          clang-tidy: ${{ matrix.clang-tidy }}
           cxx: ${{ matrix.cxx }}
           gcov: ${{ matrix.gcov }}
           standard: ${{ matrix.standard }}
@@ -99,6 +101,7 @@ jobs:
             cxx: clang++-15
             gcov: llvm-cov-15 gcov
             clang-format: clang-format-15
+            clang-tidy: clang-tidy-15
             standard: 14
             checks: true
             apt-packages: clang-15
@@ -107,6 +110,7 @@ jobs:
             cxx: clang++-15
             gcov: llvm-cov-15 gcov
             clang-format: clang-format-15
+            clang-tidy: clang-tidy-15
             standard: 17
             checks: true
             apt-packages: clang-15
@@ -115,6 +119,7 @@ jobs:
             cxx: clang++-15
             gcov: llvm-cov-15 gcov
             clang-format: clang-format-15
+            clang-tidy: clang-tidy-15
             standard: 20
             checks: true
             apt-packages: clang-15
@@ -151,6 +156,8 @@ jobs:
       - uses: ./.github/workflows/cmake
         with:
           cc: ${{ matrix.cc }}
+          clang-format: ${{ matrix.clang-format }}
+          clang-tidy: ${{ matrix.clang-tidy }}
           cxx: ${{ matrix.cxx }}
           gcov: ${{ matrix.gcov }}
           standard: ${{ matrix.standard }}
