@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         cxx_std: [c++11, c++14, c++17, c++20]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       CXX_STD: ${{ matrix.cxx_std }}
     steps:
