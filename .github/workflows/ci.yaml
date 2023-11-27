@@ -12,6 +12,7 @@ jobs:
     steps:
       - name: Compiler versions
         run: |
+          g++-13 --version
           c++ --version
           g++ --version
           clang++ --version
