@@ -10,28 +10,24 @@ jobs:
     env:
       CXX_STD: ${{ matrix.cxx_std }}
     steps:
-      - name: List tool alternatives
-        run: |
-          update-alternatives --list clang
-          update-alternatives --list clang++
-          update-alternatives --list clang-format
-          update-alternatives --list clang-tidy
-      - name: Compiler versions
-        run: |
-          g++-13 --version
-          c++ --version
-          g++ --version
-          clang++ --version
-      - name: Print include dirs
-        run: ls -la /usr/include/c++/
       - uses: actions/checkout@v3
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
+      - name: Compiler versions
+        run: |
+          c++ --version
+          g++ --version
+          clang++ --version
       # Set default compiler toolchain version to latest available versions for Ubuntu 22.04 as of 2023-11-27
       - name: Set default compiler toolchain versions
         run: |
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 120 --slave /usr/bin/gcc gcc /usr/bin/gcc-12
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 150 --slave /usr/bin/clang clang /usr/bin/clang-15 --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-15 --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-15
+      - name: Compiler versions
+        run: |
+          c++ --version
+          g++ --version
+          clang++ --version
       - name: Build and run tests
         run: xvfb-run ./script/build.sh
 
