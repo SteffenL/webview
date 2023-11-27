@@ -12,8 +12,9 @@ jobs:
     steps:
       - name: Compiler versions
         run: |
-          gcc --version
-          clang --version
+          c++ --version
+          g++ --version
+          clang++ --version
       - name: Print include dirs
         run: ls -la /usr/include/c++/
       - uses: actions/checkout@v3
