@@ -14,6 +14,8 @@ jobs:
         run: |
           gcc --version
           clang --version
+      - name: Print include dirs
+        run: ls -la /usr/include/c++/
       - uses: actions/checkout@v3
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.0-dev xvfb -y
