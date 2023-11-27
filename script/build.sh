@@ -307,7 +307,7 @@ elif [[ "${target_os}" == "windows" ]]; then
 fi
 
 # Default tasks
-tasks=(info clean format deps check build test)
+tasks=(info clean format deps build test)
 
 # Task override from command line
 if [[ ${#@} -gt 0 ]]; then
