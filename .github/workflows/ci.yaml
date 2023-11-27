@@ -12,7 +12,6 @@ jobs:
     steps:
       - name: List tool alternatives
         run: |
-          update-alternatives --list g++
           update-alternatives --list clang
           update-alternatives --list clang++
           update-alternatives --list clang-format
