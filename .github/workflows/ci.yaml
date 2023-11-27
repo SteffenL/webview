@@ -10,6 +10,14 @@ jobs:
     env:
       CXX_STD: ${{ matrix.cxx_std }}
     steps:
+      - name: List tool alternatives
+        run: |
+          update-alternatives --list gcc
+          update-alternatives --list g++
+          update-alternatives --list clang
+          update-alternatives --list clang++
+          update-alternatives --list clang-format
+          update-alternatives --list clang-tidy
       - name: Compiler versions
         run: |
           g++-13 --version
