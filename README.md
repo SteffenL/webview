@@ -22,7 +22,7 @@ Windows  | [Windows API][win32-api], [WebView2][ms-webview2]
 
 ## Documentation
 
-We have started working on publishing documentation at [webview.dev] but you can always find the most up-to-date documentation right in the source code. Improving the documentation is a continuous effort and you are more than welcome to [offer suggestions][issues-new] or [contribute with content][docs-repo]. Please bear with us if the latest updates are not yet published.
+The most up-to-date documentation is right in the source code. Improving the documentation is a continuous effort and you are more than welcome to contribute.
 
 ## Prerequisites
 
@@ -321,16 +321,18 @@ For example, the library does not attempt to support user interaction features l
 
 Language    | Project
 ----------  | -------
+Bun         | [tr1ckydev/webview-bun](https://github.com/tr1ckydev/webview-bun)
 C#          | [webview/webview_csharp](https://github.com/webview/webview_csharp)
 Crystal     | [naqvis/webview](https://github.com/naqvis/webview)
 D           | [thechampagne/webview-d](https://github.com/thechampagne/webview-d)
 Deno        | [webview/webview_deno](https://github.com/webview/webview_deno)
 Go          | [webview/webview_go][webview_go]
+Harbour     | [EricLendvai/Harbour_WebView](https://github.com/EricLendvai/Harbour_WebView)
 Haskell     | [lettier/webviewhs](https://github.com/lettier/webviewhs)
 Janet       | [janet-lang/webview](https://github.com/janet-lang/webview)
 Java        | [webview/webview_java](https://github.com/webview/webview_java)
 Kotlin      | [Winterreisender/webviewko](https://github.com/Winterreisender/webviewko)
-Nim         | [oskca/webview](https://github.com/oskca/webview)
+Nim         | [oskca/webview](https://github.com/oskca/webview), [neroist/webview](https://github.com/neroist/webview)
 Node.js     | [Winterreisender/webview-nodejs](https://github.com/Winterreisender/webview-nodejs)
 Pascal      | [PierceNg/fpwebview](http://github.com/PierceNg/fpwebview)
 Python      | [zserge/webview-python](https://github.com/zserge/webview-python)
@@ -339,6 +341,7 @@ Ruby        | [Maaarcocr/webview_ruby](https://github.com/Maaarcocr/webview_ruby
 Rust        | [Boscop/web-view](https://github.com/Boscop/web-view)
 Swift       | [jakenvac/SwiftWebview](https://github.com/jakenvac/SwiftWebview)
 V           | [malisipi/mui](https://github.com/malisipi/mui/tree/main/webview), [ttytm/webview](https://github.com/ttytm/webview)
+Zig         | [thechampagne/webview-zig](https://github.com/thechampagne/webview-zig)
 
 If you wish to add bindings to the list, feel free to submit a pull request or [open an issue][issues-new].
 
@@ -361,7 +364,6 @@ swig -c++ -ruby -outdir build/bindings/ruby -o build/bindings/ruby/ruby_wrap.cpp
 Code is distributed under MIT license, feel free to use it in your proprietary projects as well.
 
 [macos-app-bundle]:  https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
-[docs-repo]:         https://github.com/webview/docs
 [examples]:          https://github.com/webview/webview/tree/master/examples
 [gtk]:               https://docs.gtk.org/gtk3/
 [issues]:            https://github.com/webview/docs/issues
