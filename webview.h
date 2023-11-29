@@ -592,13 +592,23 @@ namespace detail {
 
 class gtk_webkit_engine {
 public:
-  gtk_webkit_engine(bool debug, void *window) {
-    if (!window) {
+  gtk_webkit_engine(bool debug, void *window)
+      : m_window(static_cast<GtkWidget *>(window)) {
+    if (!m_window) {
       if (gtk_init_check(nullptr, nullptr) == FALSE) {
         return;
       }
+      m_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+      inc_window_count();
+      g_signal_connect(G_OBJECT(m_window), "destroy",
+                       G_CALLBACK(+[](GtkWidget *, gpointer arg) {
+                         auto *w = static_cast<gtk_webkit_engine *>(arg);
+                         if (dec_window_count() <= 0) {
+                           w->terminate();
+                         }
+                       }),
+                       this);
     }
-
     // Initialize webview widget
     m_webview = webkit_web_view_new();
     WebKitUserContentManager *manager =
@@ -721,6 +731,21 @@ private:
     return s;
   }
 
+  static std::atomic_uint &window_ref_count() {
+    static std::atomic_uint ref_count{0};
+    return ref_count;
+  }
+
+  static unsigned int inc_window_count() { return ++window_ref_count(); }
+
+  static unsigned int dec_window_count() {
+    auto &count = window_ref_count();
+    if (count > 0) {
+      return --count;
+    }
+    return 0;
+  }
+
   GtkWidget *m_window;
   GtkWidget *m_webview;
 };
@@ -824,26 +849,32 @@ inline id operator"" _str(const char *s, std::size_t) {
 class cocoa_wkwebview_engine {
 public:
   cocoa_wkwebview_engine(bool debug, void *window)
-      : m_debug{debug}, m_window{static_cast<id>(window)},
-        m_owns_window{!window} {
+      : m_debug{debug}, m_window{static_cast<id>(window)}, m_owns_window{
+                                                               !window} {
     auto app = get_shared_application();
     // See comments related to application lifecycle in create_app_delegate().
     if (!m_owns_window) {
-      auto delegate = objc::msg_send<id>(app, "getDelegate"_sel);
-      on_application_did_finish_launching(delegate, app);
+      create_window();
     } else {
-      auto delegate = create_app_delegate();
-      objc_setAssociatedObject(
-          delegate, "webview",
-          objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
-          OBJC_ASSOCIATION_RETAIN);
-      objc::msg_send<void>(app, "setDelegate:"_sel, delegate);
-      // Start the main run loop so that the app delegate gets the
-      // NSApplicationDidFinishLaunchingNotification notification after the run
-      // loop has started in order to perform further initialization.
-      // We need to return from this constructor so this run loop is only
-      // temporary.
-      objc::msg_send<void>(app, "run"_sel);
+      // Only set the app delegate if it hasn't already been set.
+      auto delegate = objc::msg_send<id>(app, "delegate"_sel);
+      if (delegate) {
+        create_window();
+      } else {
+        delegate = create_app_delegate();
+        objc_setAssociatedObject(
+            delegate, "webview",
+            objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+            OBJC_ASSOCIATION_RETAIN);
+        objc::msg_send<void>(app, "setDelegate:"_sel, delegate);
+
+        // Start the main run loop so that the app delegate gets the
+        // NSApplicationDidFinishLaunchingNotification notification after the run
+        // loop has started in order to perform further initialization.
+        // We need to return from this constructor so this run loop is only
+        // temporary.
+        objc::msg_send<void>(app, "run"_sel);
+      }
     }
   }
   virtual ~cocoa_wkwebview_engine() = default;
@@ -933,50 +964,62 @@ public:
 private:
   virtual void on_message(const std::string &msg) = 0;
   id create_app_delegate() {
-    // Note: Avoid registering the class name "AppDelegate" as it is the
-    // default name in projects created with Xcode, and using the same name
-    // causes objc_registerClassPair to crash.
-    auto cls = objc_allocateClassPair((Class) "NSResponder"_cls,
-                                      "WebviewAppDelegate", 0);
-    class_addProtocol(cls, objc_getProtocol("NSTouchBarProvider"));
-    class_addMethod(cls, "applicationShouldTerminateAfterLastWindowClosed:"_sel,
-                    (IMP)(+[](id, SEL, id) -> BOOL { return YES; }), "c@:@");
-    class_addMethod(cls, "applicationShouldTerminate:"_sel,
-                    (IMP)(+[](id self, SEL, id sender) -> int {
-                      auto w = get_associated_webview(self);
-                      return w->on_application_should_terminate(self, sender);
-                    }),
-                    "i@:@");
-    // If the library was not initialized with an existing window then the user
-    // is likely managing the application lifecycle and we would not get the
-    // "applicationDidFinishLaunching:" message and therefore do not need to
-    // add this method.
-    if (m_owns_window) {
-      class_addMethod(cls, "applicationDidFinishLaunching:"_sel,
-                      (IMP)(+[](id self, SEL, id notification) {
-                        id app = objc::msg_send<id>(notification, "object"_sel);
+    static id shared_delegate{};
+
+    constexpr auto class_name = "WebviewAppDelegate";
+    // Avoid crash due to registering same class twice
+    auto cls = objc_lookUpClass(class_name);
+    if (!cls) {
+      // Note: Avoid registering the class name "AppDelegate" as it is the
+      // default name in projects created with Xcode, and using the same name
+      // causes objc_registerClassPair to crash.
+      cls = objc_allocateClassPair((Class) "NSResponder"_cls, class_name, 0);
+      class_addProtocol(cls, objc_getProtocol("NSTouchBarProvider"));
+      class_addMethod(cls,
+                      "applicationShouldTerminateAfterLastWindowClosed:"_sel,
+                      (IMP)(+[](id, SEL, id) -> BOOL { return YES; }), "c@:@");
+      class_addMethod(cls, "applicationShouldTerminate:"_sel,
+                      (IMP)(+[](id self, SEL, id sender) -> int {
                         auto w = get_associated_webview(self);
-                        w->on_application_did_finish_launching(self, app);
+                        return w->on_application_should_terminate(self, sender);
                       }),
-                      "v@:@");
+                      "i@:@");
+      // If the library was not initialized with an existing window then the user
+      // is likely managing the application lifecycle and we would not get the
+      // "applicationDidFinishLaunching:" message and therefore do not need to
+      // add this method.
+      if (m_owns_window) {
+        class_addMethod(cls, "applicationDidFinishLaunching:"_sel,
+                        (IMP)(+[](id self, SEL, id notification) {
+                          auto app =
+                              objc::msg_send<id>(notification, "object"_sel);
+                          auto w = get_associated_webview(self);
+                          w->on_application_did_finish_launching(self, app);
+                        }),
+                        "v@:@");
+      }
+      objc_registerClassPair(cls);
     }
-    objc_registerClassPair(cls);
     return objc::msg_send<id>((id)cls, "new"_sel);
   }
   id create_script_message_handler() {
-    auto cls = objc_allocateClassPair((Class) "NSResponder"_cls,
-                                      "WebviewWKScriptMessageHandler", 0);
-    class_addProtocol(cls, objc_getProtocol("WKScriptMessageHandler"));
-    class_addMethod(
-        cls, "userContentController:didReceiveScriptMessage:"_sel,
-        (IMP)(+[](id self, SEL, id, id msg) {
-          auto w = get_associated_webview(self);
-          w->on_message(objc::msg_send<const char *>(
-              objc::msg_send<id>(msg, "body"_sel), "UTF8String"_sel));
-        }),
-        "v@:@@");
-    objc_registerClassPair(cls);
-    id instance = objc::msg_send<id>((id)cls, "new"_sel);
+    constexpr auto class_name = "WebviewWKScriptMessageHandler";
+    // Avoid crash due to registering same class twice
+    auto cls = objc_lookUpClass(class_name);
+    if (!cls) {
+      cls = objc_allocateClassPair((Class) "NSResponder"_cls, class_name, 0);
+      class_addProtocol(cls, objc_getProtocol("WKScriptMessageHandler"));
+      class_addMethod(
+          cls, "userContentController:didReceiveScriptMessage:"_sel,
+          (IMP)(+[](id self, SEL, id, id msg) {
+            auto w = get_associated_webview(self);
+            w->on_message(objc::msg_send<const char *>(
+                objc::msg_send<id>(msg, "body"_sel), "UTF8String"_sel));
+          }),
+          "v@:@@");
+      objc_registerClassPair(cls);
+    }
+    auto instance = objc::msg_send<id>((id)cls, "new"_sel);
     objc_setAssociatedObject(
         instance, "webview",
         objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
@@ -984,48 +1027,52 @@ private:
     return instance;
   }
   static id create_webkit_ui_delegate() {
-    auto cls =
-        objc_allocateClassPair((Class) "NSObject"_cls, "WebkitUIDelegate", 0);
-    class_addProtocol(cls, objc_getProtocol("WKUIDelegate"));
-    class_addMethod(
-        cls,
-        "webView:runOpenPanelWithParameters:initiatedByFrame:completionHandler:"_sel,
-        (IMP)(+[](id, SEL, id, id parameters, id, id completion_handler) {
-          auto allows_multiple_selection =
-              objc::msg_send<BOOL>(parameters, "allowsMultipleSelection"_sel);
-          auto allows_directories =
-              objc::msg_send<BOOL>(parameters, "allowsDirectories"_sel);
+    constexpr auto class_name = "WebviewWKUIDelegate";
+    // Avoid crash due to registering same class twice
+    auto cls = objc_lookUpClass(class_name);
+    if (!cls) {
+      cls = objc_allocateClassPair((Class) "NSObject"_cls, class_name, 0);
+      class_addProtocol(cls, objc_getProtocol("WKUIDelegate"));
+      class_addMethod(
+          cls,
+          "webView:runOpenPanelWithParameters:initiatedByFrame:completionHandler:"_sel,
+          (IMP)(+[](id, SEL, id, id parameters, id, id completion_handler) {
+            auto allows_multiple_selection =
+                objc::msg_send<BOOL>(parameters, "allowsMultipleSelection"_sel);
+            auto allows_directories =
+                objc::msg_send<BOOL>(parameters, "allowsDirectories"_sel);
 
-          // Show a panel for selecting files.
-          id panel = objc::msg_send<id>("NSOpenPanel"_cls, "openPanel"_sel);
-          objc::msg_send<void>(panel, "setCanChooseFiles:"_sel, YES);
-          objc::msg_send<void>(panel, "setCanChooseDirectories:"_sel,
-                               allows_directories);
-          objc::msg_send<void>(panel, "setAllowsMultipleSelection:"_sel,
-                               allows_multiple_selection);
-          auto modal_response =
-              objc::msg_send<NSModalResponse>(panel, "runModal"_sel);
+            // Show a panel for selecting files.
+            auto panel = objc::msg_send<id>("NSOpenPanel"_cls, "openPanel"_sel);
+            objc::msg_send<void>(panel, "setCanChooseFiles:"_sel, YES);
+            objc::msg_send<void>(panel, "setCanChooseDirectories:"_sel,
+                                 allows_directories);
+            objc::msg_send<void>(panel, "setAllowsMultipleSelection:"_sel,
+                                 allows_multiple_selection);
+            auto modal_response =
+                objc::msg_send<NSModalResponse>(panel, "runModal"_sel);
 
-          // Get the URLs for the selected files. If the modal was canceled
-          // then we pass null to the completion handler to signify
-          // cancellation.
-          id urls = modal_response == NSModalResponseOK
-                        ? objc::msg_send<id>(panel, "URLs"_sel)
-                        : nullptr;
+            // Get the URLs for the selected files. If the modal was canceled
+            // then we pass null to the completion handler to signify
+            // cancellation.
+            id urls = modal_response == NSModalResponseOK
+                          ? objc::msg_send<id>(panel, "URLs"_sel)
+                          : nullptr;
 
-          // Invoke the completion handler block.
-          id sig = objc::msg_send<id>("NSMethodSignature"_cls,
-                                      "signatureWithObjCTypes:"_sel, "v@?@");
-          id invocation = objc::msg_send<id>(
-              "NSInvocation"_cls, "invocationWithMethodSignature:"_sel, sig);
-          objc::msg_send<void>(invocation, "setTarget:"_sel,
-                               completion_handler);
-          objc::msg_send<void>(invocation, "setArgument:atIndex:"_sel, &urls,
-                               1);
-          objc::msg_send<void>(invocation, "invoke"_sel);
-        }),
-        "v@:@@@@");
-    objc_registerClassPair(cls);
+            // Invoke the completion handler block.
+            auto sig = objc::msg_send<id>(
+                "NSMethodSignature"_cls, "signatureWithObjCTypes:"_sel, "v@?@");
+            auto invocation = objc::msg_send<id>(
+                "NSInvocation"_cls, "invocationWithMethodSignature:"_sel, sig);
+            objc::msg_send<void>(invocation, "setTarget:"_sel,
+                                 completion_handler);
+            objc::msg_send<void>(invocation, "setArgument:atIndex:"_sel, &urls,
+                                 1);
+            objc::msg_send<void>(invocation, "invoke"_sel);
+          }),
+          "v@:@@@@");
+      objc_registerClassPair(cls);
+    }
     return objc::msg_send<id>((id)cls, "new"_sel);
   }
   static id get_shared_application() {
@@ -1080,6 +1127,9 @@ private:
       objc::msg_send<void>(app, "activateIgnoringOtherApps:"_sel, YES);
     }
 
+    create_window();
+  }
+  void create_window() {
     // Main window
     if (m_owns_window) {
       m_window = objc::msg_send<id>("NSWindow"_cls, "alloc"_sel);
@@ -2267,8 +2317,10 @@ public:
         case WM_DESTROY:
           w->m_window = nullptr;
           SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
-          // w->terminate();
-          PostQuitMessage(0);
+
+          if (w->dec_window_count() <= 0) {
+            w->terminate();
+          }
           break;
         case WM_GETMINMAXINFO: {
           auto lpmmi = (LPMINMAXINFO)lp;
@@ -2312,6 +2364,50 @@ public:
       if (m_window == nullptr) {
         return;
       }
+      inc_window_count();
+
+      // Create a message-only window for internal messaging.
+      WNDCLASSEXW message_wc{};
+      message_wc.cbSize = sizeof(WNDCLASSEX);
+      message_wc.hInstance = hInstance;
+      message_wc.lpszClassName = L"webview_message";
+      message_wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
+                                             LPARAM lp) -> LRESULT {
+        win32_edge_engine *w{};
+
+        if (msg == WM_NCCREATE) {
+          auto *lpcs{reinterpret_cast<LPCREATESTRUCT>(lp)};
+          w = static_cast<win32_edge_engine *>(lpcs->lpCreateParams);
+          w->m_message_window = hwnd;
+          SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(w));
+        } else {
+          w = reinterpret_cast<win32_edge_engine *>(
+              GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+        }
+
+        if (!w) {
+          return DefWindowProcW(hwnd, msg, wp, lp);
+        }
+
+        switch (msg) {
+        case WM_APP:
+          if (auto f = (dispatch_fn_t *)(lp)) {
+            (*f)();
+            delete f;
+          }
+          break;
+        case WM_DESTROY:
+          w->m_message_window = nullptr;
+          SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+          break;
+        default:
+          return DefWindowProcW(hwnd, msg, wp, lp);
+        }
+        return 0;
+      });
+      RegisterClassExW(&message_wc);
+      CreateWindowExW(0, L"webview_message", nullptr, 0, 0, 0, 0, 0,
+                      HWND_MESSAGE, nullptr, hInstance, this);
 
       m_dpi = get_window_dpi(m_window);
       constexpr const int initial_width = 640;
@@ -2645,6 +2741,21 @@ private:
     if (lstrcmpW(area, L"ImmersiveColorSet") == 0) {
       apply_window_theme(m_window);
     }
+  }
+
+  static std::atomic_uint &window_ref_count() {
+    static std::atomic_uint ref_count{0};
+    return ref_count;
+  }
+
+  static unsigned int inc_window_count() { return ++window_ref_count(); }
+
+  static unsigned int dec_window_count() {
+    auto &count = window_ref_count();
+    if (count > 0) {
+      return --count;
+    }
+    return 0;
   }
 
   virtual void on_message(const std::string &msg) = 0;
