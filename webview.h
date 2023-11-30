@@ -113,10 +113,10 @@ typedef void *webview_t;
 // be enabled (if the platform supports them). The window parameter can be a
 // pointer to the native window handle. If it's non-null - then child WebView
 // is embedded into the given parent window. Otherwise a new window is created.
-// Depending on the platform, a GtkWindow, NSWindow or HWND pointer can be
-// passed here. Returns null on failure. Creation can fail for various reasons
-// such as when required runtime dependencies are missing or when window creation
-// fails.
+// Depending on the platform, a GtkWindow, NSWindow or HWND can be passed here.
+// For backward compatibility, the function also accepts a pointer to HWND.
+// Returns null on failure. Creation can fail for various reasons such as when
+// required runtime dependencies are missing or when window creation fails.
 WEBVIEW_API webview_t webview_create(int debug, void *window);
 
 // Destroys a webview and closes the native window.
@@ -135,10 +135,22 @@ WEBVIEW_API void webview_terminate(webview_t w);
 WEBVIEW_API void
 webview_dispatch(webview_t w, void (*fn)(webview_t w, void *arg), void *arg);
 
-// Returns a native window handle pointer. When using a GTK backend the pointer
-// is a GtkWindow pointer, when using a Cocoa backend the pointer is a NSWindow
-// pointer, when using a Win32 backend the pointer is a HWND pointer.
+// Returns the native window provided to the library if any; otherwise, a
+// native window created by the library.
+// The exact type depends on the backend:
+// - GTK: GtkWindow *
+// - Cocoa: NSWindow *
+// - Windows: HWND
 WEBVIEW_API void *webview_get_window(webview_t w);
+
+// Returns a native widget with the underlying browser view.
+// The exact type depends on the backend:
+// - GTK: GtkWidget *
+// - Cocoa: NSView *
+// - Windows: HWND
+// While the returned pointer may be the underlying webview widget, you
+// shouldn't rely on derived types through this pointer.
+WEBVIEW_API void *webview_get_widget(webview_t w);
 
 // Updates the title of the native window. Must be called from the UI thread.
 WEBVIEW_API void webview_set_title(webview_t w, const char *title);
@@ -234,7 +246,6 @@ WEBVIEW_API const webview_version_info_t *webview_version(void);
 #include <atomic>
 #include <cstdint>
 #include <functional>
-#include <future>
 #include <map>
 #include <string>
 #include <utility>
@@ -618,7 +629,6 @@ public:
     init("window.external={invoke:function(s){window.webkit.messageHandlers."
          "external.postMessage(s);}}");
 
-    gtk_container_add(GTK_CONTAINER(m_window), GTK_WIDGET(m_webview));
     gtk_widget_grab_focus(GTK_WIDGET(m_webview));
 
     WebKitSettings *settings =
@@ -630,10 +640,22 @@ public:
       webkit_settings_set_enable_developer_extras(settings, true);
     }
 
-    gtk_widget_show_all(m_window);
+    if (window) {
+      m_window = static_cast<GtkWidget *>(window);
+    } else {
+      m_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+      g_signal_connect(G_OBJECT(m_window), "destroy",
+                       G_CALLBACK(+[](GtkWidget *, gpointer arg) {
+                         static_cast<gtk_webkit_engine *>(arg)->terminate();
+                       }),
+                       this);
+      gtk_container_add(GTK_CONTAINER(m_window), GTK_WIDGET(m_webview));
+      gtk_widget_show_all(m_window);
+    }
   }
   virtual ~gtk_webkit_engine() = default;
   void *window() { return (void *)m_window; }
+  void *widget() { return (void *)m_webview; }
   void run() { gtk_main(); }
   void terminate() { gtk_main_quit(); }
   void dispatch(std::function<void()> f) {
@@ -842,8 +864,10 @@ public:
         create_window();
       } else {
         delegate = create_app_delegate();
-        objc_setAssociatedObject(delegate, "webview", (id)this,
-                                 OBJC_ASSOCIATION_ASSIGN);
+        objc_setAssociatedObject(
+            delegate, "webview",
+            objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+            OBJC_ASSOCIATION_RETAIN);
         objc::msg_send<void>(app, "setDelegate:"_sel, delegate);
 
         // Start the main run loop so that the app delegate gets the
@@ -857,6 +881,7 @@ public:
   }
   virtual ~cocoa_wkwebview_engine() = default;
   void *window() { return (void *)m_window; }
+  void *widget() { return (void *)m_webview; }
   void terminate() { stop_run_loop(); }
   void run() {
     auto app = get_shared_application();
@@ -901,7 +926,7 @@ public:
   void navigate(const std::string &url) {
     objc::autoreleasepool pool;
 
-    auto nsurl = objc::msg_send<id>(
+    id nsurl = objc::msg_send<id>(
         "NSURL"_cls, "URLWithString:"_sel,
         objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel,
                            url.c_str()));
@@ -995,8 +1020,10 @@ private:
       objc_registerClassPair(cls);
     }
     auto instance = objc::msg_send<id>((id)cls, "new"_sel);
-    objc_setAssociatedObject(instance, "webview", (id)this,
-                             OBJC_ASSOCIATION_ASSIGN);
+    objc_setAssociatedObject(
+        instance, "webview",
+        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+        OBJC_ASSOCIATION_RETAIN);
     return instance;
   }
   static id create_webkit_ui_delegate() {
@@ -1052,8 +1079,12 @@ private:
     return objc::msg_send<id>("NSApplication"_cls, "sharedApplication"_sel);
   }
   static cocoa_wkwebview_engine *get_associated_webview(id object) {
-    auto w =
-        (cocoa_wkwebview_engine *)objc_getAssociatedObject(object, "webview");
+    id assoc_obj = objc_getAssociatedObject(object, "webview");
+    if (!objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
+      return nullptr;
+    }
+    cocoa_wkwebview_engine *w{};
+    objc::msg_send<void>(assoc_obj, "getValue:size:"_sel, &w, sizeof(w));
     assert(w);
     return w;
   }
@@ -1061,11 +1092,11 @@ private:
     return objc::msg_send<id>("NSBundle"_cls, "mainBundle"_sel);
   }
   static bool is_app_bundled() noexcept {
-    auto bundle = get_main_bundle();
+    id bundle = get_main_bundle();
     if (!bundle) {
       return false;
     }
-    auto bundle_path = objc::msg_send<id>(bundle, "bundlePath"_sel);
+    id bundle_path = objc::msg_send<id>(bundle, "bundlePath"_sel);
     auto bundled =
         objc::msg_send<BOOL>(bundle_path, "hasSuffix:"_sel, ".app"_str);
     return !!bundled;
@@ -1109,15 +1140,16 @@ private:
     }
 
     // Webview
-    auto config = objc::msg_send<id>("WKWebViewConfiguration"_cls, "new"_sel);
+    id config = objc::msg_send<id>("WKWebViewConfiguration"_cls, "new"_sel);
     m_manager = objc::msg_send<id>(config, "userContentController"_sel);
     m_webview = objc::msg_send<id>("WKWebView"_cls, "alloc"_sel);
+    id preferences = objc::msg_send<id>(config, "preferences"_sel);
 
     if (m_debug) {
       // Equivalent Obj-C:
       // [[config preferences] setValue:@YES forKey:@"developerExtrasEnabled"];
       objc::msg_send<id>(
-          objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
+          preferences, "setValue:forKey:"_sel,
           objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
           "developerExtrasEnabled"_str);
     }
@@ -1125,25 +1157,25 @@ private:
     // Equivalent Obj-C:
     // [[config preferences] setValue:@YES forKey:@"fullScreenEnabled"];
     objc::msg_send<id>(
-        objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
+        preferences, "setValue:forKey:"_sel,
         objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
         "fullScreenEnabled"_str);
 
     // Equivalent Obj-C:
     // [[config preferences] setValue:@YES forKey:@"javaScriptCanAccessClipboard"];
     objc::msg_send<id>(
-        objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
+        preferences, "setValue:forKey:"_sel,
         objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
         "javaScriptCanAccessClipboard"_str);
 
     // Equivalent Obj-C:
     // [[config preferences] setValue:@YES forKey:@"DOMPasteAllowed"];
     objc::msg_send<id>(
-        objc::msg_send<id>(config, "preferences"_sel), "setValue:forKey:"_sel,
+        preferences, "setValue:forKey:"_sel,
         objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
         "DOMPasteAllowed"_str);
 
-    auto ui_delegate = create_webkit_ui_delegate();
+    id ui_delegate = create_webkit_ui_delegate();
     objc::msg_send<void>(m_webview, "initWithFrame:configuration:"_sel,
                          CGRectMake(0, 0, 0, 0), config);
     objc::msg_send<void>(m_webview, "setUIDelegate:"_sel, ui_delegate);
@@ -1170,7 +1202,7 @@ private:
 #endif
     }
 
-    auto script_message_handler = create_script_message_handler();
+    id script_message_handler = create_script_message_handler();
     objc::msg_send<void>(m_manager, "addScriptMessageHandler:name:"_sel,
                          script_message_handler, "external"_str);
 
@@ -1181,9 +1213,8 @@ private:
         },
       };
       )"");
-    objc::msg_send<void>(m_window, "setContentView:"_sel, m_webview);
-
     if (m_owns_window) {
+      objc::msg_send<void>(m_window, "setContentView:"_sel, m_webview);
       objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
     }
   }
@@ -1211,11 +1242,11 @@ private:
     objc::msg_send<void>(app, "postEvent:atStart:"_sel, event, YES);
   }
 
-  bool m_debug;
-  id m_window;
-  id m_webview;
-  id m_manager;
-  bool m_owns_window;
+  bool m_debug{};
+  id m_window{};
+  id m_webview{};
+  id m_manager{};
+  bool m_owns_window{};
 };
 
 } // namespace detail
@@ -2251,14 +2282,14 @@ private:
 
 class win32_edge_engine {
 public:
-  win32_edge_engine(bool debug, void *window) {
+  win32_edge_engine(bool debug, void *window) : m_owns_window{!window} {
     if (!is_webview2_available()) {
       return;
     }
 
-    HINSTANCE hInstance = GetModuleHandle(nullptr);
+    auto hInstance = GetModuleHandle(nullptr);
 
-    if (!window) {
+    if (m_owns_window) {
       m_com_init = {COINIT_APARTMENTTHREADED};
       if (!m_com_init.is_initialized()) {
         return;
@@ -2269,14 +2300,14 @@ public:
           hInstance, IDI_APPLICATION, IMAGE_ICON, GetSystemMetrics(SM_CXICON),
           GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR);
 
-      WNDCLASSEXW wc;
-      ZeroMemory(&wc, sizeof(WNDCLASSEX));
+      // Create a top-level window.
+      WNDCLASSEXW wc{};
       wc.cbSize = sizeof(WNDCLASSEX);
       wc.hInstance = hInstance;
       wc.lpszClassName = L"webview";
       wc.hIcon = icon;
-      wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
-                                     LPARAM lp) -> LRESULT {
+      wc.lpfnWndProc =
+          +[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
         win32_edge_engine *w{};
 
         if (msg == WM_NCCREATE) {
@@ -2303,15 +2334,15 @@ public:
           DestroyWindow(hwnd);
           break;
         case WM_DESTROY:
+          w->m_window = nullptr;
+          SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+
           if (w->dec_window_count() <= 0) {
             w->terminate();
           }
           break;
         case WM_GETMINMAXINFO: {
           auto lpmmi = (LPMINMAXINFO)lp;
-          if (w == nullptr) {
-            return 0;
-          }
           if (w->m_maxsz.x > 0 && w->m_maxsz.y > 0) {
             lpmmi->ptMaxSize = w->m_maxsz;
             lpmmi->ptMaxTrackSize = w->m_maxsz;
@@ -2345,9 +2376,8 @@ public:
           return DefWindowProcW(hwnd, msg, wp, lp);
         }
         return 0;
-      });
+      };
       RegisterClassExW(&wc);
-
       CreateWindowW(L"webview", L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
                     CW_USEDEFAULT, 0, 0, nullptr, nullptr, hInstance, this);
       if (m_window == nullptr) {
@@ -2360,9 +2390,51 @@ public:
       constexpr const int initial_height = 480;
       set_size(initial_width, initial_height, WEBVIEW_HINT_NONE);
     } else {
-      m_window = *(static_cast<HWND *>(window));
+      m_window = IsWindow(static_cast<HWND>(window))
+                     ? static_cast<HWND>(window)
+                     : *(static_cast<HWND *>(window));
       m_dpi = get_window_dpi(m_window);
     }
+
+    // Create a window that WebView2 will be embedded into.
+    WNDCLASSEXW widget_wc{};
+    widget_wc.cbSize = sizeof(WNDCLASSEX);
+    widget_wc.hInstance = hInstance;
+    widget_wc.lpszClassName = L"webview_widget";
+    widget_wc.lpfnWndProc =
+        +[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
+      win32_edge_engine *w{};
+
+      if (msg == WM_NCCREATE) {
+        auto *lpcs{reinterpret_cast<LPCREATESTRUCT>(lp)};
+        w = static_cast<win32_edge_engine *>(lpcs->lpCreateParams);
+        w->m_widget = hwnd;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(w));
+      } else {
+        w = reinterpret_cast<win32_edge_engine *>(
+            GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+      }
+
+      if (!w) {
+        return DefWindowProcW(hwnd, msg, wp, lp);
+      }
+
+      switch (msg) {
+      case WM_SIZE:
+        w->resize_webview();
+        break;
+      case WM_DESTROY:
+        w->m_widget = nullptr;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+        break;
+      default:
+        return DefWindowProcW(hwnd, msg, wp, lp);
+      }
+      return 0;
+    };
+    auto widget_atom = RegisterClassExW(&widget_wc);
+    CreateWindowW(L"webview_widget", nullptr, WS_CHILD, 0, 0, 0, 0, m_window,
+                  nullptr, hInstance, this);
 
     // Create a message-only window for internal messaging.
     WNDCLASSEXW message_wc{};
@@ -2407,16 +2479,15 @@ public:
     CreateWindowExW(0, L"webview_message", nullptr, 0, 0, 0, 0, 0, HWND_MESSAGE,
                     nullptr, hInstance, this);
 
-    ShowWindow(m_window, SW_SHOW);
-    UpdateWindow(m_window);
-    SetFocus(m_window);
+    if (m_owns_window) {
+      ShowWindow(m_window, SW_SHOW);
+      UpdateWindow(m_window);
+      SetFocus(m_window);
+    }
 
-    auto cb =
-        std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1);
-
-    embed(m_window, debug, cb);
-    resize_widget();
-    m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+    embed(
+        m_widget, debug,
+        std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
   }
 
   virtual ~win32_edge_engine() {
@@ -2432,6 +2503,20 @@ public:
       m_controller->Release();
       m_controller = nullptr;
     }
+    if (m_message_window) {
+      DestroyWindow(m_message_window);
+      m_message_window = nullptr;
+    }
+    if (m_widget) {
+      DestroyWindow(m_widget);
+      m_widget = nullptr;
+    }
+    if (m_window) {
+      if (m_owns_window) {
+        DestroyWindow(m_window);
+      }
+      m_window = nullptr;
+    }
   }
 
   win32_edge_engine(const win32_edge_engine &other) = delete;
@@ -2446,8 +2531,11 @@ public:
       DispatchMessageW(&msg);
     }
   }
+
   void *window() { return (void *)m_window; }
+  void *widget() { return (void *)m_widget; }
   void terminate() { PostQuitMessage(0); }
+
   void dispatch(dispatch_fn_t f) {
     PostMessageW(m_message_window, WM_APP, 0, (LPARAM) new dispatch_fn_t(f));
   }
@@ -2505,8 +2593,7 @@ public:
 
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
-    std::atomic_flag flag = ATOMIC_FLAG_INIT;
-    flag.test_and_set();
+    bool webview2_done{};
 
     wchar_t currentExePath[MAX_PATH];
     GetModuleFileNameW(nullptr, currentExePath, MAX_PATH);
@@ -2523,15 +2610,14 @@ private:
     m_com_handler = new webview2_com_handler(
         wnd, cb,
         [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
+          webview2_done = true;
           if (!controller || !webview) {
-            flag.clear();
             return;
           }
           controller->AddRef();
           webview->AddRef();
           m_controller = controller;
           m_webview = webview;
-          flag.clear();
         });
 
     m_com_handler->set_attempt_handler([&] {
@@ -2542,40 +2628,62 @@ private:
 
     // Pump the message loop until WebView2 has finished initialization.
     MSG msg;
-    while (flag.test_and_set() && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
+    while (!webview2_done && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
       if (msg.message == WM_QUIT) {
         return false;
       }
       TranslateMessage(&msg);
       DispatchMessageW(&msg);
     }
+
     if (!m_controller || !m_webview) {
       return false;
     }
+
     ICoreWebView2Settings *settings = nullptr;
     auto res = m_webview->get_Settings(&settings);
     if (res != S_OK) {
       return false;
     }
+
     res = settings->put_AreDevToolsEnabled(debug ? TRUE : FALSE);
     if (res != S_OK) {
       return false;
     }
+
     res = settings->put_IsStatusBarEnabled(FALSE);
     if (res != S_OK) {
       return false;
     }
+
     init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+    resize_webview();
+    m_controller->put_IsVisible(TRUE);
+    ShowWindow(m_widget, SW_SHOW);
+    UpdateWindow(m_widget);
+    SetFocus(wnd);
+    m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+
     return true;
   }
 
   void resize_widget() {
-    if (m_controller == nullptr) {
-      return;
+    if (m_widget) {
+      RECT r{};
+      if (GetClientRect(GetParent(m_widget), &r)) {
+        MoveWindow(m_widget, r.left, r.top, r.right - r.left, r.bottom - r.top,
+                   TRUE);
+      }
     }
-    RECT bounds;
-    GetClientRect(m_window, &bounds);
-    m_controller->put_Bounds(bounds);
+  }
+
+  void resize_webview() {
+    if (m_widget && m_controller) {
+      RECT bounds{};
+      if (GetClientRect(m_widget, &bounds)) {
+        m_controller->put_Bounds(bounds);
+      }
+    }
   }
 
   bool is_webview2_available() const noexcept {
@@ -2641,7 +2749,9 @@ private:
   // CreateCoreWebView2EnvironmentWithOptions.
   // Source: https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/webview2-idl#createcorewebview2environmentwithoptions
   com_init_wrapper m_com_init;
+  bool m_owns_window{};
   HWND m_window = nullptr;
+  HWND m_widget = nullptr;
   HWND m_message_window = nullptr;
   POINT m_minsz = POINT{0, 0};
   POINT m_maxsz = POINT{0, 0};
@@ -2815,6 +2925,10 @@ WEBVIEW_API void webview_dispatch(webview_t w, void (*fn)(webview_t, void *),
 
 WEBVIEW_API void *webview_get_window(webview_t w) {
   return static_cast<webview::webview *>(w)->window();
+}
+
+WEBVIEW_API void *webview_get_widget(webview_t w) {
+  return static_cast<webview::webview *>(w)->widget();
 }
 
 WEBVIEW_API void webview_set_title(webview_t w, const char *title) {
