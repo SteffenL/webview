@@ -109,14 +109,24 @@ extern "C" {
 
 typedef void *webview_t;
 
-// Creates a new webview instance. If debug is non-zero - developer tools will
-// be enabled (if the platform supports them). The window parameter can be a
-// pointer to the native window handle. If it's non-null - then child WebView
-// is embedded into the given parent window. Otherwise a new window is created.
-// Depending on the platform, a GtkWindow, NSWindow or HWND can be passed here.
-// For backward compatibility, the function also accepts a pointer to HWND.
-// Returns null on failure. Creation can fail for various reasons such as when
-// required runtime dependencies are missing or when window creation fails.
+// Creates a new webview instance. If the debug parameter is non-zero,
+// developer tools are enabled if supported by the backend. The optional window
+// parameter can be a native window handle, i.e. GtkWindow pointer (GTK),
+// NSWindow pointer (Cocoa) or HWND (Win32). If the window handle is
+// non-null, the webview widget is embedded into the given window, and the
+// caller is expected to assume responsibility for the window as well as
+// application lifecycle. If the window handle is null, a new window is created
+// and both the window and application lifecycle are managed by the webview
+// instance. Returns null on failure. Creation can fail for various reasons such
+// as when required runtime dependencies are missing or when window creation
+// fails.
+// Remarks:
+// - Win32: The function also accepts a pointer to HWND (Win32) in the window
+//   parameter for backward compatibility.
+// - Win32/WebView2: CoInitializeEx should be called with
+//   COINIT_APARTMENTTHREADED before attempting to call this function with an
+//   existing window. Omitting this step may cause WebView2 initialization to
+//   fail.
 WEBVIEW_API webview_t webview_create(int debug, void *window);
 
 // Destroys a webview and closes the native window.
@@ -135,22 +145,26 @@ WEBVIEW_API void webview_terminate(webview_t w);
 WEBVIEW_API void
 webview_dispatch(webview_t w, void (*fn)(webview_t w, void *arg), void *arg);
 
-// Returns the native window provided to the library if any; otherwise, a
-// native window created by the library.
-// The exact type depends on the backend:
-// - GTK: GtkWindow *
-// - Cocoa: NSWindow *
-// - Windows: HWND
+// Returns the native handle of the window associated with the webview instance.
+// The handle can be a GtkWindow pointer (GTK), NSWindow pointer (Cocoa) or
+// HWND (Win32).
 WEBVIEW_API void *webview_get_window(webview_t w);
 
-// Returns a native widget with the underlying browser view.
-// The exact type depends on the backend:
-// - GTK: GtkWidget *
-// - Cocoa: NSView *
-// - Windows: HWND
-// While the returned pointer may be the underlying webview widget, you
-// shouldn't rely on derived types through this pointer.
-WEBVIEW_API void *webview_get_widget(webview_t w);
+// Native handle kind. The actual type depends on the backend.
+typedef enum {
+  // Top-level window. GtkWindow pointer (GTK), NSWindow pointer (Cocoa) or HWND (Win32).
+  WEBVIEW_NATIVE_HANDLE_KIND_UI_WINDOW,
+  // Browser widget. GtkWidget pointer (GTK), NSView pointer (Cocoa) or HWND (Win32).
+  WEBVIEW_NATIVE_HANDLE_KIND_UI_WIDGET,
+  // Browser controller. WebKitWebView pointer (WebKitGTK), WKWebView pointer (Cocoa/WebKit) or
+  // ICoreWebView2Controller pointer (Win32/WebView2).
+  WEBVIEW_NATIVE_HANDLE_KIND_BROWSER_CONTROLLER
+} webview_native_handle_kind_t;
+
+// Returns a native handle of choice.
+// @since 0.11
+WEBVIEW_API void *webview_get_native_handle(webview_t w,
+                                            webview_native_handle_kind_t kind);
 
 // Updates the title of the native window. Must be called from the UI thread.
 WEBVIEW_API void webview_set_title(webview_t w, const char *title);
@@ -242,8 +256,10 @@ WEBVIEW_API const webview_version_info_t *webview_version(void);
   WEBVIEW_DEPRECATED("Private API should not be used")
 #endif
 
+#include <algorithm>
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -252,6 +268,13 @@ WEBVIEW_API const webview_version_info_t *webview_version(void);
 #include <vector>
 
 #include <cstring>
+
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
 
 namespace webview {
 
@@ -265,6 +288,58 @@ constexpr const webview_version_info_t library_version_info{
     WEBVIEW_VERSION_NUMBER,
     WEBVIEW_VERSION_PRE_RELEASE,
     WEBVIEW_VERSION_BUILD_METADATA};
+
+#if defined(_WIN32)
+// Converts a narrow (UTF-8-encoded) string into a wide (UTF-16-encoded) string.
+inline std::wstring widen_string(const std::string &input) {
+  if (input.empty()) {
+    return std::wstring();
+  }
+  UINT cp = CP_UTF8;
+  DWORD flags = MB_ERR_INVALID_CHARS;
+  auto input_c = input.c_str();
+  auto input_length = static_cast<int>(input.size());
+  auto required_length =
+      MultiByteToWideChar(cp, flags, input_c, input_length, nullptr, 0);
+  if (required_length > 0) {
+    std::wstring output(static_cast<std::size_t>(required_length), L'\0');
+    if (MultiByteToWideChar(cp, flags, input_c, input_length, &output[0],
+                            required_length) > 0) {
+      return output;
+    }
+  }
+  // Failed to convert string from UTF-8 to UTF-16
+  return std::wstring();
+}
+
+// Converts a wide (UTF-16-encoded) string into a narrow (UTF-8-encoded) string.
+inline std::string narrow_string(const std::wstring &input) {
+  struct wc_flags {
+    enum TYPE : unsigned int {
+      // WC_ERR_INVALID_CHARS
+      err_invalid_chars = 0x00000080U
+    };
+  };
+  if (input.empty()) {
+    return std::string();
+  }
+  UINT cp = CP_UTF8;
+  DWORD flags = wc_flags::err_invalid_chars;
+  auto input_c = input.c_str();
+  auto input_length = static_cast<int>(input.size());
+  auto required_length = WideCharToMultiByte(cp, flags, input_c, input_length,
+                                             nullptr, 0, nullptr, nullptr);
+  if (required_length > 0) {
+    std::string output(static_cast<std::size_t>(required_length), '\0');
+    if (WideCharToMultiByte(cp, flags, input_c, input_length, &output[0],
+                            required_length, nullptr, nullptr) > 0) {
+      return output;
+    }
+  }
+  // Failed to convert string from UTF-16 to UTF-8
+  return std::string();
+}
+#endif
 
 inline int json_parse_c(const char *s, size_t sz, const char *key, size_t keysz,
                         const char **value, size_t *valuesz) {
@@ -408,27 +483,24 @@ inline int json_parse_c(const char *s, size_t sz, const char *key, size_t keysz,
   return -1;
 }
 
-constexpr bool is_json_special_char(unsigned int c) {
-  return c == '"' || c == '\\';
+constexpr bool is_json_special_char(char c) {
+  return c == '"' || c == '\\' || c == '\b' || c == '\f' || c == '\n' ||
+         c == '\r' || c == '\t';
 }
 
-constexpr bool is_control_char(unsigned int c) {
-  return c <= 0x1f || (c >= 0x7f && c <= 0x9f);
-}
+constexpr bool is_ascii_control_char(char c) { return c >= 0 && c <= 0x1f; }
 
 inline std::string json_escape(const std::string &s, bool add_quotes = true) {
-  constexpr char hex_alphabet[]{"0123456789abcdef"};
   // Calculate the size of the resulting string.
   // Add space for the double quotes.
-  auto required_length = s.size() + (add_quotes ? 2 : 0);
+  size_t required_length = add_quotes ? 2 : 0;
   for (auto c : s) {
-    auto uc = static_cast<unsigned char>(c);
-    if (is_json_special_char(uc)) {
+    if (is_json_special_char(c)) {
       // '\' and a single following character
       required_length += 2;
       continue;
     }
-    if (is_control_char(uc)) {
+    if (is_ascii_control_char(c)) {
       // '\', 'u', 4 digits
       required_length += 6;
       continue;
@@ -443,13 +515,23 @@ inline std::string json_escape(const std::string &s, bool add_quotes = true) {
   }
   // Copy string while escaping characters.
   for (auto c : s) {
-    auto uc = static_cast<unsigned char>(c);
-    if (is_json_special_char(uc)) {
+    if (is_json_special_char(c)) {
+      static constexpr char special_escape_table[256] =
+          "\0\0\0\0\0\0\0\0btn\0fr\0\0"
+          "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+          "\0\0\"\0\0\0\0\0\0\0\0\0\0\0\0\0"
+          "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+          "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+          "\0\0\0\0\0\0\0\0\0\0\0\0\\";
       result += '\\';
-      result += c;
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+      result += special_escape_table[static_cast<unsigned char>(c)];
       continue;
     }
-    if (is_control_char(uc)) {
+    if (is_ascii_control_char(c)) {
+      // Escape as \u00xx
+      static constexpr char hex_alphabet[]{"0123456789abcdef"};
+      auto uc = static_cast<unsigned char>(c);
       auto h = (uc >> 4) & 0x0f;
       auto l = uc & 0x0f;
       result += "\\u00";
@@ -464,6 +546,8 @@ inline std::string json_escape(const std::string &s, bool add_quotes = true) {
   if (add_quotes) {
     result += '"';
   }
+  // Should have calculated the exact amount of memory needed
+  assert(required_length == result.size());
   return result;
 }
 
@@ -548,6 +632,117 @@ inline std::string json_parse(const std::string &s, const std::string &key,
   return "";
 }
 
+// Holds a symbol name and associated type for code clarity.
+template <typename T> class library_symbol {
+public:
+  using type = T;
+
+  constexpr explicit library_symbol(const char *name) : m_name(name) {}
+  constexpr const char *get_name() const { return m_name; }
+
+private:
+  const char *m_name;
+};
+
+// Loads a native shared library and allows one to get addresses for those
+// symbols.
+class native_library {
+public:
+  native_library() = default;
+
+  explicit native_library(const std::string &name)
+      : m_handle{load_library(name)} {}
+
+#ifdef _WIN32
+  explicit native_library(const std::wstring &name)
+      : m_handle{load_library(name)} {}
+#endif
+
+  ~native_library() {
+    if (m_handle) {
+#ifdef _WIN32
+      FreeLibrary(m_handle);
+#else
+      dlclose(m_handle);
+#endif
+      m_handle = nullptr;
+    }
+  }
+
+  native_library(const native_library &other) = delete;
+  native_library &operator=(const native_library &other) = delete;
+  native_library(native_library &&other) = default;
+  native_library &operator=(native_library &&other) = default;
+
+  // Returns true if the library is currently loaded; otherwise false.
+  operator bool() const { return is_loaded(); }
+
+  // Get the address for the specified symbol or nullptr if not found.
+  template <typename Symbol>
+  typename Symbol::type get(const Symbol &symbol) const {
+    if (is_loaded()) {
+      // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+#ifdef _WIN32
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+      return reinterpret_cast<typename Symbol::type>(
+          GetProcAddress(m_handle, symbol.get_name()));
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+#else
+      return reinterpret_cast<typename Symbol::type>(
+          dlsym(m_handle, symbol.get_name()));
+#endif
+      // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+    }
+    return nullptr;
+  }
+
+  // Returns true if the library is currently loaded; otherwise false.
+  bool is_loaded() const { return !!m_handle; }
+
+  void detach() { m_handle = nullptr; }
+
+  // Returns true if the library by the given name is currently loaded; otherwise false.
+  static inline bool is_loaded(const std::string &name) {
+#ifdef _WIN32
+    auto handle = GetModuleHandleW(widen_string(name).c_str());
+#else
+    auto handle = dlopen(name.c_str(), RTLD_NOW | RTLD_NOLOAD);
+    if (handle) {
+      dlclose(handle);
+    }
+#endif
+    return !!handle;
+  }
+
+private:
+#ifdef _WIN32
+  using mod_handle_t = HMODULE;
+#else
+  using mod_handle_t = void *;
+#endif
+
+  static inline mod_handle_t load_library(const std::string &name) {
+#ifdef _WIN32
+    return load_library(widen_string(name));
+#else
+    return dlopen(name.c_str(), RTLD_NOW);
+#endif
+  }
+
+#ifdef _WIN32
+  static inline mod_handle_t load_library(const std::wstring &name) {
+    return LoadLibraryW(name.c_str());
+  }
+#endif
+
+  mod_handle_t m_handle{};
+};
+
 } // namespace detail
 
 WEBVIEW_DEPRECATED_PRIVATE
@@ -585,18 +780,143 @@ inline std::string json_parse(const std::string &s, const std::string &key,
 //
 // ====================================================================
 //
+#include <cstdlib>
+
 #include <JavaScriptCore/JavaScript.h>
 #include <gtk/gtk.h>
 #include <webkit2/webkit2.h>
 
+#ifdef GDK_WINDOWING_X11
+#include <gdk/gdkx.h>
+#endif
+
+#include <fcntl.h>
+#include <sys/stat.h>
+
 namespace webview {
 namespace detail {
+
+// Namespace containing workaround for WebKit 2.42 when using NVIDIA GPU
+// driver.
+// See WebKit bug: https://bugs.webkit.org/show_bug.cgi?id=261874
+// Please remove all of the code in this namespace when it's no longer needed.
+namespace webkit_dmabuf {
+
+// Get environment variable. Not thread-safe.
+static inline std::string get_env(const std::string &name) {
+  auto *value = std::getenv(name.c_str());
+  if (value) {
+    return {value};
+  }
+  return {};
+}
+
+// Set environment variable. Not thread-safe.
+static inline void set_env(const std::string &name, const std::string &value) {
+  ::setenv(name.c_str(), value.c_str(), 1);
+}
+
+// Checks whether the NVIDIA GPU driver is used based on whether the kernel
+// module is loaded.
+static inline bool is_using_nvidia_driver() {
+  struct ::stat buffer;
+  if (::stat("/sys/module/nvidia", &buffer) != 0) {
+    return false;
+  }
+  return S_ISDIR(buffer.st_mode);
+}
+
+// Checks whether the windowing system is Wayland.
+static inline bool is_wayland_display() {
+  if (!get_env("WAYLAND_DISPLAY").empty()) {
+    return true;
+  }
+  if (get_env("XDG_SESSION_TYPE") == "wayland") {
+    return true;
+  }
+  if (get_env("DESKTOP_SESSION").find("wayland") != std::string::npos) {
+    return true;
+  }
+  return false;
+}
+
+// Checks whether the GDK X11 backend is used.
+// See: https://docs.gtk.org/gdk3/class.DisplayManager.html
+static inline bool is_gdk_x11_backend() {
+#ifdef GDK_WINDOWING_X11
+  auto *manager = gdk_display_manager_get();
+  auto *display = gdk_display_manager_get_default_display(manager);
+  return GDK_IS_X11_DISPLAY(display);
+#else
+  return false;
+#endif
+}
+
+// Checks whether WebKit is affected by bug when using DMA-BUF renderer.
+// Returns true if all of the following conditions are met:
+//  - WebKit version is >= 2.42 (please narrow this down when there's a fix).
+//  - Environment variables are empty or not set:
+//    - WEBKIT_DISABLE_DMABUF_RENDERER
+//  - Windowing system is not Wayland.
+//  - GDK backend is X11.
+//  - NVIDIA GPU driver is used.
+static inline bool is_webkit_dmabuf_bugged() {
+  auto wk_major = webkit_get_major_version();
+  auto wk_minor = webkit_get_minor_version();
+  // TODO: Narrow down affected WebKit version when there's a fixed version
+  auto is_affected_wk_version = wk_major == 2 && wk_minor >= 42;
+  if (!is_affected_wk_version) {
+    return false;
+  }
+  if (!get_env("WEBKIT_DISABLE_DMABUF_RENDERER").empty()) {
+    return false;
+  }
+  if (is_wayland_display()) {
+    return false;
+  }
+  if (!is_gdk_x11_backend()) {
+    return false;
+  }
+  if (!is_using_nvidia_driver()) {
+    return false;
+  }
+  return true;
+}
+
+// Applies workaround for WebKit DMA-BUF bug if needed.
+// See WebKit bug: https://bugs.webkit.org/show_bug.cgi?id=261874
+static inline void apply_webkit_dmabuf_workaround() {
+  if (!is_webkit_dmabuf_bugged()) {
+    return;
+  }
+  set_env("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+}
+} // namespace webkit_dmabuf
+
+namespace webkit_symbols {
+using webkit_web_view_evaluate_javascript_t =
+    void (*)(WebKitWebView *, const char *, gssize, const char *, const char *,
+             GCancellable *, GAsyncReadyCallback, gpointer);
+
+using webkit_web_view_run_javascript_t = void (*)(WebKitWebView *,
+                                                  const gchar *, GCancellable *,
+                                                  GAsyncReadyCallback,
+                                                  gpointer);
+
+constexpr auto webkit_web_view_evaluate_javascript =
+    library_symbol<webkit_web_view_evaluate_javascript_t>(
+        "webkit_web_view_evaluate_javascript");
+constexpr auto webkit_web_view_run_javascript =
+    library_symbol<webkit_web_view_run_javascript_t>(
+        "webkit_web_view_run_javascript");
+} // namespace webkit_symbols
 
 class gtk_webkit_engine {
 public:
   gtk_webkit_engine(bool debug, void *window)
       : m_window(static_cast<GtkWidget *>(window)) {
-    if (!m_window) {
+    auto owns_window = !window;
+    if (owns_window) {
       if (gtk_init_check(nullptr, nullptr) == FALSE) {
         return;
       }
@@ -611,6 +931,7 @@ public:
                        }),
                        this);
     }
+    webkit_dmabuf::apply_webkit_dmabuf_workaround();
     // Initialize webview widget
     m_webview = webkit_web_view_new();
     WebKitUserContentManager *manager =
@@ -629,7 +950,8 @@ public:
     init("window.external={invoke:function(s){window.webkit.messageHandlers."
          "external.postMessage(s);}}");
 
-    gtk_widget_grab_focus(GTK_WIDGET(m_webview));
+    gtk_container_add(GTK_CONTAINER(m_window), GTK_WIDGET(m_webview));
+    gtk_widget_show(GTK_WIDGET(m_webview));
 
     WebKitSettings *settings =
         webkit_web_view_get_settings(WEBKIT_WEB_VIEW(m_webview));
@@ -640,22 +962,15 @@ public:
       webkit_settings_set_enable_developer_extras(settings, true);
     }
 
-    if (window) {
-      m_window = static_cast<GtkWidget *>(window);
-    } else {
-      m_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-      g_signal_connect(G_OBJECT(m_window), "destroy",
-                       G_CALLBACK(+[](GtkWidget *, gpointer arg) {
-                         static_cast<gtk_webkit_engine *>(arg)->terminate();
-                       }),
-                       this);
-      gtk_container_add(GTK_CONTAINER(m_window), GTK_WIDGET(m_webview));
+    if (owns_window) {
+      gtk_widget_grab_focus(GTK_WIDGET(m_webview));
       gtk_widget_show_all(m_window);
     }
   }
   virtual ~gtk_webkit_engine() = default;
   void *window() { return (void *)m_window; }
   void *widget() { return (void *)m_webview; }
+  void *browser_controller() { return (void *)m_webview; };
   void run() { gtk_main(); }
   void terminate() { gtk_main_quit(); }
   void dispatch(std::function<void()> f) {
@@ -708,8 +1023,20 @@ public:
   }
 
   void eval(const std::string &js) {
-    webkit_web_view_run_javascript(WEBKIT_WEB_VIEW(m_webview), js.c_str(),
-                                   nullptr, nullptr, nullptr);
+    auto &lib = get_webkit_library();
+    auto wkmajor = webkit_get_major_version();
+    auto wkminor = webkit_get_minor_version();
+    if ((wkmajor == 2 && wkminor >= 40) || wkmajor > 2) {
+      if (auto fn =
+              lib.get(webkit_symbols::webkit_web_view_evaluate_javascript)) {
+        fn(WEBKIT_WEB_VIEW(m_webview), js.c_str(),
+           static_cast<gssize>(js.size()), nullptr, nullptr, nullptr, nullptr,
+           nullptr);
+      }
+    } else if (auto fn =
+                   lib.get(webkit_symbols::webkit_web_view_run_javascript)) {
+      fn(WEBKIT_WEB_VIEW(m_webview), js.c_str(), nullptr, nullptr, nullptr);
+    }
   }
 
 private:
@@ -731,6 +1058,35 @@ private:
     JSStringRelease(js);
 #endif
     return s;
+  }
+
+  static const native_library &get_webkit_library() {
+    static const native_library non_loaded_lib;
+    static native_library loaded_lib;
+
+    if (loaded_lib.is_loaded()) {
+      return loaded_lib;
+    }
+
+    constexpr std::array<const char *, 2> lib_names{"libwebkit2gtk-4.1.so",
+                                                    "libwebkit2gtk-4.0.so"};
+    auto found =
+        std::find_if(lib_names.begin(), lib_names.end(), [](const char *name) {
+          return native_library::is_loaded(name);
+        });
+
+    if (found == lib_names.end()) {
+      return non_loaded_lib;
+    }
+
+    loaded_lib = native_library(*found);
+
+    auto loaded = loaded_lib.is_loaded();
+    if (!loaded) {
+      return non_loaded_lib;
+    }
+
+    return loaded_lib;
   }
 
   static std::atomic_uint &window_ref_count() {
@@ -882,6 +1238,7 @@ public:
   virtual ~cocoa_wkwebview_engine() = default;
   void *window() { return (void *)m_window; }
   void *widget() { return (void *)m_webview; }
+  void *browser_controller() { return (void *)m_webview; }
   void terminate() { stop_run_loop(); }
   void run() {
     auto app = get_shared_application();
@@ -1288,56 +1645,6 @@ namespace detail {
 
 using msg_cb_t = std::function<void(const std::string)>;
 
-// Converts a narrow (UTF-8-encoded) string into a wide (UTF-16-encoded) string.
-inline std::wstring widen_string(const std::string &input) {
-  if (input.empty()) {
-    return std::wstring();
-  }
-  UINT cp = CP_UTF8;
-  DWORD flags = MB_ERR_INVALID_CHARS;
-  auto input_c = input.c_str();
-  auto input_length = static_cast<int>(input.size());
-  auto required_length =
-      MultiByteToWideChar(cp, flags, input_c, input_length, nullptr, 0);
-  if (required_length > 0) {
-    std::wstring output(static_cast<std::size_t>(required_length), L'\0');
-    if (MultiByteToWideChar(cp, flags, input_c, input_length, &output[0],
-                            required_length) > 0) {
-      return output;
-    }
-  }
-  // Failed to convert string from UTF-8 to UTF-16
-  return std::wstring();
-}
-
-// Converts a wide (UTF-16-encoded) string into a narrow (UTF-8-encoded) string.
-inline std::string narrow_string(const std::wstring &input) {
-  struct wc_flags {
-    enum TYPE : unsigned int {
-      // WC_ERR_INVALID_CHARS
-      err_invalid_chars = 0x00000080U
-    };
-  };
-  if (input.empty()) {
-    return std::string();
-  }
-  UINT cp = CP_UTF8;
-  DWORD flags = wc_flags::err_invalid_chars;
-  auto input_c = input.c_str();
-  auto input_length = static_cast<int>(input.size());
-  auto required_length = WideCharToMultiByte(cp, flags, input_c, input_length,
-                                             nullptr, 0, nullptr, nullptr);
-  if (required_length > 0) {
-    std::string output(static_cast<std::size_t>(required_length), '\0');
-    if (WideCharToMultiByte(cp, flags, input_c, input_length, &output[0],
-                            required_length, nullptr, nullptr) > 0) {
-      return output;
-    }
-  }
-  // Failed to convert string from UTF-16 to UTF-8
-  return std::string();
-}
-
 // Parses a version string with 1-4 integral components, e.g. "1.2.3.4".
 // Missing or invalid components default to 0, and excess components are ignored.
 template <typename T>
@@ -1440,65 +1747,6 @@ public:
 
 private:
   bool m_initialized = false;
-};
-
-// Holds a symbol name and associated type for code clarity.
-template <typename T> class library_symbol {
-public:
-  using type = T;
-
-  constexpr explicit library_symbol(const char *name) : m_name(name) {}
-  constexpr const char *get_name() const { return m_name; }
-
-private:
-  const char *m_name;
-};
-
-// Loads a native shared library and allows one to get addresses for those
-// symbols.
-class native_library {
-public:
-  explicit native_library(const wchar_t *name) : m_handle(LoadLibraryW(name)) {}
-
-  ~native_library() {
-    if (m_handle) {
-      FreeLibrary(m_handle);
-      m_handle = nullptr;
-    }
-  }
-
-  native_library(const native_library &other) = delete;
-  native_library &operator=(const native_library &other) = delete;
-  native_library(native_library &&other) = default;
-  native_library &operator=(native_library &&other) = default;
-
-  // Returns true if the library is currently loaded; otherwise false.
-  operator bool() const { return is_loaded(); }
-
-  // Get the address for the specified symbol or nullptr if not found.
-  template <typename Symbol>
-  typename Symbol::type get(const Symbol &symbol) const {
-    if (is_loaded()) {
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
-      return reinterpret_cast<typename Symbol::type>(
-          GetProcAddress(m_handle, symbol.get_name()));
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-    }
-    return nullptr;
-  }
-
-  // Returns true if the library is currently loaded; otherwise false.
-  bool is_loaded() const { return !!m_handle; }
-
-  void detach() { m_handle = nullptr; }
-
-private:
-  HMODULE m_handle = nullptr;
 };
 
 namespace ntdll_symbols {
@@ -2372,6 +2620,11 @@ public:
           }
           break;
         }
+        case WM_ACTIVATE:
+          if (LOWORD(wp) != WA_INACTIVE) {
+            w->focus_webview();
+          }
+          break;
         default:
           return DefWindowProcW(hwnd, msg, wp, lp);
         }
@@ -2401,8 +2654,8 @@ public:
     widget_wc.cbSize = sizeof(WNDCLASSEX);
     widget_wc.hInstance = hInstance;
     widget_wc.lpszClassName = L"webview_widget";
-    widget_wc.lpfnWndProc =
-        +[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
+    widget_wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
+                                          LPARAM lp) -> LRESULT {
       win32_edge_engine *w{};
 
       if (msg == WM_NCCREATE) {
@@ -2431,10 +2684,10 @@ public:
         return DefWindowProcW(hwnd, msg, wp, lp);
       }
       return 0;
-    };
+    });
     auto widget_atom = RegisterClassExW(&widget_wc);
-    CreateWindowW(L"webview_widget", nullptr, WS_CHILD, 0, 0, 0, 0, m_window,
-                  nullptr, hInstance, this);
+    CreateWindowExW(WS_EX_CONTROLPARENT, L"webview_widget", nullptr, WS_CHILD,
+                    0, 0, 0, 0, m_window, nullptr, hInstance, this);
 
     // Create a message-only window for internal messaging.
     WNDCLASSEXW message_wc{};
@@ -2485,9 +2738,10 @@ public:
       SetFocus(m_window);
     }
 
-    embed(
-        m_widget, debug,
-        std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1));
+    auto cb =
+        std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1);
+
+    embed(m_widget, debug, cb);
   }
 
   virtual ~win32_edge_engine() {
@@ -2534,6 +2788,7 @@ public:
 
   void *window() { return (void *)m_window; }
   void *widget() { return (void *)m_widget; }
+  void *browser_controller() { return (void *)m_controller; }
   void terminate() { PostQuitMessage(0); }
 
   void dispatch(dispatch_fn_t f) {
@@ -2661,8 +2916,10 @@ private:
     m_controller->put_IsVisible(TRUE);
     ShowWindow(m_widget, SW_SHOW);
     UpdateWindow(m_widget);
-    SetFocus(wnd);
-    m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+
+    if (m_owns_window) {
+      focus_webview();
+    }
 
     return true;
   }
@@ -2683,6 +2940,12 @@ private:
       if (GetClientRect(m_widget, &bounds)) {
         m_controller->put_Bounds(bounds);
       }
+    }
+  }
+
+  void focus_webview() {
+    if (m_controller) {
+      m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
     }
   }
 
@@ -2761,6 +3024,7 @@ private:
   webview2_com_handler *m_com_handler = nullptr;
   mswebview2::loader m_webview2_loader;
   int m_dpi{};
+  bool m_owns_window{};
 };
 
 } // namespace detail
@@ -2927,8 +3191,20 @@ WEBVIEW_API void *webview_get_window(webview_t w) {
   return static_cast<webview::webview *>(w)->window();
 }
 
-WEBVIEW_API void *webview_get_widget(webview_t w) {
-  return static_cast<webview::webview *>(w)->widget();
+
+WEBVIEW_API void *webview_get_native_handle(webview_t w,
+                                            webview_native_handle_kind_t kind) {
+  auto *w_ = static_cast<webview::webview *>(w);
+  switch (kind) {
+  case WEBVIEW_NATIVE_HANDLE_KIND_UI_WINDOW:
+    return w_->window();
+  case WEBVIEW_NATIVE_HANDLE_KIND_UI_WIDGET:
+    return w_->widget();
+  case WEBVIEW_NATIVE_HANDLE_KIND_BROWSER_CONTROLLER:
+    return w_->browser_controller();
+  default:
+    return nullptr;
+  }
 }
 
 WEBVIEW_API void webview_set_title(webview_t w, const char *title) {
