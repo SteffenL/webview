@@ -2550,7 +2550,8 @@ public:
           GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR);
 
       // Create a top-level window.
-      WNDCLASSEXW wc{};
+      WNDCLASSEXW wc;
+      ZeroMemory(&wc, sizeof(WNDCLASSEX));
       wc.cbSize = sizeof(WNDCLASSEX);
       wc.hInstance = hInstance;
       wc.lpszClassName = L"webview";
@@ -2585,7 +2586,6 @@ public:
         case WM_DESTROY:
           w->m_window = nullptr;
           SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
-
           if (w->dec_window_count() <= 0) {
             w->terminate();
           }
@@ -2632,6 +2632,7 @@ public:
         return 0;
       });
       RegisterClassExW(&wc);
+
       CreateWindowW(L"webview", L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
                     CW_USEDEFAULT, 0, 0, nullptr, nullptr, hInstance, this);
       if (m_window == nullptr) {
@@ -2847,7 +2848,8 @@ public:
 
 private:
   bool embed(HWND wnd, bool debug, msg_cb_t cb) {
-    bool webview2_done{};
+    std::atomic_flag flag = ATOMIC_FLAG_INIT;
+    flag.test_and_set();
 
     wchar_t currentExePath[MAX_PATH];
     GetModuleFileNameW(nullptr, currentExePath, MAX_PATH);
@@ -2864,14 +2866,15 @@ private:
     m_com_handler = new webview2_com_handler(
         wnd, cb,
         [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
-          webview2_done = true;
           if (!controller || !webview) {
+            flag.clear();
             return;
           }
           controller->AddRef();
           webview->AddRef();
           m_controller = controller;
           m_webview = webview;
+          flag.clear();
         });
 
     m_com_handler->set_attempt_handler([&] {
@@ -2882,7 +2885,7 @@ private:
 
     // Pump the message loop until WebView2 has finished initialization.
     MSG msg;
-    while (!webview2_done && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
+    while (flag.test_and_set() && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
       if (msg.message == WM_QUIT) {
         return false;
       }
