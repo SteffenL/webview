@@ -1283,7 +1283,7 @@ public:
   void navigate(const std::string &url) {
     objc::autoreleasepool pool;
 
-    id nsurl = objc::msg_send<id>(
+    auto nsurl = objc::msg_send<id>(
         "NSURL"_cls, "URLWithString:"_sel,
         objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel,
                            url.c_str()));
@@ -2536,7 +2536,7 @@ public:
       return;
     }
 
-    auto hInstance = GetModuleHandle(nullptr);
+    HINSTANCE hInstance = GetModuleHandle(nullptr);
 
     if (m_owns_window) {
       m_com_init = {COINIT_APARTMENTTHREADED};
@@ -2555,8 +2555,8 @@ public:
       wc.hInstance = hInstance;
       wc.lpszClassName = L"webview";
       wc.hIcon = icon;
-      wc.lpfnWndProc =
-          +[](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> LRESULT {
+      wc.lpfnWndProc = (WNDPROC)(+[](HWND hwnd, UINT msg, WPARAM wp,
+                                     LPARAM lp) -> LRESULT {
         win32_edge_engine *w{};
 
         if (msg == WM_NCCREATE) {
@@ -2630,7 +2630,7 @@ public:
           return DefWindowProcW(hwnd, msg, wp, lp);
         }
         return 0;
-      };
+      });
       RegisterClassExW(&wc);
       CreateWindowW(L"webview", L"", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
                     CW_USEDEFAULT, 0, 0, nullptr, nullptr, hInstance, this);
@@ -2786,12 +2786,10 @@ public:
       DispatchMessageW(&msg);
     }
   }
-
   void *window() { return (void *)m_window; }
   void *widget() { return (void *)m_widget; }
   void *browser_controller() { return (void *)m_controller; }
   void terminate() { PostQuitMessage(0); }
-
   void dispatch(dispatch_fn_t f) {
     PostMessageW(m_message_window, WM_APP, 0, (LPARAM) new dispatch_fn_t(f));
   }
@@ -2891,37 +2889,30 @@ private:
       TranslateMessage(&msg);
       DispatchMessageW(&msg);
     }
-
     if (!m_controller || !m_webview) {
       return false;
     }
-
     ICoreWebView2Settings *settings = nullptr;
     auto res = m_webview->get_Settings(&settings);
     if (res != S_OK) {
       return false;
     }
-
     res = settings->put_AreDevToolsEnabled(debug ? TRUE : FALSE);
     if (res != S_OK) {
       return false;
     }
-
     res = settings->put_IsStatusBarEnabled(FALSE);
     if (res != S_OK) {
       return false;
     }
-
     init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
     resize_webview();
     m_controller->put_IsVisible(TRUE);
     ShowWindow(m_widget, SW_SHOW);
     UpdateWindow(m_widget);
-
     if (m_owns_window) {
       focus_webview();
     }
-
     return true;
   }
 
@@ -3013,7 +3004,6 @@ private:
   // CreateCoreWebView2EnvironmentWithOptions.
   // Source: https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/webview2-idl#createcorewebview2environmentwithoptions
   com_init_wrapper m_com_init;
-  bool m_owns_window{};
   HWND m_window = nullptr;
   HWND m_widget = nullptr;
   HWND m_message_window = nullptr;
@@ -3191,7 +3181,6 @@ WEBVIEW_API void webview_dispatch(webview_t w, void (*fn)(webview_t, void *),
 WEBVIEW_API void *webview_get_window(webview_t w) {
   return static_cast<webview::webview *>(w)->window();
 }
-
 
 WEBVIEW_API void *webview_get_native_handle(webview_t w,
                                             webview_native_handle_kind_t kind) {
