@@ -1449,11 +1449,11 @@ private:
     return objc::msg_send<id>("NSBundle"_cls, "mainBundle"_sel);
   }
   static bool is_app_bundled() noexcept {
-    id bundle = get_main_bundle();
+    auto bundle = get_main_bundle();
     if (!bundle) {
       return false;
     }
-    id bundle_path = objc::msg_send<id>(bundle, "bundlePath"_sel);
+    auto bundle_path = objc::msg_send<id>(bundle, "bundlePath"_sel);
     auto bundled =
         objc::msg_send<BOOL>(bundle_path, "hasSuffix:"_sel, ".app"_str);
     return !!bundled;
@@ -1497,10 +1497,10 @@ private:
     }
 
     // Webview
-    id config = objc::msg_send<id>("WKWebViewConfiguration"_cls, "new"_sel);
+    auto config = objc::msg_send<id>("WKWebViewConfiguration"_cls, "new"_sel);
     m_manager = objc::msg_send<id>(config, "userContentController"_sel);
     m_webview = objc::msg_send<id>("WKWebView"_cls, "alloc"_sel);
-    id preferences = objc::msg_send<id>(config, "preferences"_sel);
+    auto preferences = objc::msg_send<id>(config, "preferences"_sel);
 
     if (m_debug) {
       // Equivalent Obj-C:
@@ -1532,7 +1532,7 @@ private:
         objc::msg_send<id>("NSNumber"_cls, "numberWithBool:"_sel, YES),
         "DOMPasteAllowed"_str);
 
-    id ui_delegate = create_webkit_ui_delegate();
+    auto ui_delegate = create_webkit_ui_delegate();
     objc::msg_send<void>(m_webview, "initWithFrame:configuration:"_sel,
                          CGRectMake(0, 0, 0, 0), config);
     objc::msg_send<void>(m_webview, "setUIDelegate:"_sel, ui_delegate);
@@ -1559,7 +1559,7 @@ private:
 #endif
     }
 
-    id script_message_handler = create_script_message_handler();
+    auto script_message_handler = create_script_message_handler();
     objc::msg_send<void>(m_manager, "addScriptMessageHandler:name:"_sel,
                          script_message_handler, "external"_str);
 
@@ -1570,8 +1570,9 @@ private:
         },
       };
       )"");
+    objc::msg_send<void>(m_window, "setContentView:"_sel, m_webview);
+
     if (m_owns_window) {
-      objc::msg_send<void>(m_window, "setContentView:"_sel, m_webview);
       objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
     }
   }
