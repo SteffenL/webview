@@ -888,7 +888,7 @@ protected:
   virtual void init_impl(const std::string &js) = 0;
   virtual void eval_impl(const std::string &js) = 0;
 
-  void on_message(const std::string &msg) {
+  virtual void on_message(const std::string &msg) {
     auto seq = json_parse(msg, "id", 0);
     auto name = json_parse(msg, "method", 0);
     auto args = json_parse(msg, "params", 0);
