@@ -1875,13 +1875,12 @@ private:
     auto mask = NSUIntegerMax; // NSEventMaskAny
     // NSDefaultRunLoopMode
     auto mode = objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel,
-                                          "kCFRunLoopDefaultMode");
+                                   "kCFRunLoopDefaultMode");
     while (!done) {
       objc::autoreleasepool arp;
       auto event = objc::msg_send<id>(
-          app,
-          "nextEventMatchingMask:untilDate:inMode:dequeue:"_sel,
-          mask, nullptr, mode, YES);
+          app, "nextEventMatchingMask:untilDate:inMode:dequeue:"_sel, mask,
+          nullptr, mode, YES);
       if (event) {
         objc::msg_send<void>(app, "sendEvent:"_sel, event);
       }
