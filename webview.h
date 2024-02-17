@@ -1170,8 +1170,10 @@ public:
       }
       m_window = nullptr;
     }
-    // Needed for the window to close immediately.
-    deplete_run_loop_event_queue();
+    if (m_owns_window) {
+      // Needed for the window to close immediately.
+      deplete_run_loop_event_queue();
+    }
   }
 
   void *window_impl() override { return (void *)m_window; }
