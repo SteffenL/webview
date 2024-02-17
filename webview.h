@@ -1170,7 +1170,7 @@ public:
       }
       m_window = nullptr;
     }
-    // Needed for UI to update immediately.
+    // Needed for the window to close immediately.
     deplete_run_loop_event_queue();
   }
 
@@ -1480,8 +1480,10 @@ public:
       objc::msg_send<void>(m_app_delegate, "release"_sel, nullptr);
       m_app_delegate = nullptr;
     }
-    // Needed for UI to update immediately.
-    deplete_run_loop_event_queue();
+    if (m_owns_window) {
+      // Needed for the window to close immediately.
+      deplete_run_loop_event_queue();
+    }
   }
 
   void *window_impl() override { return (void *)m_window; }
