@@ -902,9 +902,11 @@ protected:
 
   virtual void on_window_created() { inc_window_count(); }
 
-  virtual void on_window_destroyed() {
+  virtual void on_window_destroyed(bool skip_termination = false) {
     if (dec_window_count() <= 0) {
-      terminate();
+      if (!skip_termination) {
+        terminate();
+      }
     }
   }
 
@@ -1164,6 +1166,7 @@ public:
         // Disconnect handlers to avoid callbacks invoked during destruction.
         g_signal_handlers_disconnect_by_data(GTK_WINDOW(m_window), this);
         gtk_window_close(GTK_WINDOW(m_window));
+        on_window_destroyed(true);
       }
       m_window = nullptr;
     }
@@ -1457,8 +1460,13 @@ public:
         }
         m_webview = nullptr;
       }
-      objc::msg_send<void>(m_window, "setDelegate:"_sel, nullptr);
-      objc::msg_send<void>(m_window, "close"_sel);
+      if (m_owns_window) {
+        // Replace delegate to avoid callbacks and other bad things during
+        // destruction.
+        objc::msg_send<void>(m_window, "setDelegate:"_sel, nullptr);
+        objc::msg_send<void>(m_window, "close"_sel);
+        on_window_destroyed(true);
+      }
       m_window = nullptr;
     }
     if (m_window_delegate) {
@@ -1737,7 +1745,7 @@ private:
           m_window, "initWithContentRect:styleMask:backing:defer:"_sel,
           CGRectMake(0, 0, 0, 0), style, NSBackingStoreBuffered, NO);
 
-      auto m_window_delegate = create_window_delegate();
+      m_window_delegate = create_window_delegate();
       objc_setAssociatedObject(m_window_delegate, "webview", (id)this,
                                OBJC_ASSOCIATION_ASSIGN);
       objc::msg_send<void>(m_window, "setDelegate:"_sel, m_window_delegate);
@@ -3042,6 +3050,7 @@ public:
     if (m_window) {
       if (m_owns_window) {
         DestroyWindow(m_window);
+        on_window_destroyed(true);
       }
       m_window = nullptr;
     }
