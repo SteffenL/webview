@@ -1300,12 +1300,7 @@ private:
   // Blocks while depleting the run loop of events.
   void deplete_run_loop_event_queue() {
     bool done{};
-    g_idle_add_full(G_PRIORITY_HIGH_IDLE,
-                    (GSourceFunc)([](void *done_arg) -> int {
-                      *static_cast<bool *>(done_arg) = true;
-                      return G_SOURCE_REMOVE;
-                    }),
-                    &done, nullptr);
+    dispatch([&] { done = true; });
     while (!done) {
       gtk_main_iteration();
     }
