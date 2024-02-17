@@ -1161,17 +1161,23 @@ public:
     }
     if (m_window) {
       if (m_owns_window) {
+        // Disconnect handlers to avoid callbacks invoked during destruction.
+        g_signal_handlers_disconnect_by_data(GTK_WINDOW(m_window), this);
         gtk_window_close(GTK_WINDOW(m_window));
       }
       m_window = nullptr;
     }
+    // Needed for UI to update immediately.
+    deplete_run_loop_event_queue();
   }
 
   void *window_impl() override { return (void *)m_window; }
   void *widget_impl() override { return (void *)m_webview; }
   void *browser_controller_impl() override { return (void *)m_webview; };
   void run_impl() override { gtk_main(); }
-  void terminate_impl() override { gtk_main_quit(); }
+  void terminate_impl() override {
+    dispatch_impl([] { gtk_main_quit(); });
+  }
   void dispatch_impl(std::function<void()> f) override {
     g_idle_add_full(G_PRIORITY_HIGH_IDLE, (GSourceFunc)([](void *f) -> int {
                       (*static_cast<dispatch_fn_t *>(f))();
@@ -1284,6 +1290,20 @@ private:
     }
 
     return loaded_lib;
+  }
+
+  // Blocks while depleting the run loop of events.
+  void deplete_run_loop_event_queue() {
+    bool done{};
+    g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                    (GSourceFunc)([](void *done_arg) -> int {
+                      *static_cast<bool *>(done_arg) = true;
+                      return G_SOURCE_REMOVE;
+                    }),
+                    &done, nullptr);
+    while (!done) {
+      gtk_main_iteration();
+    }
   }
 
   bool m_owns_window{};
