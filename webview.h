@@ -1480,6 +1480,8 @@ public:
       objc::msg_send<void>(m_app_delegate, "release"_sel, nullptr);
       m_app_delegate = nullptr;
     }
+    // Needed for UI to update immediately.
+    deplete_run_loop_event_queue();
   }
 
   void *window_impl() override { return (void *)m_window; }
@@ -1860,6 +1862,28 @@ private:
       first = false;
     }
     return temp;
+  }
+
+  // Blocks while depleting the run loop of events.
+  void deplete_run_loop_event_queue() {
+    objc::autoreleasepool arp;
+    auto app = get_shared_application();
+    bool done{};
+    dispatch([&] { done = true; });
+    auto mask = NSUIntegerMax; // NSEventMaskAny
+    // NSDefaultRunLoopMode
+    auto mode = objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel,
+                                          "kCFRunLoopDefaultMode");
+    while (!done) {
+      objc::autoreleasepool arp;
+      auto event = objc::msg_send<id>(
+          app,
+          "nextEventMatchingMask:untilDate:inMode:dequeue:"_sel,
+          mask, nullptr, mode, YES);
+      if (event) {
+        objc::msg_send<void>(app, "sendEvent:"_sel, event);
+      }
+    }
   }
 
   bool m_debug{};
