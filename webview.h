@@ -316,19 +316,18 @@ WEBVIEW_API void webview_eval(webview_t w, const char *js);
  * Binds a function pointer to a new global JavaScript function.
  *
  * Internally, JS glue code is injected to create the JS function by the
- * given name. The callback function is passed a sequential request
- * identifier, a request string and a user-provided argument. The request
- * string is a JSON array of the arguments passed to the JS function.
+ * given name. The callback function is passed a request identifier,
+ * a request string and a user-provided argument. The request string is
+ * a JSON array of the arguments passed to the JS function.
  *
  * @param w The webview instance.
  * @param name Name of the JS function.
  * @param fn Callback function.
  * @param arg User argument.
  */
-WEBVIEW_API void webview_bind(webview_t w, const char *name,
-                              void (*fn)(const char *seq, const char *req,
-                                         void *arg),
-                              void *arg);
+WEBVIEW_API void
+webview_bind(webview_t w, const char *name,
+             void (*fn)(const char *id, const char *req, void *arg), void *arg);
 
 /**
  * Removes a binding created with webview_bind().
@@ -342,15 +341,15 @@ WEBVIEW_API void webview_unbind(webview_t w, const char *name);
  * Responds to a binding call from the JS side.
  *
  * @param w The webview instance.
- * @param seq The sequence number of the binding call. Pass along the value
- *            received in the binding handler (see webview_bind()).
+ * @param id The identifier of the binding call. Pass along the value received
+ *           in the binding handler (see webview_bind()).
  * @param status A status of zero tells the JS side that the binding call was
  *               succesful; any other value indicates an error.
  * @param result The result of the binding call to be returned to the JS side.
  *               This must either be a valid JSON value or an empty string for
  *               the primitive JS value @c undefined.
  */
-WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
+WEBVIEW_API void webview_return(webview_t w, const char *id, int status,
                                 const char *result);
 
 /**
@@ -903,20 +902,21 @@ public:
   using binding_t = std::function<void(std::string, std::string, void *)>;
   class binding_ctx_t {
   public:
-    binding_ctx_t(binding_t callback, void *arg)
-        : callback(callback), arg(arg) {}
+    binding_ctx_t(binding_t callback, void *arg, bool internal = false)
+        : callback(callback), arg(arg), internal(internal) {}
     // This function is called upon execution of the bound JS function
     binding_t callback;
     // This user-supplied argument is passed to the callback
     void *arg;
+    bool internal;
   };
 
   using sync_binding_t = std::function<std::string(std::string)>;
 
   // Synchronous bind
   void bind(const std::string &name, sync_binding_t fn) {
-    auto wrapper = [this, fn](const std::string &seq, const std::string &req,
-                              void * /*arg*/) { resolve(seq, 0, fn(req)); };
+    auto wrapper = [this, fn](const std::string &id, const std::string &req,
+                              void * /*arg*/) { resolve(id, 0, fn(req)); };
     bind(name, wrapper, nullptr);
   }
 
@@ -927,68 +927,36 @@ public:
       return;
     }
     bindings.emplace(name, binding_ctx_t(fn, arg));
-    auto js = "(function() { var name = '" + name + "';" + R""(
-      var RPC = window._rpc = (window._rpc || {nextSeq: 1});
-      window[name] = function() {
-        var seq = RPC.nextSeq++;
-        var promise = new Promise(function(resolve, reject) {
-          RPC[seq] = {
-            resolve: resolve,
-            reject: reject,
-          };
-        });
-        window.external.invoke(JSON.stringify({
-          id: seq,
-          method: name,
-          params: Array.prototype.slice.call(arguments),
-        }));
-        return promise;
-      }
-    })())"";
-    init(js);
-    eval(js);
+    // Notify that a binding was created if the init script has already
+    // set things up.
+    eval("if (window.__webview__) {\n\
+window.__webview__.onBind(" +
+         json_escape(name) + ")\n\
+}");
   }
 
   void unbind(const std::string &name) {
     auto found = bindings.find(name);
     if (found != bindings.end()) {
-      auto js = "delete window['" + name + "'];";
-      init(js);
-      eval(js);
-      bindings.erase(found);
+      if (!found->second.internal) {
+        // Notify that a binding was created if the init script has already
+        // set things up.
+        eval("if (window.__webview__) {\n\
+window.__webview__.onUnbind(" +
+             json_escape(name) + ")\n\
+}");
+        bindings.erase(found);
+      }
     }
   }
 
-  void resolve(const std::string &seq, int status, const std::string &result) {
+  void resolve(const std::string &id, int status, const std::string &result) {
     // NOLINTNEXTLINE(modernize-avoid-bind): Lambda with move requires C++14
     dispatch(std::bind(
-        [seq, status, this](std::string escaped_result) {
-          std::string js;
-          js += "(function(){var seq = \"";
-          js += seq;
-          js += "\";\n";
-          js += "var status = ";
-          js += std::to_string(status);
-          js += ";\n";
-          js += "var result = ";
-          js += escaped_result;
-          js += ";\
-var promise = window._rpc[seq];\
-delete window._rpc[seq];\
-if (result !== undefined) {\
-  try {\
-    result = JSON.parse(result);\
-  } catch {\
-    promise.reject(new Error(\"Failed to parse binding result as JSON\"));\
-    return;\
-  }\
-}\
-if (status === 0) {\
-  promise.resolve(result);\
-} else {\
-  promise.reject(result);\
-}\
-})()";
+        [id, status, this](std::string escaped_result) {
+          std::string js = "window.__webview__.onReply(" + json_escape(id) +
+                           ", " + std::to_string(status) + ", " +
+                           escaped_result + ")";
           eval(js);
         },
         result.empty() ? "undefined" : json_escape(result)));
@@ -1024,8 +992,131 @@ protected:
   virtual void init_impl(const std::string &js) = 0;
   virtual void eval_impl(const std::string &js) = 0;
 
+  void add_init_script(const std::string &post_fn, bool debug_log) {
+    bindings.emplace("__webview__.initialize",
+                     binding_ctx_t(
+                         [&](const std::string &id, const std::string & /*req*/,
+                             void * /*arg*/) {
+                           std::string js_names = "{\"methods\":[";
+                           bool first = true;
+                           for (const auto &binding : bindings) {
+                             if (binding.second.internal) {
+                               continue;
+                             }
+                             if (first) {
+                               first = false;
+                             } else {
+                               js_names += ",";
+                             }
+                             js_names += json_escape(binding.first);
+                           }
+                           js_names += "]}";
+                           resolve(id, 0, js_names);
+                         },
+                         nullptr, true));
+
+    auto init_script = std::string{} + "(function() {\n\
+  'use strict';\n\
+  var debugEnabled = " +
+                       (debug_log ? "true" : "false") + ";\n\
+  function post(message) {\n\
+    return (" + post_fn +
+                       ")(message);\n\
+  }\n\
+  function generateId() {\n\
+    var crypto = window.crypto || window.msCrypto;\n\
+    var bytes = new Uint8Array(16);\n\
+    crypto.getRandomValues(bytes);\n\
+    return Array.prototype.slice.call(bytes).map(function(n) {\n\
+      return n.toString(16).padStart(2, '0');\n\
+    }).join('');\n\
+  }\n\
+  var logging = {\n\
+    DEBUG: 1,\n\
+    INFO: 2,\n\
+    WARNING: 3,\n\
+    ERROR: 4,\n\
+    CRITICAL: 5,\n\
+    _level: 0,\n\
+    _tag: 'webview',\n\
+    setLevel(level) { this._level = level; },\n\
+    print(level, printer, message) {\n\
+      if (this._level >= this.DEBUG) {\n\
+        printer('[' + this._tag + '] ' + message);\n\
+      }\n\
+    },\n\
+    debug(message) { this.print(this.DEBUG, console.debug, message); },\n\
+  };\n\
+  logging.setLevel(debugEnabled ? logging.DEBUG : logging.WARNING);\n\
+  var webview = window.__webview__ = (function() {\n\
+    var promises = {};\n\
+    var webview = Object.freeze({\n\
+      call(method) {\n\
+        var id = generateId();\n\
+        var params = Array.prototype.slice.call(arguments, 1);\n\
+        logging.debug('call(id=' + JSON.stringify(id)\
+          + ', method=' + JSON.stringify(method)\
+          + ', params=' + JSON.stringify(params) + ')');\n\
+        var promise = new Promise(function(resolve, reject) {\n\
+          promises[id] = { resolve, reject };\n\
+        });\n\
+        post(JSON.stringify({\n\
+          id: id,\n\
+          method: method,\n\
+          params: params\n\
+        }));\n\
+        return promise;\n\
+      },\n\
+      onReply(id, status, result) {\n\
+        logging.debug('onReply(id=' + JSON.stringify(id)\
+          + ', status=' + JSON.stringify(status)\
+          + ', result=' + result + ')');\n\
+        var promise = promises[id];\n\
+        if (result !== undefined) {\n\
+          try {\n\
+            result = JSON.parse(result);\n\
+          } catch {\n\
+            promise.reject(new Error(\"Failed to parse binding result as JSON\"));\n\
+            return;\n\
+          }\n\
+        }\n\
+        if (status === 0) {\n\
+          promise.resolve(result);\n\
+        } else {\n\
+          promise.reject(result);\n\
+        }\n\
+      },\n\
+      onBind(name) {\n\
+        if (Object.hasOwn(window, name)) {\n\
+          throw new Error('Property \"' + name + '\" already exists');\n\
+        }\n\
+        logging.debug('onBind(name=' + JSON.stringify(name) + ')');\n\
+        window[name] = function() {\n\
+          var params = [name].concat(Array.prototype.slice.call(arguments));\n\
+          return webview.call.apply(null, params);\n\
+        }\n\
+      },\n\
+      onUnbind(name) {\n\
+        if (!Object.hasOwn(window, name)) {\n\
+          throw new Error('Property \"' + name + '\" does not exist');\n\
+        }\n\
+        logging.debug('onUnbind(name=' + JSON.stringify(name) + ')');\n\
+        delete window[name];\n\
+      },\n\
+    });\n\
+    return webview;\n\
+  })();\n\
+  webview.call('__webview__.initialize').then(function(result) {\n\
+    result.methods.forEach(function(name) {\n\
+      webview.onBind(name);\n\
+    });\n\
+  });\n\
+})()";
+    init(init_script);
+  }
+
   virtual void on_message(const std::string &msg) {
-    auto seq = json_parse(msg, "id", 0);
+    auto id = json_parse(msg, "id", 0);
     auto name = json_parse(msg, "method", 0);
     auto args = json_parse(msg, "params", 0);
     auto found = bindings.find(name);
@@ -1033,7 +1124,7 @@ protected:
       return;
     }
     const auto &context = found->second;
-    context.callback(seq, args, context.arg);
+    context.callback(id, args, context.arg);
   }
 
   virtual void on_window_created() { inc_window_count(); }
@@ -1236,7 +1327,8 @@ constexpr auto webkit_web_view_run_javascript =
 class gtk_webkit_engine : public engine_base {
 public:
   gtk_webkit_engine(bool debug, void *window)
-      : m_owns_window{!window}, m_window(static_cast<GtkWidget *>(window)) {
+      : m_debug{debug}, m_owns_window{!window},
+        m_window(static_cast<GtkWidget *>(window)) {
     if (m_owns_window) {
       if (gtk_init_check(nullptr, nullptr) == FALSE) {
         return;
@@ -1258,7 +1350,7 @@ public:
     m_webview = webkit_web_view_new();
     WebKitUserContentManager *manager =
         webkit_web_view_get_user_content_manager(WEBKIT_WEB_VIEW(m_webview));
-    g_signal_connect(manager, "script-message-received::external",
+    g_signal_connect(manager, "script-message-received::__webview__",
                      G_CALLBACK(+[](WebKitUserContentManager *,
                                     WebKitJavascriptResult *r, gpointer arg) {
                        auto *w = static_cast<gtk_webkit_engine *>(arg);
@@ -1268,9 +1360,11 @@ public:
                      }),
                      this);
     webkit_user_content_manager_register_script_message_handler(manager,
-                                                                "external");
-    init("window.external={invoke:function(s){window.webkit.messageHandlers."
-         "external.postMessage(s);}}");
+                                                                "__webview__");
+    add_init_script("function(message) {\n\
+  return window.webkit.messageHandlers.__webview__.postMessage(message);\n\
+}",
+                    m_debug);
 
     gtk_container_add(GTK_CONTAINER(m_window), GTK_WIDGET(m_webview));
     gtk_widget_show(GTK_WIDGET(m_webview));
@@ -1445,6 +1539,7 @@ private:
     }
   }
 
+  bool m_debug{};
   bool m_owns_window{};
   GtkWidget *m_window{};
   GtkWidget *m_webview{};
@@ -1554,8 +1649,8 @@ inline id operator"" _str(const char *s, std::size_t) {
 class cocoa_wkwebview_engine : public engine_base {
 public:
   cocoa_wkwebview_engine(bool debug, void *window)
-      : m_debug{debug}, m_window{static_cast<id>(window)}, m_owns_window{
-                                                               !window} {
+      : m_debug{debug}, m_window{static_cast<id>(window)},
+        m_owns_window{!window} {
     auto app = get_shared_application();
     // See comments related to application lifecycle in create_app_delegate().
     if (!m_owns_window) {
@@ -1986,15 +2081,12 @@ private:
     auto script_message_handler =
         objc::autoreleased(create_script_message_handler());
     objc::msg_send<void>(m_manager, "addScriptMessageHandler:name:"_sel,
-                         script_message_handler, "external"_str);
+                         script_message_handler, "__webview__"_str);
 
-    init(R""(
-      window.external = {
-        invoke: function(s) {
-          window.webkit.messageHandlers.external.postMessage(s);
-        },
-      };
-      )"");
+    add_init_script("function(message) {\n\
+  return window.webkit.messageHandlers.__webview__.postMessage(message);\n\
+}",
+                    m_debug);
   }
   void stop_run_loop() {
     objc::autoreleasepool arp;
@@ -3377,7 +3469,10 @@ private:
     if (res != S_OK) {
       return false;
     }
-    init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+    add_init_script("function(message) {\n\
+  return window.chrome.webview.postMessage(message);\n\
+}",
+                    debug);
     resize_webview();
     m_controller->put_IsVisible(TRUE);
     ShowWindow(m_widget, SW_SHOW);
@@ -3569,13 +3664,13 @@ WEBVIEW_API void webview_eval(webview_t w, const char *js) {
 }
 
 WEBVIEW_API void webview_bind(webview_t w, const char *name,
-                              void (*fn)(const char *seq, const char *req,
+                              void (*fn)(const char *id, const char *req,
                                          void *arg),
                               void *arg) {
   static_cast<webview::webview *>(w)->bind(
       name,
-      [=](const std::string &seq, const std::string &req, void *arg) {
-        fn(seq.c_str(), req.c_str(), arg);
+      [=](const std::string &id, const std::string &req, void *arg) {
+        fn(id.c_str(), req.c_str(), arg);
       },
       arg);
 }
@@ -3584,9 +3679,9 @@ WEBVIEW_API void webview_unbind(webview_t w, const char *name) {
   static_cast<webview::webview *>(w)->unbind(name);
 }
 
-WEBVIEW_API void webview_return(webview_t w, const char *seq, int status,
+WEBVIEW_API void webview_return(webview_t w, const char *id, int status,
                                 const char *result) {
-  static_cast<webview::webview *>(w)->resolve(seq, status, result);
+  static_cast<webview::webview *>(w)->resolve(id, status, result);
 }
 
 WEBVIEW_API const webview_version_info_t *webview_version(void) {
