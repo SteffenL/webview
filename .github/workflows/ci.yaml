@@ -124,8 +124,8 @@ jobs:
           source: '.'
           exclude: './build'
           extensions: 'h,cc'
-          # Latest version supported by Ubuntu 20.04
-          clangFormatVersion: 12
+          # Latest version supported by Ubuntu 22.04
+          clangFormatVersion: 15
           style: file
 
   doxygen:
