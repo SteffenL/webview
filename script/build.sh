@@ -268,7 +268,7 @@ fi
 external_dir=${build_dir}/external
 libs_dir=${external_dir}/libs
 tools_dir=${external_dir}/tools
-warning_flags=(-Wall -Wextra -pedantic)
+warning_flags=(-Wall -Wextra -pedantic -Wold-style-cast -Wshadow)
 common_compile_flags=("${warning_flags[@]}" "-I${project_dir}")
 common_link_flags=("${warning_flags[@]}")
 c_compile_flags=()
