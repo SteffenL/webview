@@ -1486,6 +1486,11 @@ protected:
     }
   }
 
+protected:
+  static unsigned int get_window_count() {
+    return window_ref_count();
+  }
+
 private:
   static std::atomic_uint &window_ref_count() {
     static std::atomic_uint ref_count{0};
@@ -1996,10 +2001,27 @@ Result invoke(Callable callable, Args... args) noexcept {
   return reinterpret_cast<Result (*)(Args...)>(callable)(args...);
 }
 
-// Calls objc_msgSend.
+// Calls objc_msgSend for a class instance.
 template <typename Result, typename... Args>
-Result msg_send(Args... args) noexcept {
-  return invoke<Result>(objc_msgSend, args...);
+Result msg_send(id self, SEL selector, Args... args) noexcept {
+  return invoke<Result>(objc_msgSend, self, selector, args...);
+}
+
+// Calls objc_msgSend for a class.
+template <typename Result, typename... Args>
+Result msg_send(Class class_, SEL selector, Args... args) noexcept {
+  return invoke<Result>(objc_msgSend, class_, selector, args...);
+}
+
+// Calls objc_msgSendSuper.
+template <typename... Args>
+void msg_send_super(id self, SEL selector, Args... args) noexcept {
+  auto self_class = object_getClass(self);
+  auto super_class = class_getSuperclass(self_class);
+  if (super_class) {
+    struct objc_super super_data{self, super_class};
+    invoke<void>(objc_msgSendSuper, &super_data, selector, args...);
+  }
 }
 
 // Wrapper around NSAutoreleasePool that drains the pool on destruction.
@@ -2085,6 +2107,8 @@ public:
   cocoa_wkwebview_engine(bool debug, void *window)
       : m_debug{debug}, m_window{static_cast<id>(window)}, m_owns_window{
                                                                !window} {
+    objc::autoreleasepool arp;
+
     auto app = get_shared_application();
     // See comments related to application lifecycle in create_app_delegate().
     if (!m_owns_window) {
@@ -2124,38 +2148,52 @@ public:
 
   virtual ~cocoa_wkwebview_engine() {
     objc::autoreleasepool arp;
-    if (m_window) {
-      if (m_webview) {
-        if (auto ui_delegate =
-                objc::msg_send<id>(m_webview, "UIDelegate"_sel)) {
-          objc::msg_send<void>(m_webview, "setUIDelegate:"_sel, nullptr);
-          objc::msg_send<void>(ui_delegate, "release"_sel);
-        }
-        if (m_webview == objc::msg_send<id>(m_window, "contentView"_sel)) {
-          objc::msg_send<void>(m_window, "setContentView:"_sel, nullptr);
-        }
-        objc::msg_send<void>(m_webview, "release"_sel);
-        m_webview = nullptr;
-      }
-      if (m_owns_window) {
+    if (m_window_delegate) {
+      if (m_window && m_owns_window) {
         // Replace delegate to avoid callbacks and other bad things during
         // destruction.
         objc::msg_send<void>(m_window, "setDelegate:"_sel, nullptr);
-        objc::msg_send<void>(m_window, "close"_sel);
-        on_window_destroyed(true);
       }
-      m_window = nullptr;
-    }
-    if (m_window_delegate) {
+      // Release the window delegate we created.
       objc::msg_send<void>(m_window_delegate, "release"_sel);
-      m_window_delegate = nullptr;
+    }
+    if (m_ui_delegate) {
+      if (m_webview) {
+        // Replace the UI delegate just in case there's a chance of callbacks
+        // during destruction.
+        objc::msg_send<void>(m_webview, "setUIDelegate:"_sel, nullptr);
+      }
+      // Release the WebKit UI delegate we created.
+      objc::msg_send<void>(m_ui_delegate, "release"_sel);
+    }
+    if (m_window && m_webview) {
+      // Replace the content view if we set it previously.
+      if (m_webview == objc::msg_send<id>(m_window, "contentView"_sel)) {
+        objc::msg_send<void>(m_window, "setContentView:"_sel, nullptr);
+      }
+    }
+    if (m_manager) {
+        // Release the user content controller.
+        objc::msg_send<void>(m_manager, "release"_sel);
+    }
+    if (m_webview) {
+        // Release the widget we created.
+        objc::msg_send<void>(m_webview, "release"_sel);
+    }
+    if (m_window && m_owns_window) {
+      objc::msg_send<void>(m_window, "close"_sel);
+      on_window_destroyed(true);
     }
     if (m_app_delegate) {
       auto app = get_shared_application();
-      objc::msg_send<void>(app, "setDelegate:"_sel, nullptr);
-      // Make sure to release the delegate we created.
+      // Replace the application delegate on the shared application if we set
+      // it previously, but only if we're about to quit the application
+      // (last window closed).
+      if (get_window_count() == 0 && m_app_delegate == objc::msg_send<id>(app, "delegate"_sel)) {
+        objc::msg_send<void>(app, "setDelegate:"_sel, nullptr);
+      }
+      // Release the delegate we created.
       objc::msg_send<void>(m_app_delegate, "release"_sel);
-      m_app_delegate = nullptr;
     }
     if (m_owns_window) {
       // Needed for the window to close immediately.
@@ -2193,6 +2231,7 @@ protected:
   }
 
   noresult run_impl() override {
+    objc::autoreleasepool arp;
     auto app = get_shared_application();
     objc::msg_send<void>(app, "run"_sel);
     return {};
@@ -2284,17 +2323,17 @@ protected:
 
   user_script add_user_script_impl(const std::string &js) override {
     objc::autoreleasepool arp;
-    auto wk_script = objc::msg_send<id>(
+    auto wk_script = objc::autoreleased(objc::msg_send<id>(
         objc::msg_send<id>("WKUserScript"_cls, "alloc"_sel),
         "initWithSource:injectionTime:forMainFrameOnly:"_sel,
         objc::msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel,
                            js.c_str()),
-        WKUserScriptInjectionTimeAtDocumentStart, YES);
+        WKUserScriptInjectionTimeAtDocumentStart, YES));
     // Script is retained when added.
     objc::msg_send<void>(m_manager, "addUserScript:"_sel, wk_script);
+    // Script is also retained here.
     user_script script{js, std::unique_ptr<user_script::impl>{
                                new user_script::impl{wk_script}}};
-    objc::msg_send<void>(wk_script, "release"_sel);
     return script;
   }
 
@@ -2313,6 +2352,10 @@ protected:
   }
 
 private:
+  // Used for debugging leaks
+  static void app_delegate_dealloc(id self, SEL selector) {
+    objc::msg_send_super(self, selector);
+  }
   id create_app_delegate() {
     objc::autoreleasepool arp;
     constexpr auto class_name = "WebviewAppDelegate";
@@ -2324,6 +2367,7 @@ private:
       // causes objc_registerClassPair to crash.
       cls = objc_allocateClassPair((Class) "NSResponder"_cls, class_name, 0);
       class_addProtocol(cls, objc_getProtocol("NSTouchBarProvider"));
+      class_addMethod(cls, "dealloc"_sel, (IMP)app_delegate_dealloc, "v@:");
       class_addMethod(cls,
                       "applicationShouldTerminateAfterLastWindowClosed:"_sel,
                       (IMP)(+[](id, SEL, id) -> BOOL { return NO; }), "c@:@");
@@ -2339,6 +2383,10 @@ private:
     }
     return objc::msg_send<id>((id)cls, "new"_sel);
   }
+  // Used for debugging leaks
+  static void script_message_handler_dealloc(id self, SEL selector) {
+    objc::msg_send_super(self, selector);
+  }
   id create_script_message_handler() {
     objc::autoreleasepool arp;
     constexpr auto class_name = "WebviewWKScriptMessageHandler";
@@ -2347,6 +2395,7 @@ private:
     if (!cls) {
       cls = objc_allocateClassPair((Class) "NSResponder"_cls, class_name, 0);
       class_addProtocol(cls, objc_getProtocol("WKScriptMessageHandler"));
+      class_addMethod(cls, "dealloc"_sel, (IMP)script_message_handler_dealloc, "v@:");
       class_addMethod(
           cls, "userContentController:didReceiveScriptMessage:"_sel,
           (IMP)(+[](id self, SEL, id, id msg) {
@@ -2362,6 +2411,10 @@ private:
                              OBJC_ASSOCIATION_ASSIGN);
     return instance;
   }
+  // Used for debugging leaks
+  static void webkit_ui_delegate_dealloc(id self, SEL selector) {
+    objc::msg_send_super(self, selector);
+  }
   static id create_webkit_ui_delegate() {
     objc::autoreleasepool arp;
     constexpr auto class_name = "WebviewWKUIDelegate";
@@ -2370,6 +2423,7 @@ private:
     if (!cls) {
       cls = objc_allocateClassPair((Class) "NSObject"_cls, class_name, 0);
       class_addProtocol(cls, objc_getProtocol("WKUIDelegate"));
+      class_addMethod(cls, "dealloc"_sel, (IMP)webkit_ui_delegate_dealloc, "v@:");
       class_addMethod(
           cls,
           "webView:runOpenPanelWithParameters:initiatedByFrame:completionHandler:"_sel,
@@ -2412,6 +2466,10 @@ private:
     }
     return objc::msg_send<id>((id)cls, "new"_sel);
   }
+  // Used for debugging leaks
+  static void window_delegate_dealloc(id self, SEL selector) {
+    objc::msg_send_super(self, selector);
+  }
   static id create_window_delegate() {
     objc::autoreleasepool arp;
     constexpr auto class_name = "WebviewNSWindowDelegate";
@@ -2420,6 +2478,7 @@ private:
     if (!cls) {
       cls = objc_allocateClassPair((Class) "NSObject"_cls, class_name, 0);
       class_addProtocol(cls, objc_getProtocol("NSWindowDelegate"));
+      class_addMethod(cls, "dealloc"_sel, (IMP)window_delegate_dealloc, "v@:");
       class_addMethod(cls, "windowWillClose:"_sel,
                       (IMP)(+[](id self, SEL, id notification) {
                         auto window =
@@ -2445,6 +2504,7 @@ private:
     return objc::msg_send<id>("NSBundle"_cls, "mainBundle"_sel);
   }
   static bool is_app_bundled() noexcept {
+    objc::autoreleasepool arp;
     auto bundle = get_main_bundle();
     if (!bundle) {
       return false;
@@ -2455,6 +2515,8 @@ private:
     return !!bundled;
   }
   void on_application_did_finish_launching(id /*delegate*/, id app) {
+    objc::autoreleasepool arp;
+
     // See comments related to application lifecycle in create_app_delegate().
     if (m_owns_window) {
       // Stop the main run loop so that we can return
@@ -2483,8 +2545,8 @@ private:
     set_up_window();
   }
   void on_window_will_close(id /*delegate*/, id /*window*/) {
-    // Widget destroyed along with window.
-    m_webview = nullptr;
+    // We need to destroy the widget in the destructor.
+    // Window will be destroyed.
     m_window = nullptr;
     dispatch([this] { on_window_destroyed(); });
   }
@@ -2509,6 +2571,7 @@ private:
 
     set_up_web_view();
 
+    // Window retains the web view.
     objc::msg_send<void>(m_window, "setContentView:"_sel, m_webview);
 
     if (m_owns_window) {
@@ -2522,7 +2585,9 @@ private:
         objc::msg_send<id>("WKWebViewConfiguration"_cls, "new"_sel));
 
     m_manager = objc::msg_send<id>(config, "userContentController"_sel);
-    m_webview = objc::msg_send<id>("WKWebView"_cls, "alloc"_sel);
+    // We need to use the user content controller later so make sure to
+    // release it later too.
+    objc::msg_send<void>(m_manager, "retain"_sel);
 
     auto preferences = objc::msg_send<id>(config, "preferences"_sel);
     auto yes_value =
@@ -2550,12 +2615,14 @@ private:
     objc::msg_send<id>(preferences, "setValue:forKey:"_sel, yes_value,
                        "DOMPasteAllowed"_str);
 
-    auto ui_delegate = create_webkit_ui_delegate();
-    objc::msg_send<void>(m_webview, "initWithFrame:configuration:"_sel,
+    m_webview = objc::msg_send<id>(
+                         objc::msg_send<id>("WKWebView"_cls, "alloc"_sel),
+                        "initWithFrame:configuration:"_sel,
                          CGRectMake(0, 0, 0, 0), config);
-    objc_setAssociatedObject(ui_delegate, "webview", (id)this,
+    m_ui_delegate = create_webkit_ui_delegate();
+    objc_setAssociatedObject(m_ui_delegate, "webview", (id)this,
                              OBJC_ASSOCIATION_ASSIGN);
-    objc::msg_send<void>(m_webview, "setUIDelegate:"_sel, ui_delegate);
+    objc::msg_send<void>(m_webview, "setUIDelegate:"_sel, m_ui_delegate);
 
     if (m_debug) {
       // Explicitly make WKWebView inspectable via Safari on OS versions that
@@ -2639,6 +2706,7 @@ private:
   id m_window{};
   id m_webview{};
   id m_manager{};
+  id m_ui_delegate{};
   bool m_owns_window{};
 };
 
