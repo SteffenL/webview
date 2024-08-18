@@ -48,7 +48,7 @@ jobs:
     uses: ./.github/workflows/coverage-collect.yml
     with:
       cc: ${{ matrix.config.cc }}
-      cxx: ${{ matrix.cconfig.xx }}
+      cxx: ${{ matrix.config.cxx }}
       image: ${{ matrix.image }}
       gcov: ${{ matrix.config.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
