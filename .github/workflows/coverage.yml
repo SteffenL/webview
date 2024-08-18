@@ -1,0 +1,66 @@
+name: CI / Coverage
+on:
+  workflow_call:
+    inputs:
+      gcovr-version:
+        type: string
+        description: gcovr version
+        required: false
+      report-dir:
+        type: string
+        description: Coverage report output directory
+        required: false
+jobs:
+  collect-linux:
+    strategy:
+      matrix:
+        image: [ubuntu-22.04]
+        cxx-std: [11, 20]
+        webkitgtk-api: ['4.0', '4.1', '6.0']
+        config:
+          - { toolchain: llvm, compiler-name: clang15, cc: clang-15, cxx: clang++-15, gcov: llvm-cov-15 gcov, apt: clang-15 clang++-15 }
+          - { toolchain: gnu,  compiler-name: gcc12,   cc: gcc-12,   cxx: g++-12,     gcov: gcov-12,          apt: gcc-12 g++-12 }
+        include:
+          - webkitgtk-api: '4.0'
+            apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.0-dev
+          - webkitgtk-api: '4.1'
+            apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.1-dev
+          - webkitgtk-api: '6.0'
+            apt-webkitgtk: libgtk-4-dev libwebkitgtk-6.0-dev
+    uses: ./.github/workflows/coverage-collect.yml
+    with:
+      apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
+      image: ${{ matrix.image }}
+      gcovr-version: ${{ inputs.gcovr-version }}
+      gen: Ninja
+      report-dir: ${{ inputs.report-dir }}
+
+  collect-macos:
+    strategy:
+      matrix:
+        image: [macos-14]
+        cxx-std: [11, 20]
+        config:
+          - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov }
+    uses: ./.github/workflows/coverage-collect.yml
+    with:
+      image: ${{ matrix.image }}
+      gen: Ninja
+      gcovr-version: ${{ inputs.gcovr-version }}
+      report-dir: ${{ inputs.report-dir }}
+
+  collect-windows:
+    strategy:
+      matrix:
+        image: [windows-2022]
+        cxx-std: [11, 20]
+        config:
+          - { toolchain: msys2-gnu-ucrt64,   compiler-name: gcc,   cc: gcc,   cxx: g++,     gcov: gcov,          msys: UCRT64 }
+          - { toolchain: msys2-llvm-clang64, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov, msys: CLANG64 }
+    uses: ./.github/workflows/coverage-collect.yml
+    with:
+      image: ${{ matrix.image }}
+      gcovr-version: ${{ inputs.gcovr-version }}
+      gen: Ninja
+      report-dir: ${{ inputs.report-dir }}
+      shell: msys2 {0}
