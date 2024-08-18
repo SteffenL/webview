@@ -117,6 +117,7 @@ jobs:
           pattern: test_coverage_data_*
           delete-merged: true
           retention-days: 1
+          separate-directories: true
 
       - name: Download test coverage artifacts
         uses: actions/download-artifact@v4
