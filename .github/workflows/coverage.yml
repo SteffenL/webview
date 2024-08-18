@@ -41,6 +41,7 @@ jobs:
       gen: Ninja
       report-dir: ${{ inputs.report-dir }}
       shell: bash
+      test-wrapper-cmd: xvfb-run
       toolchain: ${{ matrix.config.toolchain }}
 
   macos:

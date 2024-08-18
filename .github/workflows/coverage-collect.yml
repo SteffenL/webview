@@ -50,6 +50,10 @@ on:
         type: string
         description: Shell
         required: false
+      test-wrapper-cmd:
+        type: string
+        description: Test wrapper command
+        required: false
       toolchain:
         type: string
         description: Toolchain name
@@ -72,7 +76,7 @@ jobs:
 
       - name: Build and run tests with coverage
         run: >
-          ctest --build-and-test . build
+          ${{ inputs.test-wrapper-cmd }} ctest --build-and-test . build
           --build-generator "${{ inputs.gen }}"
           --build-config Profile
           --test-command ctest

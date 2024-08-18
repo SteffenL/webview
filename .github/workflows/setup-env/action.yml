@@ -21,6 +21,7 @@ runs:
           python3-lxml \
           python3-markupsafe \
           python3-pip \
+          xvfb \
           "${packages[@]}"
       shell: bash
     - if: runner.os == 'Windows' && inputs.msys != ''
