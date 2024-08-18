@@ -30,6 +30,7 @@ jobs:
     with:
       apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
       cc: ${{ matrix.config.cc }}
+      compiler-name: ${{ matrix.config.compiler-name }}
       cxx: ${{ matrix.config.cxx }}
       cxx-std: ${{ matrix.cxx-std }}
       image: ubuntu-22.04
@@ -37,6 +38,7 @@ jobs:
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
       report-dir: ${{ inputs.report-dir }}
+      toolchain: ${{ matrix.config.toolchain }}
 
   collect-macos:
     strategy:
@@ -47,6 +49,7 @@ jobs:
     uses: ./.github/workflows/coverage-collect.yml
     with:
       cc: ${{ matrix.config.cc }}
+      compiler-name: ${{ matrix.config.compiler-name }}
       cxx: ${{ matrix.config.cxx }}
       cxx-std: ${{ matrix.cxx-std }}
       image: macos-14
@@ -54,6 +57,7 @@ jobs:
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
       report-dir: ${{ inputs.report-dir }}
+      toolchain: ${{ matrix.config.toolchain }}
 
   collect-windows:
     strategy:
@@ -65,11 +69,14 @@ jobs:
     uses: ./.github/workflows/coverage-collect.yml
     with:
       cc: ${{ matrix.config.cc }}
+      compiler-name: ${{ matrix.config.compiler-name }}
       cxx: ${{ matrix.config.cxx }}
       cxx-std: ${{ matrix.cxx-std }}
       image: windows-2022
       gcov: ${{ matrix.config.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
+      msys: ${{ matrix.config.msys }}
       report-dir: ${{ inputs.report-dir }}
       shell: msys2 {0}
+      toolchain: ${{ matrix.config.toolchain }}

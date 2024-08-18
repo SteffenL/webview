@@ -8,11 +8,15 @@ on:
         required: false
       cc:
         type: string
-        description: C compiler
+        description: C compiler executable
+        required: true
+      compiler-name:
+        type: string
+        description: Compiler name
         required: true
       cxx:
         type: string
-        description: C++ compiler
+        description: C++ compiler executable
         required: true
       cxx-std:
         type: string
@@ -27,11 +31,20 @@ on:
         description: CMake generator
         required: false
         default: Ninja
+      gcov:
+        type: string
+        description: gcov executable
+        required: false
+        default: gcov
       gcovr-version:
         type: string
         description: gcovr version
         required: false
         default: '7.2'
+      msys:
+        type: string
+        description: MSYS2 system
+        required: false
       report-dir:
         type: string
         description: Coverage report output directory
@@ -42,12 +55,16 @@ on:
         description: Shell
         required: false
         default: bash
+      toolchain:
+        type: string
+        description: Toolchain name
+        required: true
 jobs:
   collect:
     runs-on: ${{ inputs.image }}
     defaults:
       run:
-        shell: ${{ matrix.config.shell }}
+        shell: ${{ inputs.shell }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,20 +72,20 @@ jobs:
       - name: Set up environment
         uses: ./.github/workflows/setup-env
         with:
-          apt: ${{ matrix.config.apt }}
-          msys: ${{ matrix.config.msys }}
+          apt: ${{ inputs.apt }}
+          msys: ${{ inputs.msys }}
 
       - name: Build and run tests with coverage
         run: >
           ctest --build-and-test . build
-          --build-generator "${{ matrix.config.gen }}"
+          --build-generator "${{ inputs.gen }}"
           --build-config Profile
           --test-command ctest
           --output-on-failure
           --build-options
-          "CMAKE_C_COMPILER=${{ matrix.config.cc }}"
-          "CMAKE_CXX_COMPILER=${{ matrix.config.cxx }}"
-          "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+          "CMAKE_C_COMPILER=${{ inputs.cc }}"
+          "CMAKE_CXX_COMPILER=${{ inputs.cxx }}"
+          "CMAKE_CXX_STANDARD=${{ inputs.cxx-std }}"
 
       - name: Install gcovr
         run: pip install "gcovr==${{ inputs.gcovr-version }}"
@@ -76,7 +93,7 @@ jobs:
       - name: Prepare test coverage artifacts
         id: prepare-test-coverage-artifacts
         run: |
-          coverage_name="${{ matrix.config.image }}_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}"
+          coverage_name="${{ inputs.image }}_${{ inputs.toolchain }}_${{ inputs.compiler-name }}_cxx${{ inputs.cxx-std }}"
           base_dir="temp_${RANDOM}"
           artifact_dir="${base_dir}/${coverage_name}"
 
