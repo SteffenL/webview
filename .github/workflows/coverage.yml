@@ -48,7 +48,7 @@ jobs:
       matrix:
         cxx-std: [11, 20]
         config:
-          - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov }
+          - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: xcrun llvm-cov gcov }
     uses: ./.github/workflows/coverage-collect.yml
     with:
       cc: ${{ matrix.config.cc }}
