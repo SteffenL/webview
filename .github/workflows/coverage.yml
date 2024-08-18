@@ -31,6 +31,7 @@ jobs:
     uses: ./.github/workflows/coverage-collect.yml
     with:
       apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
+      artifacts-name: ${{ runner.os }}_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}
       cc: ${{ matrix.config.cc }}
       compiler-name: ${{ matrix.config.compiler-name }}
       cxx: ${{ matrix.config.cxx }}
@@ -52,6 +53,7 @@ jobs:
           - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: xcrun llvm-cov gcov }
     uses: ./.github/workflows/coverage-collect.yml
     with:
+      artifacts-name: ${{ runner.os }}_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}
       cc: ${{ matrix.config.cc }}
       compiler-name: ${{ matrix.config.compiler-name }}
       cxx: ${{ matrix.config.cxx }}
@@ -73,6 +75,7 @@ jobs:
           - { toolchain: msys2-llvm-clang64, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov, msys: CLANG64 }
     uses: ./.github/workflows/coverage-collect.yml
     with:
+      artifacts-name: ${{ runner.os }}_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}
       cc: ${{ matrix.config.cc }}
       compiler-name: ${{ matrix.config.compiler-name }}
       cxx: ${{ matrix.config.cxx }}

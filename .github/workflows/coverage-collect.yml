@@ -6,6 +6,10 @@ on:
         type: string
         description: APT packages
         required: false
+      artifacts-name:
+        type: string
+        description: Name of artifacts
+        required: true
       cc:
         type: string
         description: C compiler executable
@@ -92,9 +96,7 @@ jobs:
       - name: Prepare test coverage artifacts
         id: prepare-test-coverage-artifacts
         run: |
-          coverage_name="${{ inputs.image }}_${{ inputs.toolchain }}_${{ inputs.compiler-name }}_cxx${{ inputs.cxx-std }}"
-          base_dir="temp_${RANDOM}"
-          artifact_dir="${base_dir}/${coverage_name}"
+          artifact_dir="build/${{ inputs.artifacts-name }}"
 
           gcovr_args=(
             --config gcovr.ci.cfg
@@ -107,13 +109,12 @@ jobs:
           mkdir -p "${artifact_dir}"
           gcovr "${gcovr_args[@]}"
 
-          echo "upload-dir=${base_dir}" >> "${GITHUB_OUTPUT}"
-          echo "coverage-name=${coverage_name}" >> "${GITHUB_OUTPUT}"
+          echo "upload-dir=${artifact_dir}" >> "${GITHUB_OUTPUT}"
 
       - name: Upload test coverage artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: test_coverage_data_${{ steps.prepare-test-coverage-artifacts.outputs.coverage-name }}
+          name: test_coverage_data_${{ inputs.artifacts-name }}
           path: ${{ steps.prepare-test-coverage-artifacts.outputs.upload-dir }}
           retention-days: 1
           if-no-files-found: error
