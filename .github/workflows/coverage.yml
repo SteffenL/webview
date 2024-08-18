@@ -14,7 +14,6 @@ jobs:
   collect-linux:
     strategy:
       matrix:
-        image: [ubuntu-22.04]
         cxx-std: [11, 20]
         webkitgtk-api: ['4.0', '4.1', '6.0']
         config:
@@ -32,7 +31,8 @@ jobs:
       apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
       cc: ${{ matrix.config.cc }}
       cxx: ${{ matrix.config.cxx }}
-      image: ${{ matrix.image }}
+      cxx-std: ${{ matrix.cxx-std }}
+      image: ubuntu-22.04
       gcov: ${{ matrix.config.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
@@ -41,7 +41,6 @@ jobs:
   collect-macos:
     strategy:
       matrix:
-        image: [macos-14]
         cxx-std: [11, 20]
         config:
           - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov }
@@ -49,7 +48,8 @@ jobs:
     with:
       cc: ${{ matrix.config.cc }}
       cxx: ${{ matrix.config.cxx }}
-      image: ${{ matrix.image }}
+      cxx-std: ${{ matrix.cxx-std }}
+      image: macos-14
       gcov: ${{ matrix.config.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
@@ -58,7 +58,6 @@ jobs:
   collect-windows:
     strategy:
       matrix:
-        image: [windows-2022]
         cxx-std: [11, 20]
         config:
           - { toolchain: msys2-gnu-ucrt64,   compiler-name: gcc,   cc: gcc,   cxx: g++,     gcov: gcov,          msys: UCRT64 }
@@ -67,7 +66,8 @@ jobs:
     with:
       cc: ${{ matrix.config.cc }}
       cxx: ${{ matrix.config.cxx }}
-      image: ${{ matrix.image }}
+      cxx-std: ${{ matrix.cxx-std }}
+      image: windows-2022
       gcov: ${{ matrix.config.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja

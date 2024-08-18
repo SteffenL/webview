@@ -6,6 +6,18 @@ on:
         type: string
         description: APT packages
         required: false
+      cc:
+        type: string
+        description: C compiler
+        required: true
+      cxx:
+        type: string
+        description: C++ compiler
+        required: true
+      cxx-std:
+        type: string
+        description: C++ standard
+        required: true
       image:
         type: string
         description: Runner image
