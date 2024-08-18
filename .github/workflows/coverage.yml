@@ -30,10 +30,10 @@ jobs:
     uses: ./.github/workflows/coverage-collect.yml
     with:
       apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
-      cc: ${{ matrix.cc }}
-      cxx: ${{ matrix.cxx }}
+      cc: ${{ matrix.config.cc }}
+      cxx: ${{ matrix.config.cxx }}
       image: ${{ matrix.image }}
-      gcov: ${{ matrix.gcov }}
+      gcov: ${{ matrix.config.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
       report-dir: ${{ inputs.report-dir }}
@@ -47,10 +47,10 @@ jobs:
           - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov }
     uses: ./.github/workflows/coverage-collect.yml
     with:
-      cc: ${{ matrix.cc }}
-      cxx: ${{ matrix.cxx }}
+      cc: ${{ matrix.config.cc }}
+      cxx: ${{ matrix.cconfig.xx }}
       image: ${{ matrix.image }}
-      gcov: ${{ matrix.gcov }}
+      gcov: ${{ matrix.config.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
       report-dir: ${{ inputs.report-dir }}
@@ -65,10 +65,10 @@ jobs:
           - { toolchain: msys2-llvm-clang64, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov, msys: CLANG64 }
     uses: ./.github/workflows/coverage-collect.yml
     with:
-      cc: ${{ matrix.cc }}
-      cxx: ${{ matrix.cxx }}
+      cc: ${{ matrix.config.cc }}
+      cxx: ${{ matrix.config.cxx }}
       image: ${{ matrix.image }}
-      gcov: ${{ matrix.gcov }}
+      gcov: ${{ matrix.config.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
       report-dir: ${{ inputs.report-dir }}
