@@ -30,7 +30,10 @@ jobs:
     uses: ./.github/workflows/coverage-collect.yml
     with:
       apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
+      cc: ${{ matrix.cc }}
+      cxx: ${{ matrix.cxx }}
       image: ${{ matrix.image }}
+      gcov: ${{ matrix.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
       report-dir: ${{ inputs.report-dir }}
@@ -44,9 +47,12 @@ jobs:
           - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov }
     uses: ./.github/workflows/coverage-collect.yml
     with:
+      cc: ${{ matrix.cc }}
+      cxx: ${{ matrix.cxx }}
       image: ${{ matrix.image }}
-      gen: Ninja
+      gcov: ${{ matrix.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
+      gen: Ninja
       report-dir: ${{ inputs.report-dir }}
 
   collect-windows:
@@ -59,7 +65,10 @@ jobs:
           - { toolchain: msys2-llvm-clang64, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov, msys: CLANG64 }
     uses: ./.github/workflows/coverage-collect.yml
     with:
+      cc: ${{ matrix.cc }}
+      cxx: ${{ matrix.cxx }}
       image: ${{ matrix.image }}
+      gcov: ${{ matrix.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
       gen: Ninja
       report-dir: ${{ inputs.report-dir }}
