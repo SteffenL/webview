@@ -11,7 +11,7 @@ on:
         description: Coverage report output directory
         required: false
 jobs:
-  collect-linux:
+  linux:
     strategy:
       matrix:
         cxx-std: [11, 20]
@@ -40,7 +40,7 @@ jobs:
       report-dir: ${{ inputs.report-dir }}
       toolchain: ${{ matrix.config.toolchain }}
 
-  collect-macos:
+  macos:
     strategy:
       matrix:
         cxx-std: [11, 20]
@@ -55,11 +55,11 @@ jobs:
       image: macos-14
       gcov: ${{ matrix.config.gcov }}
       gcovr-version: ${{ inputs.gcovr-version }}
-      gen: Ninja
+      gen: Xcode
       report-dir: ${{ inputs.report-dir }}
       toolchain: ${{ matrix.config.toolchain }}
 
-  collect-windows:
+  windows:
     strategy:
       matrix:
         cxx-std: [11, 20]
