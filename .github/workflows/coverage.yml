@@ -134,7 +134,7 @@ jobs:
           gcov: ${{ matrix.config.gcov }}
           shell: bash
 
-  msys2:
+  windows:
     runs-on: windows-2022
     strategy:
       matrix:
