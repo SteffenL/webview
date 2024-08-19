@@ -127,12 +127,11 @@ jobs:
       - name: Build
         uses: ./.github/workflows/cmake/build
         with:
-          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
+          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.generator-platform }}
           build-dir: build
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
-          distributable: ${{ matrix.distributable }}
           generator: ${{ matrix.generator }}
           generator-platform: ${{ matrix.generator-platform }}
           shell: bash
