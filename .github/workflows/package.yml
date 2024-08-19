@@ -96,6 +96,7 @@ jobs:
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
+          distributable: ${{ matrix.distributable }}
           generator: Xcode
           osx-deployment-target: '10.9'
           shell: bash
@@ -130,6 +131,7 @@ jobs:
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
+          distributable: ${{ matrix.distributable }}
           generator: ${{ matrix.generator }}
           generator-platform: ${{ matrix.generator-platform }}
           shell: bash
@@ -180,16 +182,6 @@ jobs:
 #          name=${{ matrix.image }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
 #          echo "name=${name}" >> ${GITHUB_OUTPUT}
 #
-#      - name: Upload distributable artifacts
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: package_${{ steps.generate-artifact-name.outputs.name }}
-#          path: |
-#            build/*.gz
-#            build/*.sha256
-#            build/*.zip
-#          retention-days: 1
-#          if-no-files-found: error
 #
 #  merge-package-artifacts:
 #    needs: package

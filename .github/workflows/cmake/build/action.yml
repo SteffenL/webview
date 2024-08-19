@@ -19,6 +19,9 @@ inputs:
   cxx-std:
     description: Sets CMAKE_CXX_STANDARD
     required: true
+  distributable:
+    description: Distributable?
+    required: false
   gcov:
     description: gcov executable
     required: false
@@ -40,6 +43,9 @@ inputs:
     required: false
   osx-deployment-target:
     description: Sets CMAKE_OSX_DEPLOYMENT_TARGET
+    required: false
+  package-source:
+    description: Package source code?
     required: false
   shell:
     description: Shell
@@ -126,7 +132,8 @@ runs:
       working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
 
-    - name: Create source package
+    - if: inputs.package-source != '' && fromJSON(inputs.package-source)
+      name: Create source package
       run: cpack --config CPackSourceConfig.cmake
       working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
@@ -141,3 +148,14 @@ runs:
         done <<< "$(find . -type f -name "*.sha*" | grep -E '^.*\.sha[0-9]+$')"
       working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: package_${{ inputs.artifacts-name }}
+        path: |
+          build/*.gz
+          build/*.sha256
+          build/*.zip
+        retention-days: 1
+        if-no-files-found: error
