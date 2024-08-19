@@ -33,7 +33,7 @@ inputs:
     required: true
   test-wrapper-cmd:
     description: Test wrapper command
-    required: true
+    required: false
 runs:
   using: composite
   steps:

@@ -103,9 +103,12 @@ jobs:
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
           generator: Xcode
+          generator-platform:
           shell: bash
           source-dir: .
           test-wrapper-cmd:
+          # Job-specific
+          osx-deployment-target: '10.9'
 
   windows-msvc:
     runs-on: ${{ matrix.image }}
@@ -178,6 +181,7 @@ jobs:
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
           generator: Ninja Multi-Config
+          generator-platform:
           shell: msys2 {0}
           source-dir: .
           test-wrapper-cmd:
