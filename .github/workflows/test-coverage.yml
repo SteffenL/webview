@@ -179,6 +179,7 @@ jobs:
           name: test_coverage_data
 
       - name: Generate report
+        id: generate-report
         run: |
           tracefile_args=()
           while read f; do
@@ -199,7 +200,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test_coverage_report
-          path: ${{ steps.prepare-coverage-artifacts.outputs.upload-dir }}
+          path: ${{ steps.generate-report.outputs.upload-dir }}
           retention-days: 1
           if-no-files-found: error
 
@@ -209,7 +210,7 @@ jobs:
           script: |
             const numberOr = (value, alternative) => Number.isNaN(value = parseInt(value)) ? alternative : value;
             const percentValue = (value, percentSymbol = "%") => numberOr(value, "-") + percentSymbol;
-            const data = require("./${{ steps.prepare-coverage-artifacts.outputs.upload-dir }}/summary.json");
+            const data = require("./${{ steps.generate-report.outputs.upload-dir }}/summary.json");
             await core.summary
               .addHeading("Test Coverage Summary")
               .addTable([
