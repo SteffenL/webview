@@ -19,6 +19,11 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: gcov version
+      run: |
+        "${{ inputs.gcov }}" --version
+      shell: ${{ inputs.shell }}
+
     - name: Install gcovr
       run: pip install "gcovr==${{ inputs.gcovr-version }}"
       shell: ${{ inputs.shell }}
