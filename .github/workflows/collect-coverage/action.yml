@@ -20,8 +20,7 @@ runs:
   using: composite
   steps:
     - name: gcov version
-      run: |
-        "${{ inputs.gcov }}" --version
+      run: ${{ inputs.gcov }} --version
       shell: ${{ inputs.shell }}
 
     - name: Install gcovr

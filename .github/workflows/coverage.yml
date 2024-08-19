@@ -67,7 +67,7 @@ jobs:
         uses: ./.github/workflows/collect-coverage
         with:
           artifacts-name: "${{ steps.vars.outputs.artifacts-name }}"
-          gcov: "${{ matrix.config.gcov }}"
+          gcov: ${{ matrix.config.gcov }}
           shell: bash
 
   macos:
@@ -84,7 +84,7 @@ jobs:
           echo "artifacts-name=macos_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
           echo "build-config=Profile" >> "${GITHUB_OUTPUT}"
           echo "build-dir=build" >> "${GITHUB_OUTPUT}"
-          echo "generator=Ninja" >> "${GITHUB_OUTPUT}"
+          echo "generator=Xcode" >> "${GITHUB_OUTPUT}"
           echo "source-dir=." >> "${GITHUB_OUTPUT}"
 
       - name: Checkout
@@ -114,7 +114,7 @@ jobs:
         uses: ./.github/workflows/collect-coverage
         with:
           artifacts-name: "${{ steps.vars.outputs.artifacts-name }}"
-          gcov: "${{ matrix.config.gcov }}"
+          gcov: ${{ matrix.config.gcov }}
           shell: bash
 
 #  windows:
