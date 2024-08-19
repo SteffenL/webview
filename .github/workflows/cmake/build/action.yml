@@ -80,10 +80,10 @@ runs:
         fi
         cmake_cmd+=(
           ctest
+          --test-dir "${{ inputs.build-dir }}"
           --output-on-failure
           --build-config "${config}"
         )
-      working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
 
     - name: Test (Release)
@@ -95,10 +95,10 @@ runs:
         fi
         cmake_cmd+=(
           ctest
+          --test-dir "${{ inputs.build-dir }}"
           --output-on-failure
           --build-config "${config}"
         )
-      working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
 
     - name: Create multi-config package
