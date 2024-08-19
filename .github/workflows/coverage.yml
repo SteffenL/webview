@@ -160,7 +160,7 @@ jobs:
           echo "artifacts-name=${{ runner.os }}_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
           echo "build-config=Profile" >> "${GITHUB_OUTPUT}"
           echo "build-dir=build" >> "${GITHUB_OUTPUT}"
-          echo "generator=MSYS Makefiles" >> "${GITHUB_OUTPUT}"
+          echo "generator=Ninja" >> "${GITHUB_OUTPUT}"
           echo "source-dir=." >> "${GITHUB_OUTPUT}"
 
       - name: Configure
