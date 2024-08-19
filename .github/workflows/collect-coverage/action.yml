@@ -60,3 +60,4 @@ runs:
 
     - name: Clean up temporary files
       run: rm -rf "${{ steps.prepare-coverage-artifacts.outputs.upload-dir }}"
+      shell: ${{ inputs.shell }}
