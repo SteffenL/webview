@@ -48,18 +48,6 @@ jobs:
                     cc: gcc-10
                     cxx: g++-10
                     apt: gcc-10 g++-10
-              - type: merge
-                match: [webkitgtk-api]
-                matrix:
-                  webkitgtk-api: ['6.0']
-              - type: merge
-                match: [webkitgtk-api]
-                matrix:
-                - webkitgtk-api: ['4.1']
-              - type: merge
-                match: [webkitgtk-api]
-                matrix:
-                - webkitgtk-api: ['4.0']
     outputs:
       matrix: ${{ steps.build-matrix.outputs.matrix }}
 
