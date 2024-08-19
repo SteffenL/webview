@@ -81,13 +81,13 @@ runs:
       working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
 
-      # CPack produces checksum files with CRLF on Windows but the CR being present can cause
-      # verification with shasum to fail on Unix-like systems.
-      # find and grep were combined to work around incompatibilities between Linux and macOS.
-      - name: Fix newlines in checksum files
-        run: |
-          while read f; do
-            sed -i.bak 's/\\r\\n/\n/g' "${f}"
-          done <<< "$(find . -type f -name "*.sha*" | grep -E '^.*\.sha[0-9]+$')"
-        working-directory: build
-      shell: ${{ inputs.shell }}
+    # CPack produces checksum files with CRLF on Windows but the CR being present can cause
+    # verification with shasum to fail on Unix-like systems.
+    # find and grep were combined to work around incompatibilities between Linux and macOS.
+    - name: Fix newlines in checksum files
+      run: |
+        while read f; do
+          sed -i.bak 's/\\r\\n/\n/g' "${f}"
+        done <<< "$(find . -type f -name "*.sha*" | grep -E '^.*\.sha[0-9]+$')"
+      working-directory: build
+    shell: ${{ inputs.shell }}
