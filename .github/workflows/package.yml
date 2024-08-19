@@ -102,7 +102,7 @@ jobs:
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
-          generator: NXcode
+          generator: Xcode
           shell: bash
           source-dir: .
           test-wrapper-cmd:

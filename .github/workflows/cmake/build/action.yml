@@ -1,6 +1,9 @@
 name: CMake build
 description: Build project using CMake
 inputs:
+  artifacts-name:
+    description: Artifacts name
+    required: false
   build-dir:
     description: CMake build directory
     required: true
