@@ -16,7 +16,9 @@ jobs:
         webkitgtk-api: ['4.0', '4.1', '6.0']
         config:
           - { toolchain: llvm, compiler-name: clang15, cc: clang-15, cxx: clang++-15, gcov: llvm-cov-15 gcov, apt: clang-15 clang++-15 }
-          - { toolchain: gnu,  compiler-name: gcc12,   cc: gcc-12,   cxx: g++-12,     gcov: gcov-12,          apt: gcc-12 g++-12 }
+          # GCC coverage data somehow introduces conflicts such as functions on multiple lines.
+          # Run tests until we figure out what's going on, but skip collection of coverage data.
+          - { toolchain: gnu,  compiler-name: gcc12,   cc: gcc-12,   cxx: g++-12,     gcov: gcov-12,          apt: gcc-12 g++-12,      skip-collect: true }
         include:
           - webkitgtk-api: '4.0'
             apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.0-dev
@@ -69,6 +71,7 @@ jobs:
         working-directory: ${{ steps.vars.outputs.build-dir }}
 
       - name: Collect code coverage
+        if: matrix.skip-collect != true
         uses: ./.github/workflows/collect-coverage
         with:
           artifacts-name: test_coverage_data_${{ steps.vars.outputs.artifacts-name }}
