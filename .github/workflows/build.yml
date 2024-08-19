@@ -3,7 +3,7 @@ on:
   workflow_call:
 jobs:
   package:
-    runs-on: ${{ matrix.config.image }}
+    runs-on: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
@@ -38,7 +38,7 @@ jobs:
             distributable: true
     defaults:
       run:
-        shell: ${{ matrix.config.shell }}
+        shell: ${{ matrix.shell }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,32 +46,32 @@ jobs:
       - name: Set up environment
         uses: ./.github/workflows/setup-env
         with:
-          apt: ${{ matrix.config.apt }}
-          msys: ${{ matrix.config.msys }}
+          apt: ${{ matrix.apt }}
+          msys: ${{ matrix.msys }}
 
       - name: Configure
         run: |
           args=()
-          if [[ ! -z "${{ matrix.config.gen_platform }}" ]]; then
-            args+=("-DCMAKE_GENERATOR_PLATFORM=${{ matrix.config.gen_platform }}")
+          if [[ ! -z "${{ matrix.gen_platform }}" ]]; then
+            args+=("-DCMAKE_GENERATOR_PLATFORM=${{ matrix.gen_platform }}")
           fi
           if [[ "${OSTYPE}" == darwin* ]]; then
             args+=("-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64")
           fi
-          cmake -G "${{ matrix.config.gen }}" -S . -B build \
-            "-DCMAKE_C_COMPILER=${{ matrix.config.cc }}" \
-            "-DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }}" \
+          cmake -G "${{ matrix.gen }}" -S . -B build \
+            "-DCMAKE_C_COMPILER=${{ matrix.cc }}" \
+            "-DCMAKE_CXX_COMPILER=${{ matrix.cxx }}" \
             "-DCMAKE_CXX_STANDARD=${{ matrix.cxx-std }}" \
             "${args[@]}"
 
-      - if: matrix.config.multi
+      - if: matrix.multi
         name: Build Debug config (Multi-Config)
         run: cmake --build build --config Debug
 
       - name: Build Release config
         run: cmake --build build --config Release
 
-      - if: matrix.config.multi
+      - if: matrix.multi
         name: Run Debug tests (Multi-Config)
         run: ctest -C Debug --output-on-failure
         working-directory: build
@@ -80,17 +80,17 @@ jobs:
         run: ctest -C Release --output-on-failure
         working-directory: build
 
-      - if: matrix.config.multi
+      - if: matrix.multi
         name: Create multi-config package
         run: cpack -C "Debug;Release" --config CPackConfig.cmake
         working-directory: build
 
-      - if: matrix.config.multi != true
+      - if: matrix.multi != true
         name: Create single-config package
         run: cpack -C Release --config CPackConfig.cmake
         working-directory: build
 
-      - if: matrix.config.package-source
+      - if: matrix.package-source
         name: Create source package
         run: cpack --config CPackSourceConfig.cmake
         working-directory: build
@@ -108,7 +108,7 @@ jobs:
       - name: Generate artifact name
         id: generate-artifact-name
         run: |
-          name=${{ matrix.config.image }}_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}
+          name=${{ matrix.image }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
           echo "name=${name}" >> ${GITHUB_OUTPUT}
 
       - name: Upload distributable artifacts
