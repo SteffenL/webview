@@ -8,6 +8,10 @@ inputs:
     description: gcov executable
     required: true
     default: gcov
+  gcovr-config:
+    description: gcovr config file
+    required: true
+    default: gcovr.ci.cfg
   gcovr-version:
     description: gcovr version
     required: true
@@ -34,7 +38,7 @@ runs:
 
         gcovr_args=(
           --verbose
-          --config gcovr.ci.cfg
+          --config "${{ inputs.gcovr-config }}"
           --json "${artifact_dir}/coverage.json"
         )
         if [[ ! -z "${{ inputs.gcov }}" ]]; then

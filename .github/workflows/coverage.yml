@@ -76,7 +76,7 @@ jobs:
       - name: Collect code coverage
         uses: ./.github/workflows/collect-coverage
         with:
-          artifacts-name: ${{ steps.vars.outputs.artifacts-name }}
+          artifacts-name: test_coverage_data_${{ steps.vars.outputs.artifacts-name }}
           gcov: ${{ matrix.config.gcov }}
           shell: bash
 
@@ -130,7 +130,7 @@ jobs:
       - name: Collect code coverage
         uses: ./.github/workflows/collect-coverage
         with:
-          artifacts-name: ${{ steps.vars.outputs.artifacts-name }}
+          artifacts-name: test_coverage_data_${{ steps.vars.outputs.artifacts-name }}
           gcov: ${{ matrix.config.gcov }}
           shell: bash
 
@@ -190,7 +190,7 @@ jobs:
       - name: Collect code coverage
         uses: ./.github/workflows/collect-coverage
         with:
-          artifacts-name: ${{ steps.vars.outputs.artifacts-name }}
+          artifacts-name: test_coverage_data_${{ steps.vars.outputs.artifacts-name }}
           gcov: ${{ matrix.config.gcov }}
           shell: msys2 {0}
 
