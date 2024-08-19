@@ -63,7 +63,7 @@ jobs:
           apt: ${{ matrix.apt }} ${{ matrix.apt-webkitgtk }}
 
       - name: Build
-        using: ./.github/workflows/cmake/build
+        uses: ./.github/workflows/cmake/build
         with:
           artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}
           build-dir: build
@@ -95,7 +95,7 @@ jobs:
         uses: ./.github/workflows/setup-env
 
       - name: Build
-        using: ./.github/workflows/cmake/build
+        uses: ./.github/workflows/cmake/build
         with:
           artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
           build-dir: build
