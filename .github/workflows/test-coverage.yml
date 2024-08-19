@@ -133,11 +133,13 @@ jobs:
             cc: gcc
             cxx: g++
             msys: UCRT64
+            gcov: gcov
           - toolchain: msys2-llvm-clang64
             compiler-name: clang
             cc: clang
             cxx: clang++
             msys: CLANG64
+            gcov: llvm-cov gcov
     steps:
       - name: Checkout
         uses: actions/checkout@v4
