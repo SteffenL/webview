@@ -19,9 +19,6 @@ inputs:
   cxx-std:
     description: Sets CMAKE_CXX_STANDARD
     required: true
-  distributable:
-    description: Distributable?
-    required: false
   gcov:
     description: gcov executable
     required: false
