@@ -30,6 +30,9 @@ jobs:
           - webkitgtk-api: '6.0'
             apt-webkitgtk: libgtk-4-dev libwebkitgtk-6.0-dev
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up environment
         uses: ./.github/workflows/setup-env
         with:
@@ -44,9 +47,6 @@ jobs:
           echo "generator=Ninja" >> "${GITHUB_OUTPUT}"
           echo "source-dir=." >> "${GITHUB_OUTPUT}"
           echo "test-wrapper-cmd=xvfb-run" >> "${GITHUB_OUTPUT}"
-
-      - name: Checkout
-        uses: actions/checkout@v4
 
       - name: Configure
         run: >
@@ -88,6 +88,9 @@ jobs:
         config:
           - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: xcrun llvm-cov gcov }
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up environment
         uses: ./.github/workflows/setup-env
 
@@ -99,9 +102,6 @@ jobs:
           echo "build-dir=build" >> "${GITHUB_OUTPUT}"
           echo "generator=Xcode" >> "${GITHUB_OUTPUT}"
           echo "source-dir=." >> "${GITHUB_OUTPUT}"
-
-      - name: Checkout
-        uses: actions/checkout@v4
 
       - name: Configure
         run: >
@@ -146,6 +146,9 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up environment
         uses: ./.github/workflows/setup-env
         with:
@@ -159,9 +162,6 @@ jobs:
           echo "build-dir=build" >> "${GITHUB_OUTPUT}"
           echo "generator=MSYS Makefiles" >> "${GITHUB_OUTPUT}"
           echo "source-dir=." >> "${GITHUB_OUTPUT}"
-
-      - name: Checkout
-        uses: actions/checkout@v4
 
       - name: Configure
         run: >
