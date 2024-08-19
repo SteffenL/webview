@@ -9,6 +9,7 @@ on:
         default: '7.2'
 jobs:
   linux:
+    name: linux (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }}, webkitgtk${{ matrix.webkitgtk-api }})
     runs-on: ${{ matrix.image }}
     strategy:
       matrix:
@@ -73,6 +74,7 @@ jobs:
           test-wrapper-cmd: xvfb-run
 
   macos:
+    name: macos (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }})
     runs-on: ${{ matrix.image }}
     strategy:
       matrix:
@@ -107,6 +109,7 @@ jobs:
           source-dir: .
 
   windows:
+    name: windows (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }})
     runs-on: ${{ matrix.image }}
     strategy:
       matrix:
