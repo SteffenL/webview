@@ -31,7 +31,7 @@ runs:
       run: pip install "gcovr==${{ inputs.gcovr-version }}"
       shell: ${{ inputs.shell }}
 
-    - name: Prepare coverage artifacts
+    - name: Generate coverage data
       id: prepare-coverage-artifacts
       run: |
         artifact_dir="temp_${RANDOM}/${{ inputs.artifacts-name }}"
@@ -50,10 +50,13 @@ runs:
         echo "upload-dir=${artifact_dir}" >> "${GITHUB_OUTPUT}"
       shell: ${{ inputs.shell }}
 
-    - name: Upload test coverage artifacts
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifacts-name }}
         path: ${{ steps.prepare-coverage-artifacts.outputs.upload-dir }}
         retention-days: 1
         if-no-files-found: error
+
+    - name: Clean up temporary files
+      run: rm -rf "${{ steps.prepare-coverage-artifacts.outputs.upload-dir }}"
