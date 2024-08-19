@@ -29,6 +29,7 @@ runs:
         artifact_dir="$(mktemp -d)/${{ inputs.artifacts-name }}"
 
         gcovr_args=(
+          --verbose
           --config gcovr.ci.cfg
           --json "${artifact_dir}/coverage.json"
         )
