@@ -45,7 +45,8 @@ jobs:
             cxx: g++-10
             apt: gcc-10 g++-10
           # WebKitGTK
-          - webkitgtk-api: '4.0'
+          - image: ubuntu-22.04
+            webkitgtk-api: '4.0'
             apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.0-dev
           - image: ubuntu-22.04
             webkitgtk-api: '4.1'
@@ -53,6 +54,9 @@ jobs:
           - image: ubuntu-22.04
             webkitgtk-api: '6.0'
             apt-webkitgtk: libgtk-4-dev libwebkitgtk-6.0-dev
+          - image: ubuntu-20.04
+            webkitgtk-api: '4.0'
+            apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.0-dev
           # Distributables
           - cxx-std: 20
             image: ubuntu-22.04
