@@ -95,10 +95,10 @@ jobs:
           --build-config "${{ steps.vars.outputs.build-config }}"
         working-directory: ${{ steps.vars.outputs.build-dir }}
 
-        name: Create single-config package
+      - name: Create single-config package
         run: cpack -C "${{ steps.vars.outputs.build-config }}" --config CPackConfig.cmake
         working-directory: ${{ steps.vars.outputs.build-dir }}
 
-        name: Create source package
+      - name: Create source package
         run: cpack -C "${{ steps.vars.outputs.build-config }}" --config CPackSourceConfig.cmake
         working-directory: ${{ steps.vars.outputs.build-dir }}
