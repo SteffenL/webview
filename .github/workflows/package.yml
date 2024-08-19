@@ -103,12 +103,9 @@ jobs:
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
           generator: Xcode
-          generator-platform:
+          osx-deployment-target: '10.9'
           shell: bash
           source-dir: .
-          test-wrapper-cmd:
-          # Job-specific
-          osx-deployment-target: '10.9'
 
   windows-msvc:
     runs-on: ${{ matrix.image }}
@@ -143,7 +140,6 @@ jobs:
           generator-platform: ${{ matrix.generator-platform }}
           shell: bash
           source-dir: .
-          test-wrapper-cmd:
 
   windows-msys2:
     runs-on: ${{ matrix.image }}
@@ -175,16 +171,15 @@ jobs:
       - name: Build
         uses: ./.github/workflows/cmake/build
         with:
+          # Common
           artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}
           build-dir: build
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
           generator: Ninja Multi-Config
-          generator-platform:
           shell: msys2 {0}
           source-dir: .
-          test-wrapper-cmd:
 
 #      - name: Generate artifact name
 #        id: generate-artifact-name
