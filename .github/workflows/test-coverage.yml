@@ -84,7 +84,7 @@ jobs:
             compiler-name: clang
             cc: clang
             cxx: clang++
-            gcov: llvm-cov gcov
+            gcov: xcrun llvm-cov gcov
     steps:
       - name: Checkout
         uses: actions/checkout@v4
