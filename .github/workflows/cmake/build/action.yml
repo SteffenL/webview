@@ -8,17 +8,23 @@ inputs:
     description: CMake build directory
     required: true
   cc:
-    description: C compiler executable
+    description: Sets CMAKE_C_COMPILER
     required: true
   cxx:
-    description: C++ compiler executable
+    description: Sets CMAKE_CXX_COMPILER
     required: true
   cxx-std:
-    description: C++ standard
+    description: Sets CMAKE_CXX_STANDARD
     required: true
   generator:
     description: CMake generator
     required: true
+  generator-platform:
+    description: Sets CMAKE_GENERATOR_PLATFORM
+    required: false
+  osx-deployment-target:
+    description: Sets CMAKE_OSX_DEPLOYMENT_TARGET
+    required: false
   shell:
     description: Shell
     required: true
@@ -32,14 +38,22 @@ runs:
   using: composite
   steps:
     - name: Configure
-      run: >
-        cmake
-        -G "${{ inputs.generator }}"
-        -B "${{ inputs.build-dir }}"
-        -S "${{ inputs.source-dir }}"
-        -D "CMAKE_C_COMPILER=${{ matrix.cc }}"
-        -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}"
-        -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+      run: |
+        cmake_args=()
+        if [[ ! -z "${{ inputs.generator-platform }}" ]]; then
+          cmake_args+=(-D "CMAKE_GENERATOR_PLATFORM=${{ inputs.generator-platform }}")
+        fi
+        if [[ ! -z "${{ inputs.osx-deployment-target }}" ]]; then
+          cmake_args+=(-D "CMAKE_OSX_DEPLOYMENT_TARGET=${{ inputs.osx-deployment-target }}")
+        fi
+        cmake \
+          -G "${{ inputs.generator }}" \
+          -B "${{ inputs.build-dir }}" \
+          -S "${{ inputs.source-dir }}" \
+          -D "CMAKE_C_COMPILER=${{ matrix.cc }}" \
+          -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}" \
+          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}" \
+          "${cmake_args[@]}"
       shell: ${{ inputs.shell }}
 
     - name: Build (Debug)

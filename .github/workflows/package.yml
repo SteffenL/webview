@@ -107,7 +107,42 @@ jobs:
           source-dir: .
           test-wrapper-cmd:
 
-  msys2:
+  windows-msvc:
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        cxx-std: [20]
+        image: [windows-2022]
+        generator-platform: [ARM64, x64, Win32]
+        include:
+          # Compilers
+          - toolchain: vs2022
+            compiler-name: msvc
+            cc: cl
+            cxx: cl
+            generator: Visual Studio 17 2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/workflows/setup-env
+
+      - name: Build
+        uses: ./.github/workflows/cmake/build
+        with:
+          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
+          build-dir: build
+          cc: ${{ matrix.cc }}
+          cxx: ${{ matrix.cxx }}
+          cxx-std: ${{ matrix.cxx-std }}
+          generator: ${{ matrix.generator }}
+          generator-platform: ${{ matrix.generator-platform }}
+          shell: bash
+          source-dir: .
+          test-wrapper-cmd:
+
+  windows-msys2:
     runs-on: ${{ matrix.image }}
     strategy:
       matrix:
@@ -146,9 +181,6 @@ jobs:
           shell: msys2 {0}
           source-dir: .
           test-wrapper-cmd:
-
-        #  - { image: windows-2019, toolchain: msvc,               compiler-name: vs2019,  cc: cl,       cxx: cl,         gen: Visual Studio 16 2019, multi: true,  shell: bash }
-        #  - { image: windows-2022, toolchain: msvc,               compiler-name: vs2022,  cc: cl,       cxx: cl,         gen: Visual Studio 17 2022, multi: true,  shell: bash }
 
 #      - name: Generate artifact name
 #        id: generate-artifact-name
