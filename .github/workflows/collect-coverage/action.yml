@@ -1,0 +1,51 @@
+name: Collect code coverage
+description: Collects code coverage using gcovr
+inputs:
+  artifacts-name:
+    description: Name of artifacts
+    required: true
+  gcov:
+    description: gcov executable
+    required: true
+    default: gcov
+  gcovr-version:
+    description: gcovr version
+    required: true
+    default: '7.2'
+  shell:
+    description: Shell
+    required: true
+    default: shell
+runs:
+  using: composite
+  steps:
+    - name: Install gcovr
+      run: pip install "gcovr==${{ inputs.gcovr-version }}"
+      shell: ${{ inputs.shell }}
+
+    - name: Prepare coverage artifacts
+      id: prepare-coverage-artifacts
+      run: |
+        artifact_dir="$(mktemp -d)/${{ inputs.artifacts-name }}"
+
+        gcovr_args=(
+          --config gcovr.ci.cfg
+          --json "${artifact_dir}/coverage.json"
+        )
+        if [[ ! -z "${{ inputs.gcov }}" ]]; then
+          gcovr_args+=(--gcov-executable "${{ inputs.gcov }}")
+        fi
+
+        mkdir -p "${artifact_dir}"
+        gcovr "${gcovr_args[@]}"
+
+        echo "upload-dir=${artifact_dir}" >> "${GITHUB_OUTPUT}"
+      shell: ${{ inputs.shell }}
+
+    - name: Upload test coverage artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifacts-name }}
+        path: ${{ steps.prepare-coverage-artifacts.outputs.upload-dir }}
+        retention-days: 1
+        if-no-files-found: error

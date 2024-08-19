@@ -12,8 +12,13 @@ on:
         description: Coverage report output directory
         required: false
         default: report
+env:
+  BUILD_CONFIG: Profile
+  BUILD_DIR: build
+  SOURCE_DIR: .
 jobs:
   linux:
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         cxx-std: [11, 20]
@@ -28,155 +33,180 @@ jobs:
             apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.1-dev
           - webkitgtk-api: '6.0'
             apt-webkitgtk: libgtk-4-dev libwebkitgtk-6.0-dev
-    uses: ./.github/workflows/coverage-collect.yml
-    with:
-      apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
-      artifacts-name: linux_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}
-      cc: ${{ matrix.config.cc }}
-      compiler-name: ${{ matrix.config.compiler-name }}
-      cxx: ${{ matrix.config.cxx }}
-      cxx-std: ${{ matrix.cxx-std }}
-      image: ubuntu-22.04
-      gcov: ${{ matrix.config.gcov }}
-      gcovr-version: ${{ inputs.gcovr-version }}
-      gen: Ninja
-      report-dir: ${{ inputs.report-dir }}
-      shell: bash
-      test-wrapper-cmd: xvfb-run
-      toolchain: ${{ matrix.config.toolchain }}
-
-  macos:
-    strategy:
-      matrix:
-        cxx-std: [11, 20]
-        config:
-          - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: xcrun llvm-cov gcov }
-    uses: ./.github/workflows/coverage-collect.yml
-    with:
-      artifacts-name: macos_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}
-      cc: ${{ matrix.config.cc }}
-      compiler-name: ${{ matrix.config.compiler-name }}
-      cxx: ${{ matrix.config.cxx }}
-      cxx-std: ${{ matrix.cxx-std }}
-      image: macos-14
-      gcov: ${{ matrix.config.gcov }}
-      gcovr-version: ${{ inputs.gcovr-version }}
-      gen: Xcode
-      report-dir: ${{ inputs.report-dir }}
-      shell: bash
-      toolchain: ${{ matrix.config.toolchain }}
-
-  windows:
-    strategy:
-      matrix:
-        cxx-std: [11, 20]
-        config:
-          - { toolchain: msys2-gnu-ucrt64,   compiler-name: gcc,   cc: gcc,   cxx: g++,     gcov: gcov,          msys: UCRT64 }
-          - { toolchain: msys2-llvm-clang64, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov, msys: CLANG64 }
-    uses: ./.github/workflows/coverage-collect.yml
-    with:
-      artifacts-name: windows_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}
-      cc: ${{ matrix.config.cc }}
-      compiler-name: ${{ matrix.config.compiler-name }}
-      cxx: ${{ matrix.config.cxx }}
-      cxx-std: ${{ matrix.cxx-std }}
-      image: windows-2022
-      gcov: ${{ matrix.config.gcov }}
-      gcovr-version: ${{ inputs.gcovr-version }}
-      gen: Ninja
-      msys: ${{ matrix.config.msys }}
-      report-dir: ${{ inputs.report-dir }}
-      shell: msys2 {0}
-      toolchain: ${{ matrix.config.toolchain }}
-
-  report:
-    needs:
-      - linux
-      - macos
-      - windows
-    runs-on: ubuntu-22.04
     steps:
+      - name: Set up variables
+        id: vars
+        run: |
+          echo "artifacts-name=linux_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}" >> "${GITHUB_OUTPUT}"
+          echo "build-config=Profile" >> "${GITHUB_OUTPUT}"
+          echo "build-dir=build" >> "${GITHUB_OUTPUT}"
+          echo "generator=Ninja" >> "${GITHUB_OUTPUT}"
+          echo "source-dir=." >> "${GITHUB_OUTPUT}"
+          echo "test-wrapper-cmd=xvfb-run" >> "${GITHUB_OUTPUT}"
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Python
+      - name: Set up environment
+        uses: ./.github/workflows/setup-env
+        with:
+          apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
+
+      - name: Build and run tests with coverage
         run: >
-          sudo apt-get install --no-install-recommends -y
-          python3
-          python3-lxml
-          python3-markupsafe
-          python3-pip
+          ${{ steps.vars.outputs.test-wrapper-cmd }}
+          ctest --build-and-test
+          "${{ steps.vars.outputs.source-dir }}"
+          "${{ steps.vars.outputs.build-dir }}"
+          --build-generator "${{ steps.vars.outputs.generator }}"
+          --build-config "${{ steps.vars.outputs.build-config }}"
+          --test-command ctest
+          --output-on-failure
+          --build-options
+          "CMAKE_C_COMPILER=${{ matrix.config.cc }}"
+          "CMAKE_CXX_COMPILER=${{ matrix.config.cxx }}"
+          "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
 
-      - name: Install gcovr
-        run: pip install "gcovr==${{ inputs.gcovr-version }}"
-
-      - name: Merge test coverage artifacts
-        uses: actions/upload-artifact/merge@v4
+      - name: Collect code coverage
+        uses: ./.github/workflows/collect-coverage
         with:
-          name: test_coverage_data
-          pattern: test_coverage_data_*
-          delete-merged: true
-          retention-days: 1
-          separate-directories: true
+          artifacts-name: "${{ steps.vars.outputs.artifacts-name }}"
+          gcov: "${{ matrix.config.gcov }}"
+          shell: bash
 
-      - name: Download test coverage artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: test_coverage_data
-
-      - name: Generate report
-        run: |
-          tracefile_args=()
-          while read f; do
-            tracefile_args+=(--add-tracefile "${f}")
-          done <<< "$(find . -type f -name "coverage.json")"
-          mkdir -p "${{ inputs.report-dir }}/html"
-          gcovr --config gcovr.ci.cfg --json "${{ inputs.report-dir }}/gcovr.json" "${tracefile_args[@]}"
-          gcovr --config gcovr.ci.cfg --coveralls "${{ inputs.report-dir }}/coveralls.json" --add-tracefile "${{ inputs.report-dir }}/gcovr.json"
-          gcovr --config gcovr.ci.cfg --json-summary "${{ inputs.report-dir }}/summary.json" --add-tracefile "${{ inputs.report-dir }}/gcovr.json"
-          gcovr --config gcovr.ci.cfg --html-details "${{ inputs.report-dir }}/html/index.html" --add-tracefile "${{ inputs.report-dir }}/gcovr.json"
-
-      - name: Upload report artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: test_coverage_report
-          path: ${{ inputs.report-dir }}
-          retention-days: 1
-          if-no-files-found: error
-
-      - name: Add report to CI job summary
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const numberOr = (value, alternative) => Number.isNaN(value = parseInt(value)) ? alternative : value;
-            const percentValue = (value, percentSymbol = "%") => numberOr(value, "-") + percentSymbol;
-            const data = require("./${{ inputs.report-dir }}/summary.json");
-            await core.summary
-              .addHeading("Test Coverage Summary")
-              .addTable([
-                [
-                  { data: "Lines", header: true },
-                  { data: "Functions", header: true },
-                  { data: "Branches", header: true }
-                ],
-                [
-                  `${percentValue(data.line_percent)} ${data.line_covered}/${data.line_total}`,
-                  `${percentValue(data.function_percent)} ${data.function_covered}/${data.function_total}`,
-                  `${percentValue(data.branch_percent)} ${data.branch_covered}/${data.branch_total}`
-                ]
-              ])
-              .addTable([
-                [
-                  { data: "File", header: true },
-                  { data: "Lines", header: true },
-                  { data: "Functions", header: true },
-                  { data: "Branches", header: true }
-                ],
-                ...data.files.map(file => [
-                  file.filename,
-                  `${percentValue(file.line_percent)} ${file.line_covered}/${file.line_total}`,
-                  `${percentValue(file.function_percent)} ${file.function_covered}/${file.function_total}`,
-                  `${percentValue(file.branch_percent)} ${file.branch_covered}/${file.branch_total}`
-                ])
-              ])
-              .write();
+#  macos:
+#    strategy:
+#      matrix:
+#        cxx-std: [11, 20]
+#        config:
+#          - { toolchain: llvm, compiler-name: clang, cc: clang, cxx: clang++, gcov: xcrun llvm-cov gcov }
+#    uses: ./.github/workflows/coverage-collect.yml
+#    with:
+#      artifacts-name: macos_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}
+#      cc: ${{ matrix.config.cc }}
+#      compiler-name: ${{ matrix.config.compiler-name }}
+#      cxx: ${{ matrix.config.cxx }}
+#      cxx-std: ${{ matrix.cxx-std }}
+#      image: macos-14
+#      gcov: ${{ matrix.config.gcov }}
+#      gcovr-version: ${{ inputs.gcovr-version }}
+#      gen: Xcode
+#      report-dir: ${{ inputs.report-dir }}
+#      shell: bash
+#      toolchain: ${{ matrix.config.toolchain }}
+#
+#  windows:
+#    strategy:
+#      matrix:
+#        cxx-std: [11, 20]
+#        config:
+#          - { toolchain: msys2-gnu-ucrt64,   compiler-name: gcc,   cc: gcc,   cxx: g++,     gcov: gcov,          msys: UCRT64 }
+#          - { toolchain: msys2-llvm-clang64, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov, msys: CLANG64 }
+#    uses: ./.github/workflows/coverage-collect.yml
+#    with:
+#      artifacts-name: windows_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}
+#      cc: ${{ matrix.config.cc }}
+#      compiler-name: ${{ matrix.config.compiler-name }}
+#      cxx: ${{ matrix.config.cxx }}
+#      cxx-std: ${{ matrix.cxx-std }}
+#      image: windows-2022
+#      gcov: ${{ matrix.config.gcov }}
+#      gcovr-version: ${{ inputs.gcovr-version }}
+#      gen: Ninja
+#      msys: ${{ matrix.config.msys }}
+#      report-dir: ${{ inputs.report-dir }}
+#      shell: msys2 {0}
+#      toolchain: ${{ matrix.config.toolchain }}
+#
+#  report:
+#    needs:
+#      - linux
+#      - macos
+#      - windows
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Install Python
+#        run: >
+#          sudo apt-get install --no-install-recommends -y
+#          python3
+#          python3-lxml
+#          python3-markupsafe
+#          python3-pip
+#
+#      - name: Install gcovr
+#        run: pip install "gcovr==${{ inputs.gcovr-version }}"
+#
+#      - name: Merge test coverage artifacts
+#        uses: actions/upload-artifact/merge@v4
+#        with:
+#          name: test_coverage_data
+#          pattern: test_coverage_data_*
+#          delete-merged: true
+#          retention-days: 1
+#          separate-directories: true
+#
+#      - name: Download test coverage artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: test_coverage_data
+#
+#      - name: Generate report
+#        run: |
+#          tracefile_args=()
+#          while read f; do
+#            tracefile_args+=(--add-tracefile "${f}")
+#          done <<< "$(find . -type f -name "coverage.json")"
+#          mkdir -p "${{ inputs.report-dir }}/html"
+#          gcovr --config gcovr.ci.cfg --json "${{ inputs.report-dir }}/gcovr.json" "${tracefile_args[@]}"
+#          gcovr --config gcovr.ci.cfg --coveralls "${{ inputs.report-dir }}/coveralls.json" --add-tracefile "${{ inputs.report-dir }}/gcovr.json"
+#          gcovr --config gcovr.ci.cfg --json-summary "${{ inputs.report-dir }}/summary.json" --add-tracefile "${{ inputs.report-dir }}/gcovr.json"
+#          gcovr --config gcovr.ci.cfg --html-details "${{ inputs.report-dir }}/html/index.html" --add-tracefile "${{ inputs.report-dir }}/gcovr.json"
+#
+#      - name: Upload report artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: test_coverage_report
+#          path: ${{ inputs.report-dir }}
+#          retention-days: 1
+#          if-no-files-found: error
+#
+#      - name: Add report to CI job summary
+#        uses: actions/github-script@v7
+#        with:
+#          script: |
+#            const numberOr = (value, alternative) => Number.isNaN(value = parseInt(value)) ? alternative : value;
+#            const percentValue = (value, percentSymbol = "%") => numberOr(value, "-") + percentSymbol;
+#            const data = require("./${{ inputs.report-dir }}/summary.json");
+#            await core.summary
+#              .addHeading("Test Coverage Summary")
+#              .addTable([
+#                [
+#                  { data: "Lines", header: true },
+#                  { data: "Functions", header: true },
+#                  { data: "Branches", header: true }
+#                ],
+#                [
+#                  `${percentValue(data.line_percent)} ${data.line_covered}/${data.line_total}`,
+#                  `${percentValue(data.function_percent)} ${data.function_covered}/${data.function_total}`,
+#                  `${percentValue(data.branch_percent)} ${data.branch_covered}/${data.branch_total}`
+#                ]
+#              ])
+#              .addTable([
+#                [
+#                  { data: "File", header: true },
+#                  { data: "Lines", header: true },
+#                  { data: "Functions", header: true },
+#                  { data: "Branches", header: true }
+#                ],
+#                ...data.files.map(file => [
+#                  file.filename,
+#                  `${percentValue(file.line_percent)} ${file.line_covered}/${file.line_total}`,
+#                  `${percentValue(file.function_percent)} ${file.function_covered}/${file.function_total}`,
+#                  `${percentValue(file.branch_percent)} ${file.branch_covered}/${file.branch_total}`
+#                ])
+#              ])
+#              .write();
+#
