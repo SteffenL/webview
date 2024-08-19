@@ -14,7 +14,7 @@ jobs:
               # Base matrix
               image: [ubuntu-20.04, ubuntu-22.04]
             operations:
-              - type: add
+              - type: merge
                 match: [image]
                 matrix:
                   image: [ubuntu-22.04]
@@ -31,7 +31,7 @@ jobs:
                       cc: gcc-12
                       cxx: g++-12
                       apt: gcc-12 g++-12
-              - type: add
+              - type: merge
                 match: [image]
                 matrix:
                   image: [ubuntu-20.04]
