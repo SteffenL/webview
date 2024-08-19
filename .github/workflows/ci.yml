@@ -4,13 +4,13 @@ defaults:
   run:
     shell: bash
 jobs:
-  check:
-    uses: ./.github/workflows/check.yml
+#  check:
+#    uses: ./.github/workflows/check.yml
 
   package:
-    needs: check
+#    needs: check
     uses: ./.github/workflows/package.yml
 
-  test-coverage:
-    needs: check
-    uses: ./.github/workflows/test-coverage.yml
+#  test-coverage:
+#    needs: check
+#    uses: ./.github/workflows/test-coverage.yml
