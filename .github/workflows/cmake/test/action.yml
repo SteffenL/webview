@@ -91,6 +91,7 @@ runs:
           --output-on-failure
           --build-config "${config}"
         )
+        "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
     - name: Generate coverage data

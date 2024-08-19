@@ -102,6 +102,7 @@ runs:
           --output-on-failure
           --build-config "${config}"
         )
+        "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
     - name: Test (Release)
@@ -117,6 +118,7 @@ runs:
           --output-on-failure
           --build-config "${config}"
         )
+        "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
     - name: Create multi-config package
