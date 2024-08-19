@@ -3,11 +3,10 @@ on:
   workflow_call:
 jobs:
   linux:
-    name: linux (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }}, webkitgtk${{ matrix.webkitgtk-api }})
-    runs-on: ${{ matrix.image }}
+    name: linux (c++${{ matrix.config.cxx-std }}, ${{ matrix.config.toolchain }}, ${{ matrix.config.compiler-name }}, ${{ matrix.config.image }}, webkitgtk${{ matrix.config.webkitgtk-api }})
+    runs-on: ${{ matrix.config.image }}
     strategy:
       matrix:
-        # Compilers
         config:
           # Ubuntu 22.04
           - apt: clang-15 clang++-15 libgtk-4-dev libwebkitgtk-6.0-dev
@@ -82,19 +81,19 @@ jobs:
       - name: Set up environment
         uses: ./.github/workflows/setup-env
         with:
-          apt: ${{ matrix.apt }}
+          apt: ${{ matrix.config.apt }}
 
       - name: Build
         uses: ./.github/workflows/cmake/build
         with:
-          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}
+          artifacts-name: ${{ runner.os }}_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.config.cxx-std }}_webkitgtk${{ matrix.config.webkitgtk-api }}
           build-dir: build
-          cc: ${{ matrix.cc }}
-          cxx: ${{ matrix.cxx }}
-          cxx-std: ${{ matrix.cxx-std }}
+          cc: ${{ matrix.config.cc }}
+          cxx: ${{ matrix.config.cxx }}
+          cxx-std: ${{ matrix.config.cxx-std }}
           generator: Ninja Multi-Config
           # Source code should be packaged only once
-          package-source: ${{ matrix.toolchain == 'llvm' && matrix.compiler-name == 'clang15' && matrix.cxx-std == 20 && matrix.webkitgtk-api == '6.0' }}
+          package-source: ${{ matrix.config.toolchain == 'llvm' && matrix.config.compiler-name == 'clang15' && matrix.config.cxx-std == 20 && matrix.config.webkitgtk-api == '6.0' }}
           shell: bash
           source-dir: .
           test-wrapper-cmd: xvfb-run
