@@ -28,24 +28,28 @@ jobs:
             cc: clang-15
             cxx: clang++-15
             apt: clang-15 clang++-15
+            gcov: llvm-cov-15 gcov
           - image: ubuntu-22.04
             toolchain: gnu
             compiler-name: gcc12
             cc: gcc-12
             cxx: g++-12
             apt: gcc-12 g++-12
+            gcov: gcov-12
           - image: ubuntu-20.04
             toolchain: llvm
             compiler-name: clang12
             cc: clang-12
             cxx: clang++-12
             apt: clang-12 clang++-12
+            gcov: llvm-cov-12 gcov
           - image: ubuntu-20.04
             toolchain: gnu
             compiler-name: gcc10
             cc: gcc-10
             cxx: g++-10
             apt: gcc-10 g++-10
+            gcov: gcov-10
           # WebKitGTK
           - webkitgtk-api: '6.0'
             apt-webkitgtk: libgtk-4-dev libwebkitgtk-6.0-dev
@@ -146,6 +150,8 @@ jobs:
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
+          gcov: ${{ inputs.gcov }}
+          gcovr-version: ${{ inputs.gcovr-version }}
           generator: Ninja Multi-Config
           shell: msys2 {0}
           source-dir: .

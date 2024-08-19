@@ -16,6 +16,12 @@ inputs:
   cxx-std:
     description: Sets CMAKE_CXX_STANDARD
     required: true
+  gcov:
+    description: gcov executable
+    required: true
+  gcovr-version:
+    description: gcovr version
+    required: true
   generator:
     description: CMake generator
     required: true
