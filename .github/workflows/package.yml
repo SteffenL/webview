@@ -72,19 +72,19 @@ jobs:
             package-source: false
     steps:
       - run: |
-        echo "cxx-std: ${{ matrix.cxx-std }}"
-        echo "image: ${{ matrix.image }}"
-        echo "webkitgtk-api: ${{ matrix.webkitgtk-api }}"
-        echo "distributable: ${{ matrix.distributable }}"
-        echo "gen: ${{ matrix.gen }}"
-        echo "toolchain: ${{ matrix.toolchain }}"
-        echo "compiler-name: ${{ matrix.compiler-name }}"
-        echo "cc: ${{ matrix.cc }}"
-        echo "cxx: ${{ matrix.cxx }}"
-        echo "apt: ${{ matrix.apt }}"
-        echo "apt-webkitgtk: ${{ matrix.apt-webkitgtk }}"
-        echo "package: ${{ matrix.package }}"
-        echo "package-source: ${{ matrix.package-source }}"
+          echo "cxx-std: ${{ matrix.cxx-std }}"
+          echo "image: ${{ matrix.image }}"
+          echo "webkitgtk-api: ${{ matrix.webkitgtk-api }}"
+          echo "distributable: ${{ matrix.distributable }}"
+          echo "gen: ${{ matrix.gen }}"
+          echo "toolchain: ${{ matrix.toolchain }}"
+          echo "compiler-name: ${{ matrix.compiler-name }}"
+          echo "cc: ${{ matrix.cc }}"
+          echo "cxx: ${{ matrix.cxx }}"
+          echo "apt: ${{ matrix.apt }}"
+          echo "apt-webkitgtk: ${{ matrix.apt-webkitgtk }}"
+          echo "package: ${{ matrix.package }}"
+          echo "package-source: ${{ matrix.package-source }}"
 #      - name: Checkout
 #        uses: actions/checkout@v4
 #
