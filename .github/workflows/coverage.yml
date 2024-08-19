@@ -48,20 +48,28 @@ jobs:
         with:
           apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
 
-      - name: Build and run tests with coverage
+      - name: Configure
+        run: >
+          cmake
+          -G "${{ steps.vars.outputs.generator }}"
+          -B "${{ steps.vars.outputs.build-dir }}"
+          -S "${{ steps.vars.outputs.source-dir }}"
+          -D "CMAKE_BUILD_TYPE=${{ steps.vars.outputs.build-config }}"
+          -D "CMAKE_C_COMPILER=${{ matrix.config.cc }}"
+          -D "CMAKE_CXX_COMPILER=${{ matrix.config.cxx }}"
+          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+
+      - name: Build
+        run: >
+          cmake
+          --build "${{ steps.vars.outputs.build-dir }}"
+          --config "${{ steps.vars.outputs.build-config }}"
+
+      - name: Test
         run: >
           ${{ steps.vars.outputs.test-wrapper-cmd }}
-          ctest --build-and-test
-          "${{ steps.vars.outputs.source-dir }}"
-          "${{ steps.vars.outputs.build-dir }}"
-          --build-generator "${{ steps.vars.outputs.generator }}"
-          --build-config "${{ steps.vars.outputs.build-config }}"
-          --test-command ctest
-          --output-on-failure
-          --build-options
-          "CMAKE_C_COMPILER=${{ matrix.config.cc }}"
-          "CMAKE_CXX_COMPILER=${{ matrix.config.cxx }}"
-          "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+          ctest --output-on-failure
+        working-directory: ${{ steps.vars.outputs.build-dir }}
 
       - name: Collect code coverage
         uses: ./.github/workflows/collect-coverage
@@ -87,28 +95,26 @@ jobs:
           echo "generator=Xcode" >> "${GITHUB_OUTPUT}"
           echo "source-dir=." >> "${GITHUB_OUTPUT}"
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up environment
-        uses: ./.github/workflows/setup-env
-        with:
-          apt: ${{ matrix.config.apt }} ${{ matrix.apt-webkitgtk }}
-
-      - name: Build and run tests with coverage
+      - name: Configure
         run: >
-          ${{ steps.vars.outputs.test-wrapper-cmd }}
-          ctest --build-and-test
-          "${{ steps.vars.outputs.source-dir }}"
-          "${{ steps.vars.outputs.build-dir }}"
-          --build-generator "${{ steps.vars.outputs.generator }}"
-          --build-config "${{ steps.vars.outputs.build-config }}"
-          --test-command ctest
-          --output-on-failure
-          --build-options
-          "CMAKE_C_COMPILER=${{ matrix.config.cc }}"
-          "CMAKE_CXX_COMPILER=${{ matrix.config.cxx }}"
-          "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+          cmake
+          -G "${{ steps.vars.outputs.generator }}"
+          -B "${{ steps.vars.outputs.build-dir }}"
+          -S "${{ steps.vars.outputs.source-dir }}"
+          -D "CMAKE_BUILD_TYPE=${{ steps.vars.outputs.build-config }}"
+          -D "CMAKE_C_COMPILER=${{ matrix.config.cc }}"
+          -D "CMAKE_CXX_COMPILER=${{ matrix.config.cxx }}"
+          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+
+      - name: Build
+        run: >
+          cmake
+          --build "${{ steps.vars.outputs.build-dir }}"
+          --config "${{ steps.vars.outputs.build-config }}"
+
+      - name: Test
+        run: ctest --output-on-failure
+        working-directory: ${{ steps.vars.outputs.build-dir }}
 
       - name: Collect code coverage
         uses: ./.github/workflows/collect-coverage
