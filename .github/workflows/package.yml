@@ -52,17 +52,14 @@ jobs:
                 match: [webkitgtk-api]
                 matrix:
                   webkitgtk-api: ['6.0']
-                  apt-webkitgtk: [libgtk-4-dev libwebkitgtk-6.0-dev]
               - type: merge
                 match: [webkitgtk-api]
                 matrix:
                 - webkitgtk-api: ['4.1']
-                  apt-webkitgtk: [libgtk-3-dev libwebkit2gtk-4.1-dev]
               - type: merge
                 match: [webkitgtk-api]
                 matrix:
                 - webkitgtk-api: ['4.0']
-                  apt-webkitgtk: [libgtk-3-dev libwebkit2gtk-4.0-dev]
     outputs:
       matrix: ${{ steps.build-matrix.outputs.matrix }}
 
@@ -79,7 +76,8 @@ jobs:
       - name: Set up environment
         uses: ./.github/workflows/setup-env
         with:
-          apt: ${{ matrix.apt }} ${{ matrix.apt-webkitgtk }}
+          apt: ${{ matrix.apt }}
+          webkitgtk-api: ${{ matrix.webkitgtk-api }}
 
       - name: Build
         uses: ./.github/workflows/cmake/build
@@ -96,168 +94,169 @@ jobs:
           source-dir: .
           test-wrapper-cmd: xvfb-run
 
-  macos:
-    name: macos (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }})
-    runs-on: ${{ matrix.image }}
-    strategy:
-      matrix:
-        cxx-std: [20]
-        image: [macos-14]
-        include:
-          # Compilers
-          - toolchain: llvm
-            compiler-name: clang
-            cc: clang
-            cxx: clang++
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up environment
-        uses: ./.github/workflows/setup-env
-
-      - name: Build
-        uses: ./.github/workflows/cmake/build
-        with:
-          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
-          build-dir: build
-          cc: ${{ matrix.cc }}
-          cxx: ${{ matrix.cxx }}
-          cxx-std: ${{ matrix.cxx-std }}
-          generator: Xcode
-          osx-deployment-target: '10.9'
-          shell: bash
-          source-dir: .
-
-  windows-msvc:
-    name: windows-msvc (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.generator-platform }})
-    runs-on: ${{ matrix.image }}
-    strategy:
-      matrix:
-        cxx-std: [20]
-        image: [windows-2022]
-        generator-platform: [ARM64, x64, Win32]
-        include:
-          # Compilers
-          - toolchain: vs2022
-            compiler-name: msvc
-            cc: cl
-            cxx: cl
-            generator: Visual Studio 17 2022
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up environment
-        uses: ./.github/workflows/setup-env
-
-      - name: Build
-        uses: ./.github/workflows/cmake/build
-        with:
-          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.generator-platform }}
-          build-dir: build
-          cc: ${{ matrix.cc }}
-          cxx: ${{ matrix.cxx }}
-          cxx-std: ${{ matrix.cxx-std }}
-          generator: ${{ matrix.generator }}
-          generator-platform: ${{ matrix.generator-platform }}
-          shell: bash
-          source-dir: .
-
-  windows-msys2:
-    name: windows-msys2 (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.msys }})
-    runs-on: ${{ matrix.image }}
-    strategy:
-      matrix:
-        cxx-std: [20]
-        image: [windows-2022]
-        include:
-          # Compilers
-          - toolchain: msys2-gnu-ucrt64
-            compiler-name: gcc
-            cc: gcc
-            cxx: g++
-            msys: UCRT64
-          - toolchain: msys2-llvm-clang64
-            compiler-name: clang
-            cc: clang
-            cxx: clang++
-            msys: CLANG64
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up environment
-        uses: ./.github/workflows/setup-env
-        with:
-          msys: ${{ matrix.msys }}
-
-      - name: Build
-        uses: ./.github/workflows/cmake/build
-        with:
-          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}
-          build-dir: build
-          cc: ${{ matrix.cc }}
-          cxx: ${{ matrix.cxx }}
-          cxx-std: ${{ matrix.cxx-std }}
-          generator: Ninja Multi-Config
-          shell: msys2 {0}
-          source-dir: .
-
-  merge-package-artifacts:
-    needs:
-      - linux
-      - macos
-      - windows-msvc
-      - windows-msys2
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Merge package artifacts
-        uses: actions/upload-artifact/merge@v4
-        with:
-          name: package
-          pattern: package_*
-          delete-merged: true
-
-  api-docs:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install doxygen
-        run: sudo apt-get install -y doxygen
-
-      - name: Prepare output directory
-        run: mkdir -p build/docs
-
-      - name: Run doxygen
-        run: doxygen
-
-      - name: Create package (tar.gz)
-        run: tar -czvf docs.tar.gz docs
-        working-directory: build
-
-      - name: Create package (zip)
-        run: zip -r9 docs.zip docs
-        working-directory: build
-
-      - name: Generate checksum files
-        run: |
-          while read f; do
-            shasum --algorithm 256 "${f}" > "${f}.sha256"
-          done << EOF
-          $(find . -maxdepth 1 -type f -name '*.gz' -or -name '*.zip')
-          EOF
-        working-directory: build
-
-      - name: Upload distributable artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: docs
-          path: |
-            build/*.gz
-            build/*.sha256
-            build/*.zip
-          retention-days: 1
-          if-no-files-found: error
+#  macos:
+#    name: macos (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }})
+#    runs-on: ${{ matrix.image }}
+#    strategy:
+#      matrix:
+#        cxx-std: [20]
+#        image: [macos-14]
+#        include:
+#          # Compilers
+#          - toolchain: llvm
+#            compiler-name: clang
+#            cc: clang
+#            cxx: clang++
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Set up environment
+#        uses: ./.github/workflows/setup-env
+#
+#      - name: Build
+#        uses: ./.github/workflows/cmake/build
+#        with:
+#          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
+#          build-dir: build
+#          cc: ${{ matrix.cc }}
+#          cxx: ${{ matrix.cxx }}
+#          cxx-std: ${{ matrix.cxx-std }}
+#          generator: Xcode
+#          osx-deployment-target: '10.9'
+#          shell: bash
+#          source-dir: .
+#
+#  windows-msvc:
+#    name: windows-msvc (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.generator-platform }})
+#    runs-on: ${{ matrix.image }}
+#    strategy:
+#      matrix:
+#        cxx-std: [20]
+#        image: [windows-2022]
+#        generator-platform: [ARM64, x64, Win32]
+#        include:
+#          # Compilers
+#          - toolchain: vs2022
+#            compiler-name: msvc
+#            cc: cl
+#            cxx: cl
+#            generator: Visual Studio 17 2022
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Set up environment
+#        uses: ./.github/workflows/setup-env
+#
+#      - name: Build
+#        uses: ./.github/workflows/cmake/build
+#        with:
+#          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.generator-platform }}
+#          build-dir: build
+#          cc: ${{ matrix.cc }}
+#          cxx: ${{ matrix.cxx }}
+#          cxx-std: ${{ matrix.cxx-std }}
+#          generator: ${{ matrix.generator }}
+#          generator-platform: ${{ matrix.generator-platform }}
+#          shell: bash
+#          source-dir: .
+#
+#  windows-msys2:
+#    name: windows-msys2 (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.msys }})
+#    runs-on: ${{ matrix.image }}
+#    strategy:
+#      matrix:
+#        cxx-std: [20]
+#        image: [windows-2022]
+#        include:
+#          # Compilers
+#          - toolchain: msys2-gnu-ucrt64
+#            compiler-name: gcc
+#            cc: gcc
+#            cxx: g++
+#            msys: UCRT64
+#          - toolchain: msys2-llvm-clang64
+#            compiler-name: clang
+#            cc: clang
+#            cxx: clang++
+#            msys: CLANG64
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Set up environment
+#        uses: ./.github/workflows/setup-env
+#        with:
+#          msys: ${{ matrix.msys }}
+#
+#      - name: Build
+#        uses: ./.github/workflows/cmake/build
+#        with:
+#          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}
+#          build-dir: build
+#          cc: ${{ matrix.cc }}
+#          cxx: ${{ matrix.cxx }}
+#          cxx-std: ${{ matrix.cxx-std }}
+#          generator: Ninja Multi-Config
+#          shell: msys2 {0}
+#          source-dir: .
+#
+#  merge-package-artifacts:
+#    needs:
+#      - linux
+#      - macos
+#      - windows-msvc
+#      - windows-msys2
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Merge package artifacts
+#        uses: actions/upload-artifact/merge@v4
+#        with:
+#          name: package
+#          pattern: package_*
+#          delete-merged: true
+#
+#  api-docs:
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Install doxygen
+#        run: sudo apt-get install -y doxygen
+#
+#      - name: Prepare output directory
+#        run: mkdir -p build/docs
+#
+#      - name: Run doxygen
+#        run: doxygen
+#
+#      - name: Create package (tar.gz)
+#        run: tar -czvf docs.tar.gz docs
+#        working-directory: build
+#
+#      - name: Create package (zip)
+#        run: zip -r9 docs.zip docs
+#        working-directory: build
+#
+#      - name: Generate checksum files
+#        run: |
+#          while read f; do
+#            shasum --algorithm 256 "${f}" > "${f}.sha256"
+#          done << EOF
+#          $(find . -maxdepth 1 -type f -name '*.gz' -or -name '*.zip')
+#          EOF
+#        working-directory: build
+#
+#      - name: Upload distributable artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: docs
+#          path: |
+#            build/*.gz
+#            build/*.sha256
+#            build/*.zip
+#          retention-days: 1
+#          if-no-files-found: error
+#
