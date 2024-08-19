@@ -150,7 +150,7 @@ jobs:
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
-          gcov: ${{ inputs.gcov }}
+          gcov: ${{ matrix.gcov }}
           gcovr-version: ${{ inputs.gcovr-version }}
           generator: Ninja Multi-Config
           shell: msys2 {0}
