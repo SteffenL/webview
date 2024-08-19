@@ -67,8 +67,9 @@ jobs:
 
       - name: Test
         run: >
-          ${{ steps.vars.outputs.test-wrapper-cmd }}
-          ctest --output-on-failure
+          ctest
+          --output-on-failure
+          --build-config "${{ steps.vars.outputs.build-config }}"
         working-directory: ${{ steps.vars.outputs.build-dir }}
 
       - name: Collect code coverage
@@ -116,7 +117,10 @@ jobs:
           --config "${{ steps.vars.outputs.build-config }}"
 
       - name: Test
-        run: ctest --output-on-failure
+        run: >
+          ctest
+          --output-on-failure
+          --build-config "${{ steps.vars.outputs.build-config }}"
         working-directory: ${{ steps.vars.outputs.build-dir }}
 
       - name: Collect code coverage
@@ -125,6 +129,66 @@ jobs:
           artifacts-name: ${{ steps.vars.outputs.artifacts-name }}
           gcov: ${{ matrix.config.gcov }}
           shell: bash
+
+  msys2:
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        cxx-std: [11, 20]
+        config:
+          - { toolchain: msys2-gnu-ucrt64,   compiler-name: gcc,   cc: gcc,   cxx: g++,     gcov: gcov,          msys: UCRT64 }
+          - { toolchain: msys2-llvm-clang64, compiler-name: clang, cc: clang, cxx: clang++, gcov: llvm-cov gcov, msys: CLANG64 }
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Set up variables
+        id: vars
+        run: |
+          echo "artifacts-name=macos_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
+          echo "build-config=Profile" >> "${GITHUB_OUTPUT}"
+          echo "build-dir=build" >> "${GITHUB_OUTPUT}"
+          echo "generator=MSYS Makefiles" >> "${GITHUB_OUTPUT}"
+          echo "source-dir=." >> "${GITHUB_OUTPUT}"
+
+      - name: Set up environment
+        uses: ./.github/workflows/setup-env
+        with:
+          msys: ${{ matrix.config.msys }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake
+          -G "${{ steps.vars.outputs.generator }}"
+          -B "${{ steps.vars.outputs.build-dir }}"
+          -S "${{ steps.vars.outputs.source-dir }}"
+          -D "CMAKE_BUILD_TYPE=${{ steps.vars.outputs.build-config }}"
+          -D "CMAKE_C_COMPILER=${{ matrix.config.cc }}"
+          -D "CMAKE_CXX_COMPILER=${{ matrix.config.cxx }}"
+          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+
+      - name: Build
+        run: >
+          cmake
+          --build "${{ steps.vars.outputs.build-dir }}"
+          --config "${{ steps.vars.outputs.build-config }}"
+
+      - name: Test
+        run: >
+          ctest
+          --output-on-failure
+          --build-config "${{ steps.vars.outputs.build-config }}"
+        working-directory: ${{ steps.vars.outputs.build-dir }}
+
+      - name: Collect code coverage
+        uses: ./.github/workflows/collect-coverage
+        with:
+          artifacts-name: ${{ steps.vars.outputs.artifacts-name }}
+          gcov: ${{ matrix.config.gcov }}
+          shell: msys2 {0}
 
 #  windows:
 #    strategy:
