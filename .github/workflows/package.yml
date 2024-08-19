@@ -8,7 +8,6 @@ jobs:
     strategy:
       matrix:
         cxx-std: [20]
-        image: [ubuntu-20.04, ubuntu-22.04]
         webkitgtk-api: ['4.0', '4.1', '6.0']
         exclude:
           - image: ubuntu-20.04
