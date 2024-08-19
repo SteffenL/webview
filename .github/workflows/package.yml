@@ -15,6 +15,11 @@ jobs:
         cxx-std: [20]
         image: [ubuntu-20.04, ubuntu-22.04]
         webkitgtk-api: ['4.0', '4.1', '6.0']
+        exclude:
+          - image: ubuntu-20.04
+            webkitgtk-api: '6.0'
+          - image: ubuntu-20.04
+            webkitgtk-api: '4.1'
         include:
           # Defaults
           - distributable: false
@@ -51,11 +56,6 @@ jobs:
             apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.1-dev
           - webkitgtk-api: '4.0'
             apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.0-dev
-        exclude:
-          image: ubuntu-20.04
-          webkitgtk-api: '6.0'
-          image: ubuntu-20.04
-          webkitgtk-api: '4.1'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
