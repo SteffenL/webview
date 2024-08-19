@@ -13,6 +13,7 @@ jobs:
             matrix:
               # Base matrix
               image: [ubuntu-20.04, ubuntu-22.04]
+              cxx-std: []
             operations:
               - type: merge
                 match: [image]
