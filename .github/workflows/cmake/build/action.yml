@@ -39,21 +39,22 @@ runs:
   steps:
     - name: Configure
       run: |
-        cmake_args=()
+        cmake_cmd=(
+          cmake
+          -G "${{ inputs.generator }}"
+          -B "${{ inputs.build-dir }}"
+          -S "${{ inputs.source-dir }}"
+          -D "CMAKE_C_COMPILER=${{ matrix.cc }}"
+          -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}"
+          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+        )
         if [[ ! -z "${{ inputs.generator-platform }}" ]]; then
-          cmake_args+=(-D "CMAKE_GENERATOR_PLATFORM=${{ inputs.generator-platform }}")
+          cmake_cmd+=(-D "CMAKE_GENERATOR_PLATFORM=${{ inputs.generator-platform }}")
         fi
         if [[ ! -z "${{ inputs.osx-deployment-target }}" ]]; then
-          cmake_args+=(-D "CMAKE_OSX_DEPLOYMENT_TARGET=${{ inputs.osx-deployment-target }}")
+          cmake_cmd+=(-D "CMAKE_OSX_DEPLOYMENT_TARGET=${{ inputs.osx-deployment-target }}")
         fi
-        cmake \
-          -G "${{ inputs.generator }}" \
-          -B "${{ inputs.build-dir }}" \
-          -S "${{ inputs.source-dir }}" \
-          -D "CMAKE_C_COMPILER=${{ matrix.cc }}" \
-          -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}" \
-          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}" \
-          "${cmake_args[@]}"
+        "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
     - name: Build (Debug)
@@ -71,20 +72,32 @@ runs:
       shell: ${{ inputs.shell }}
 
     - name: Test (Debug)
-      run: >
-        ${{ inputs.test-wrapper-cmd }}
-        ctest
-        --output-on-failure
-        --build-config Debug
+      run: |
+        config=Debug
+        cmake_cmd=()
+        if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
+          cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
+        fi
+        cmake_cmd+=(
+          ctest
+          --output-on-failure
+          --build-config "${config}"
+        )
       working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
 
     - name: Test (Release)
-      run: >
-        ${{ inputs.test-wrapper-cmd }}
-        ctest
-        --output-on-failure
-        --build-config Release
+      run: |
+        config=Release
+        cmake_cmd=()
+        if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
+          cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
+        fi
+        cmake_cmd+=(
+          ctest
+          --output-on-failure
+          --build-config "${config}"
+        )
       working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
 
