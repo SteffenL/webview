@@ -1,0 +1,248 @@
+name: CI / Test
+on:
+  workflow_call:
+    inputs:
+      gcovr-version:
+        type: string
+        description: gcovr version
+        required: false
+        default: '7.2'
+jobs:
+  linux:
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        cxx-std: [20]
+        image: [ubuntu-20.04, ubuntu-22.04]
+        webkitgtk-api: ['4.0', '4.1', '6.0']
+        exclude:
+          - image: ubuntu-20.04
+            webkitgtk-api: '6.0'
+          - image: ubuntu-20.04
+            webkitgtk-api: '4.1'
+        include:
+          # Compilers
+          - image: ubuntu-22.04
+            toolchain: llvm
+            compiler-name: clang15
+            cc: clang-15
+            cxx: clang++-15
+            apt: clang-15 clang++-15
+          - image: ubuntu-22.04
+            toolchain: gnu
+            compiler-name: gcc12
+            cc: gcc-12
+            cxx: g++-12
+            apt: gcc-12 g++-12
+          - image: ubuntu-20.04
+            toolchain: llvm
+            compiler-name: clang12
+            cc: clang-12
+            cxx: clang++-12
+            apt: clang-12 clang++-12
+          - image: ubuntu-20.04
+            toolchain: gnu
+            compiler-name: gcc10
+            cc: gcc-10
+            cxx: g++-10
+            apt: gcc-10 g++-10
+          # WebKitGTK
+          - webkitgtk-api: '6.0'
+            apt-webkitgtk: libgtk-4-dev libwebkitgtk-6.0-dev
+          - webkitgtk-api: '4.1'
+            apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.1-dev
+          - webkitgtk-api: '4.0'
+            apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.0-dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/workflows/setup-env
+        with:
+          apt: ${{ matrix.apt }} ${{ matrix.apt-webkitgtk }}
+
+      - name: Set up variables
+        id: vars
+        run: |
+          echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}" >> "${GITHUB_OUTPUT}"
+
+      - name: Test
+        uses: ./.github/workflows/cmake/test
+        with:
+          artifacts-name: ${{ steps.vars.outputs.artifacts-name }}
+          build-dir: build
+          cc: ${{ matrix.cc }}
+          cxx: ${{ matrix.cxx }}
+          cxx-std: ${{ matrix.cxx-std }}
+          generator: Ninja Multi-Config
+          shell: bash
+          source-dir: .
+          test-wrapper-cmd: xvfb-run
+
+  macos:
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        cxx-std: [20]
+        image: [macos-14]
+        include:
+          # Compilers
+          - toolchain: llvm
+            compiler-name: clang
+            cc: clang
+            cxx: clang++
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/workflows/setup-env
+
+      - name: Build
+        uses: ./.github/workflows/cmake/build
+        with:
+          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
+          build-dir: build
+          cc: ${{ matrix.cc }}
+          cxx: ${{ matrix.cxx }}
+          cxx-std: ${{ matrix.cxx-std }}
+          generator: Xcode
+          shell: bash
+          source-dir: .
+
+  windows:
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        cxx-std: [20]
+        image: [windows-2022]
+        include:
+          # Compilers
+          - toolchain: msys2-gnu-ucrt64
+            compiler-name: gcc
+            cc: gcc
+            cxx: g++
+            msys: UCRT64
+          - toolchain: msys2-llvm-clang64
+            compiler-name: clang
+            cc: clang
+            cxx: clang++
+            msys: CLANG64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/workflows/setup-env
+        with:
+          msys: ${{ matrix.msys }}
+
+      - name: Test
+        uses: ./.github/workflows/cmake/test
+        with:
+          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}
+          build-dir: build
+          cc: ${{ matrix.cc }}
+          cxx: ${{ matrix.cxx }}
+          cxx-std: ${{ matrix.cxx-std }}
+          generator: Ninja Multi-Config
+          shell: msys2 {0}
+          source-dir: .
+
+  report:
+    needs:
+      - linux
+      - macos
+      - windows
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        run: >
+          sudo apt-get install --no-install-recommends -y
+          python3
+          python3-lxml
+          python3-markupsafe
+          python3-pip
+
+      - name: Install gcovr
+        run: pip install "gcovr==${{ inputs.gcovr-version }}"
+
+      - name: Merge test coverage artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: test_coverage_data
+          pattern: test_coverage_data_*
+          delete-merged: true
+          retention-days: 1
+          separate-directories: true
+
+      - name: Download merged test coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: test_coverage_data
+
+      - name: Generate report
+        run: |
+          tracefile_args=()
+          while read f; do
+            tracefile_args+=(--add-tracefile "${f}")
+          done <<< "$(find . -type f -name "coverage.json")"
+
+          artifact_dir="temp_${RANDOM}/report"
+          mkdir -p "${artifact_dir}/html"
+
+          gcovr --config gcovr.ci.cfg --json "${artifact_dir}/gcovr.json" "${tracefile_args[@]}"
+          gcovr --config gcovr.ci.cfg --coveralls "${artifact_dir}/coveralls.json" --add-tracefile "${artifact_dir}/gcovr.json"
+          gcovr --config gcovr.ci.cfg --json-summary "${artifact_dir}/summary.json" --add-tracefile "${artifact_dir}/gcovr.json"
+          gcovr --config gcovr.ci.cfg --html-details "${artifact_dir}/html/index.html" --add-tracefile "${artifact_dir}/gcovr.json"
+
+          echo "upload-dir=${artifact_dir}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test_coverage_report
+          path: ${{ steps.prepare-coverage-artifacts.outputs.upload-dir }}
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Add report to CI job summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const numberOr = (value, alternative) => Number.isNaN(value = parseInt(value)) ? alternative : value;
+            const percentValue = (value, percentSymbol = "%") => numberOr(value, "-") + percentSymbol;
+            const data = require("./${{ steps.prepare-coverage-artifacts.outputs.upload-dir }}/summary.json");
+            await core.summary
+              .addHeading("Test Coverage Summary")
+              .addTable([
+                [
+                  { data: "Lines", header: true },
+                  { data: "Functions", header: true },
+                  { data: "Branches", header: true }
+                ],
+                [
+                  `${percentValue(data.line_percent)} ${data.line_covered}/${data.line_total}`,
+                  `${percentValue(data.function_percent)} ${data.function_covered}/${data.function_total}`,
+                  `${percentValue(data.branch_percent)} ${data.branch_covered}/${data.branch_total}`
+                ]
+              ])
+              .addTable([
+                [
+                  { data: "File", header: true },
+                  { data: "Lines", header: true },
+                  { data: "Functions", header: true },
+                  { data: "Branches", header: true }
+                ],
+                ...data.files.map(file => [
+                  file.filename,
+                  `${percentValue(file.line_percent)} ${file.line_covered}/${file.line_total}`,
+                  `${percentValue(file.function_percent)} ${file.function_covered}/${file.function_total}`,
+                  `${percentValue(file.branch_percent)} ${file.branch_covered}/${file.branch_total}`
+                ])
+              ])
+              .write();

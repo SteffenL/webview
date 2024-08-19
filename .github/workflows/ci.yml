@@ -7,10 +7,10 @@ jobs:
 #  check:
 #    uses: ./.github/workflows/check.yml
 
-#  test:
+  test-coverage:
 #    needs: check
-#    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/test-coverage.yml
 
-  package:
+#  package:
 #    needs: test
-    uses: ./.github/workflows/package.yml
+#    uses: ./.github/workflows/package.yml

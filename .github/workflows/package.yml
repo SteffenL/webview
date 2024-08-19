@@ -171,7 +171,6 @@ jobs:
       - name: Build
         uses: ./.github/workflows/cmake/build
         with:
-          # Common
           artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}
           build-dir: build
           cc: ${{ matrix.cc }}
