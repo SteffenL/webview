@@ -9,11 +9,6 @@ jobs:
       matrix:
         cxx-std: [20]
         webkitgtk-api: ['4.0', '4.1', '6.0']
-        exclude:
-          - image: ubuntu-20.04
-            webkitgtk-api: '6.0'
-          - image: ubuntu-20.04
-            webkitgtk-api: '4.1'
         include:
           # Compilers
           - image: ubuntu-22.04
