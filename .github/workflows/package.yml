@@ -1,4 +1,4 @@
-name: CI / Build
+name: CI / Package
 on:
   workflow_call:
     inputs:
@@ -21,9 +21,6 @@ jobs:
           - image: ubuntu-20.04
             webkitgtk-api: '4.1'
         include:
-          # Defaults
-          - distributable: false
-            gen: Ninja
           # Compilers
           - image: ubuntu-22.04
             toolchain: llvm
@@ -69,9 +66,8 @@ jobs:
         id: vars
         run: |
           echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}" >> "${GITHUB_OUTPUT}"
-          echo "build-config=Release" >> "${GITHUB_OUTPUT}"
           echo "build-dir=build" >> "${GITHUB_OUTPUT}"
-          echo "generator=Ninja" >> "${GITHUB_OUTPUT}"
+          echo "generator=Ninja Multi-Config" >> "${GITHUB_OUTPUT}"
           echo "source-dir=." >> "${GITHUB_OUTPUT}"
           echo "test-wrapper-cmd=xvfb-run" >> "${GITHUB_OUTPUT}"
 
@@ -81,29 +77,118 @@ jobs:
           -G "${{ steps.vars.outputs.generator }}"
           -B "${{ steps.vars.outputs.build-dir }}"
           -S "${{ steps.vars.outputs.source-dir }}"
-          -D "CMAKE_BUILD_TYPE=${{ steps.vars.outputs.build-config }}"
           -D "CMAKE_C_COMPILER=${{ matrix.cc }}"
           -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}"
           -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
 
-      - name: Build
+      - name: Build (Debug)
         run: >
           cmake
           --build "${{ steps.vars.outputs.build-dir }}"
-          --config "${{ steps.vars.outputs.build-config }}"
+          --config Debug
 
-      - name: Test
+      - name: Build (Release)
+        run: >
+          cmake
+          --build "${{ steps.vars.outputs.build-dir }}"
+          --config Release
+
+      - name: Test (Debug)
         run: >
           ${{ steps.vars.outputs.test-wrapper-cmd }}
           ctest
           --output-on-failure
-          --build-config "${{ steps.vars.outputs.build-config }}"
+          --build-config Debug
         working-directory: ${{ steps.vars.outputs.build-dir }}
 
-      - name: Create single-config package
-        run: cpack -C "${{ steps.vars.outputs.build-config }}" --config CPackConfig.cmake
+      - name: Test (Release)
+        run: >
+          ${{ steps.vars.outputs.test-wrapper-cmd }}
+          ctest
+          --output-on-failure
+          --build-config Release
+        working-directory: ${{ steps.vars.outputs.build-dir }}
+
+      - name: Create multi-config package
+        run: cpack -C "Debug;Release" --config CPackConfig.cmake
         working-directory: ${{ steps.vars.outputs.build-dir }}
 
       - name: Create source package
-        run: cpack -C "${{ steps.vars.outputs.build-config }}" --config CPackSourceConfig.cmake
+        run: cpack --config CPackSourceConfig.cmake
+        working-directory: ${{ steps.vars.outputs.build-dir }}
+
+  macos:
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        cxx-std: [20]
+        image: [ubuntu-14]
+        include:
+          # Compilers
+          - toolchain: llvm
+            compiler-name: clang
+            cc: clang
+            cxx: clang++
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/workflows/setup-env
+        with:
+          apt: ${{ matrix.apt }} ${{ matrix.apt-webkitgtk }}
+
+      - name: Set up variables
+        id: vars
+        run: |
+          echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
+          echo "build-dir=build" >> "${GITHUB_OUTPUT}"
+          echo "generator=Xcode" >> "${GITHUB_OUTPUT}"
+          echo "source-dir=." >> "${GITHUB_OUTPUT}"
+          echo "test-wrapper-cmd=" >> "${GITHUB_OUTPUT}"
+
+      - name: Configure
+        run: >
+          cmake
+          -G "${{ steps.vars.outputs.generator }}"
+          -B "${{ steps.vars.outputs.build-dir }}"
+          -S "${{ steps.vars.outputs.source-dir }}"
+          -D "CMAKE_C_COMPILER=${{ matrix.cc }}"
+          -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}"
+          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+
+      - name: Build (Debug)
+        run: >
+          cmake
+          --build "${{ steps.vars.outputs.build-dir }}"
+          --config Debug
+
+      - name: Build (Release)
+        run: >
+          cmake
+          --build "${{ steps.vars.outputs.build-dir }}"
+          --config Release
+
+      - name: Test (Debug)
+        run: >
+          ${{ steps.vars.outputs.test-wrapper-cmd }}
+          ctest
+          --output-on-failure
+          --build-config Debug
+        working-directory: ${{ steps.vars.outputs.build-dir }}
+
+      - name: Test (Release)
+        run: >
+          ${{ steps.vars.outputs.test-wrapper-cmd }}
+          ctest
+          --output-on-failure
+          --build-config Release
+        working-directory: ${{ steps.vars.outputs.build-dir }}
+
+      - name: Create multi-config package
+        run: cpack -C "Debug;Release" --config CPackConfig.cmake
+        working-directory: ${{ steps.vars.outputs.build-dir }}
+
+      - name: Create source package
+        run: cpack --config CPackSourceConfig.cmake
         working-directory: ${{ steps.vars.outputs.build-dir }}
