@@ -92,8 +92,8 @@ jobs:
       - name: Set up environment
         uses: ./.github/workflows/setup-env
 
-      - name: Build
-        uses: ./.github/workflows/cmake/build
+      - name: Test
+        uses: ./.github/workflows/cmake/test
         with:
           artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
           build-dir: build
