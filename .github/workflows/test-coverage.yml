@@ -79,6 +79,8 @@ jobs:
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
+          gcov: ${{ matrix.gcov }}
+          gcovr-version: ${{ inputs.gcovr-version }}
           generator: Ninja Multi-Config
           shell: bash
           source-dir: .
@@ -96,6 +98,7 @@ jobs:
             compiler-name: clang
             cc: clang
             cxx: clang++
+            gcov: llvm-cov gcov
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -111,6 +114,8 @@ jobs:
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
+          gcov: ${{ matrix.gcov }}
+          gcovr-version: ${{ inputs.gcovr-version }}
           generator: Xcode
           shell: bash
           source-dir: .
