@@ -29,12 +29,6 @@ inputs:
   generator:
     description: CMake generator
     required: true
-  generator-platform:
-    description: Sets CMAKE_GENERATOR_PLATFORM
-    required: false
-  osx-deployment-target:
-    description: Sets CMAKE_OSX_DEPLOYMENT_TARGET
-    required: false
   shell:
     description: Shell
     required: true
@@ -66,12 +60,6 @@ runs:
           -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}"
           -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
         )
-        if [[ ! -z "${{ inputs.generator-platform }}" ]]; then
-          cmake_cmd+=(-D "CMAKE_GENERATOR_PLATFORM=${{ inputs.generator-platform }}")
-        fi
-        if [[ ! -z "${{ inputs.osx-deployment-target }}" ]]; then
-          cmake_cmd+=(-D "CMAKE_OSX_DEPLOYMENT_TARGET=${{ inputs.osx-deployment-target }}")
-        fi
         "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 

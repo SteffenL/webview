@@ -5,7 +5,7 @@ on:
       gcovr-version:
         type: string
         description: gcovr version
-        required: false
+        required: true
         default: '7.2'
 jobs:
   linux:
