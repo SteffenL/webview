@@ -1,7 +1,6 @@
 name: CMake build
 description: Build project using CMake
 inputs:
-inputs:
   artifacts-name:
     description: Artifacts name
     required: false
