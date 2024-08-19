@@ -19,6 +19,10 @@ inputs:
   gcov:
     description: gcov executable
     required: true
+  gcovr-config:
+    description: gcovr config file
+    required: true
+    default: gcovr.ci.cfg
   gcovr-version:
     description: gcovr version
     required: true
