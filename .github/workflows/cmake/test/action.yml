@@ -6,35 +6,43 @@ inputs:
     required: false
   build-dir:
     description: CMake build directory
-    required: true
+    required: false
+    default: build
   cc:
     description: Sets CMAKE_C_COMPILER
-    required: true
+    required: false
+    default: cc
   cxx:
     description: Sets CMAKE_CXX_COMPILER
-    required: true
+    required: false
+    default: c++
   cxx-std:
     description: Sets CMAKE_CXX_STANDARD
     required: true
   gcov:
     description: gcov executable
-    required: true
+    required: false
+    default: gcov
   gcovr-config:
     description: gcovr config file
-    required: true
+    required: false
     default: gcovr.ci.cfg
   gcovr-version:
     description: gcovr version
-    required: true
+    required: false
+    default: '7.2'
   generator:
     description: CMake generator
-    required: true
+    required: false
+    default: Ninja
   shell:
     description: Shell
-    required: true
+    required: false
+    default: bash
   source-dir:
     description: CMake source directory
-    required: true
+    required: false
+    default: .
   test-wrapper-cmd:
     description: Test wrapper command
     required: false

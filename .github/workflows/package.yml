@@ -1,12 +1,6 @@
 name: CI / Package
 on:
   workflow_call:
-    inputs:
-      gcovr-version:
-        type: string
-        description: gcovr version
-        required: false
-        default: '7.2'
 jobs:
   linux:
     runs-on: ${{ matrix.image }}

@@ -1,24 +1,41 @@
 name: CMake build
 description: Build project using CMake
 inputs:
+inputs:
   artifacts-name:
     description: Artifacts name
     required: false
   build-dir:
     description: CMake build directory
-    required: true
+    required: false
+    default: build
   cc:
     description: Sets CMAKE_C_COMPILER
-    required: true
+    required: false
+    default: cc
   cxx:
     description: Sets CMAKE_CXX_COMPILER
-    required: true
+    required: false
+    default: c++
   cxx-std:
     description: Sets CMAKE_CXX_STANDARD
     required: true
+  gcov:
+    description: gcov executable
+    required: false
+    default: gcov
+  gcovr-config:
+    description: gcovr config file
+    required: false
+    default: gcovr.ci.cfg
+  gcovr-version:
+    description: gcovr version
+    required: false
+    default: '7.2'
   generator:
     description: CMake generator
-    required: true
+    required: false
+    default: Ninja
   generator-platform:
     description: Sets CMAKE_GENERATOR_PLATFORM
     required: false
@@ -27,10 +44,12 @@ inputs:
     required: false
   shell:
     description: Shell
-    required: true
+    required: false
+    default: bash
   source-dir:
     description: CMake source directory
-    required: true
+    required: false
+    default: .
   test-wrapper-cmd:
     description: Test wrapper command
     required: false
