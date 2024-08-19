@@ -34,10 +34,9 @@ runs:
     - name: Prepare coverage artifacts
       id: prepare-coverage-artifacts
       run: |
-        artifact_dir="$(mktemp -d)/${{ inputs.artifacts-name }}"
+        artifact_dir="${PWD}/coverage_${RANDOM}/${{ inputs.artifacts-name }}"
 
         gcovr_args=(
-          --verbose
           --config "${{ inputs.gcovr-config }}"
           --json "${artifact_dir}/coverage.json"
         )
