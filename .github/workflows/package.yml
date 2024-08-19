@@ -57,19 +57,6 @@ jobs:
           - image: ubuntu-20.04
             webkitgtk-api: '4.0'
             apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.0-dev
-          # Distributables
-          - cxx-std: 20
-            image: ubuntu-22.04
-            toolchain: gnu
-            compiler-name: gcc12
-            package: true
-            package-source: true
-          - cxx-std: 20
-            image: ubuntu-20.04
-            toolchain: gnu
-            compiler-name: gcc10
-            package: true
-            package-source: false
     steps:
       - run: |
           echo "cxx-std: ${{ matrix.cxx-std }}"
