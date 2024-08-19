@@ -1,0 +1,82 @@
+name: CMake build
+description: Build project using CMake
+inputs:
+  build-dir:
+    description: CMake build directory
+    required: true
+  cc:
+    description: C compiler executable
+    required: true
+  cxx:
+    description: C++ compiler executable
+    required: true
+  cxx-std:
+    description: C++ standard
+    required: true
+  generator:
+    description: CMake generator
+    required: true
+  shell:
+    description: Shell
+    required: true
+  source-dir:
+    description: CMake source directory
+    required: true
+  test-wrapper-cmd:
+    description: Test wrapper command
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Configure
+      run: >
+        cmake
+        -G "${{ inputs.generator }}"
+        -B "${{ inputs.build-dir }}"
+        -S "${{ inputs.source-dir }}"
+        -D "CMAKE_C_COMPILER=${{ matrix.cc }}"
+        -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}"
+        -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
+      shell: ${{ inputs.shell }}
+
+    - name: Build (Debug)
+      run: >
+        cmake
+        --build "${{ inputs.build-dir }}"
+        --config Debug
+      shell: ${{ inputs.shell }}
+
+    - name: Build (Release)
+      run: >
+        cmake
+        --build "${{ inputs.build-dir }}"
+        --config Release
+      shell: ${{ inputs.shell }}
+
+    - name: Test (Debug)
+      run: >
+        ${{ inputs.test-wrapper-cmd }}
+        ctest
+        --output-on-failure
+        --build-config Debug
+      working-directory: ${{ inputs.build-dir }}
+      shell: ${{ inputs.shell }}
+
+    - name: Test (Release)
+      run: >
+        ${{ inputs.test-wrapper-cmd }}
+        ctest
+        --output-on-failure
+        --build-config Release
+      working-directory: ${{ inputs.build-dir }}
+      shell: ${{ inputs.shell }}
+
+    - name: Create multi-config package
+      run: cpack -C "Debug;Release" --config CPackConfig.cmake
+      working-directory: ${{ inputs.build-dir }}
+      shell: ${{ inputs.shell }}
+
+    - name: Create source package
+      run: cpack --config CPackSourceConfig.cmake
+      working-directory: ${{ inputs.build-dir }}
+      shell: ${{ inputs.shell }}

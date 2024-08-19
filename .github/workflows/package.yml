@@ -62,60 +62,18 @@ jobs:
         with:
           apt: ${{ matrix.apt }} ${{ matrix.apt-webkitgtk }}
 
-      - name: Set up variables
-        id: vars
-        run: |
-          echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}" >> "${GITHUB_OUTPUT}"
-          echo "build-dir=build" >> "${GITHUB_OUTPUT}"
-          echo "generator=Ninja Multi-Config" >> "${GITHUB_OUTPUT}"
-          echo "source-dir=." >> "${GITHUB_OUTPUT}"
-          echo "test-wrapper-cmd=xvfb-run" >> "${GITHUB_OUTPUT}"
-
-      - name: Configure
-        run: >
-          cmake
-          -G "${{ steps.vars.outputs.generator }}"
-          -B "${{ steps.vars.outputs.build-dir }}"
-          -S "${{ steps.vars.outputs.source-dir }}"
-          -D "CMAKE_C_COMPILER=${{ matrix.cc }}"
-          -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}"
-          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
-
-      - name: Build (Debug)
-        run: >
-          cmake
-          --build "${{ steps.vars.outputs.build-dir }}"
-          --config Debug
-
-      - name: Build (Release)
-        run: >
-          cmake
-          --build "${{ steps.vars.outputs.build-dir }}"
-          --config Release
-
-      - name: Test (Debug)
-        run: >
-          ${{ steps.vars.outputs.test-wrapper-cmd }}
-          ctest
-          --output-on-failure
-          --build-config Debug
-        working-directory: ${{ steps.vars.outputs.build-dir }}
-
-      - name: Test (Release)
-        run: >
-          ${{ steps.vars.outputs.test-wrapper-cmd }}
-          ctest
-          --output-on-failure
-          --build-config Release
-        working-directory: ${{ steps.vars.outputs.build-dir }}
-
-      - name: Create multi-config package
-        run: cpack -C "Debug;Release" --config CPackConfig.cmake
-        working-directory: ${{ steps.vars.outputs.build-dir }}
-
-      - name: Create source package
-        run: cpack --config CPackSourceConfig.cmake
-        working-directory: ${{ steps.vars.outputs.build-dir }}
+      - name: Build
+        using: ./.github/workflows/cmake/build
+        with:
+          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}
+          build-dir: build
+          cc: ${{ matrix.cc }}
+          cxx: ${{ matrix.cxx }}
+          cxx-std: ${{ matrix.cxx-std }}
+          generator: Ninja Multi-Config
+          shell: bash
+          source-dir: .
+          test-wrapper-cmd: xvfb-run
 
   macos:
     runs-on: ${{ matrix.image }}
@@ -135,60 +93,17 @@ jobs:
 
       - name: Set up environment
         uses: ./.github/workflows/setup-env
+
+      - name: Build
+        using: ./.github/workflows/cmake/build
         with:
-          apt: ${{ matrix.apt }} ${{ matrix.apt-webkitgtk }}
-
-      - name: Set up variables
-        id: vars
-        run: |
-          echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
-          echo "build-dir=build" >> "${GITHUB_OUTPUT}"
-          echo "generator=Xcode" >> "${GITHUB_OUTPUT}"
-          echo "source-dir=." >> "${GITHUB_OUTPUT}"
-          echo "test-wrapper-cmd=" >> "${GITHUB_OUTPUT}"
-
-      - name: Configure
-        run: >
-          cmake
-          -G "${{ steps.vars.outputs.generator }}"
-          -B "${{ steps.vars.outputs.build-dir }}"
-          -S "${{ steps.vars.outputs.source-dir }}"
-          -D "CMAKE_C_COMPILER=${{ matrix.cc }}"
-          -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}"
-          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
-
-      - name: Build (Debug)
-        run: >
-          cmake
-          --build "${{ steps.vars.outputs.build-dir }}"
-          --config Debug
-
-      - name: Build (Release)
-        run: >
-          cmake
-          --build "${{ steps.vars.outputs.build-dir }}"
-          --config Release
-
-      - name: Test (Debug)
-        run: >
-          ${{ steps.vars.outputs.test-wrapper-cmd }}
-          ctest
-          --output-on-failure
-          --build-config Debug
-        working-directory: ${{ steps.vars.outputs.build-dir }}
-
-      - name: Test (Release)
-        run: >
-          ${{ steps.vars.outputs.test-wrapper-cmd }}
-          ctest
-          --output-on-failure
-          --build-config Release
-        working-directory: ${{ steps.vars.outputs.build-dir }}
-
-      - name: Create multi-config package
-        run: cpack -C "Debug;Release" --config CPackConfig.cmake
-        working-directory: ${{ steps.vars.outputs.build-dir }}
-
-      - name: Create source package
-        run: cpack --config CPackSourceConfig.cmake
-        working-directory: ${{ steps.vars.outputs.build-dir }}
+          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
+          build-dir: build
+          cc: ${{ matrix.cc }}
+          cxx: ${{ matrix.cxx }}
+          cxx-std: ${{ matrix.cxx-std }}
+          generator: NXcode
+          shell: bash
+          source-dir: .
+          test-wrapper-cmd:
+        
