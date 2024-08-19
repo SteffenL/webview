@@ -3,77 +3,51 @@ on:
   workflow_call:
 jobs:
   linux:
-    name: linux (c++${{ matrix.config.cxx-std }}, ${{ matrix.config.toolchain }}, ${{ matrix.config.compiler-name }}, ${{ matrix.config.image }}, webkitgtk${{ matrix.config.webkitgtk-api }})
-    runs-on: ${{ matrix.config.image }}
+    name: linux (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }}, webkitgtk${{ matrix.webkitgtk-api }})
+    runs-on: ${{ matrix.image }}
     strategy:
       matrix:
-        config:
-          # Ubuntu 22.04
-          - apt: clang-15 clang++-15 libgtk-4-dev libwebkitgtk-6.0-dev
-            cc: clang-15
-            compiler-name: clang15
-            cxx: clang++-15
-            cxx-std: 20
-            image: ubuntu-22.04
-            toolchain: llvm
+        cxx-std: [20]
+        image: [ubuntu-20.04, ubuntu-22.04]
+        webkitgtk-api: ['4.0', '4.1', '6.0']
+        exclude:
+          - image: ubuntu-20.04
             webkitgtk-api: '6.0'
-          - apt: clang-15 clang++-15 libgtk-3-dev libwebkit2gtk-4.1-dev
-            cc: clang-15
-            compiler-name: clang15
-            cxx: clang++-15
-            cxx-std: 20
-            image: ubuntu-22.04
-            toolchain: llvm
+          - image: ubuntu-20.04
             webkitgtk-api: '4.1'
-          - apt: clang-15 clang++-15 libgtk-3-dev libwebkit2gtk-4.0-dev
-            cc: clang-15
-            compiler-name: clang15
-            cxx: clang++-15
-            cxx-std: 20
-            image: ubuntu-22.04
+        include:
+          # Compilers
+          - image: ubuntu-22.04
             toolchain: llvm
-            webkitgtk-api: '4.0'
-          - apt: gcc-12 g++-12 libgtk-4-dev libwebkitgtk-6.0-dev
-            cc: gcc-12
-            compiler-name: gcc12
-            cxx: g++-12
-            cxx-std: 20
-            image: ubuntu-22.04
+            compiler-name: clang15
+            cc: clang-15
+            cxx: clang++-15
+            apt: clang-15 clang++-15
+          - image: ubuntu-22.04
             toolchain: gnu
-            webkitgtk-api: '6.0'
-          - apt: gcc-12 g++-12 libgtk-3-dev libwebkit2gtk-4.1-dev
-            cc: gcc-12
             compiler-name: gcc12
-            cxx: g++-12
-            cxx-std: 20
-            image: ubuntu-22.04
-            toolchain: gnu
-            webkitgtk-api: '4.1'
-          - apt: gcc-12 g++-12 libgtk-3-dev libwebkit2gtk-4.0-dev
             cc: gcc-12
-            compiler-name: gcc12
             cxx: g++-12
-            cxx-std: 20
-            image: ubuntu-22.04
-            toolchain: gnu
-            webkitgtk-api: '4.0'
-          # Ubuntu 20.04
-          - apt: clang-12 clang++-12 libgtk-3-dev libwebkit2gtk-4.0-dev
-            cc: clang-12
+            apt: gcc-12 g++-12
+          - image: ubuntu-20.04
+            toolchain: llvm
             compiler-name: clang12
+            cc: clang-12
             cxx: clang++-12
-            cxx-std: 20
-            image: ubuntu-20.04
-            toolchain: llvm
-            webkitgtk-api: '4.0'
-          - apt: gcc-10 g++-10 libgtk-3-dev libwebkit2gtk-4.0-dev
-            cc: gcc-10
-            compiler-name: gcc10
-            cxx: g++-10
-            cxx-std: 20
-            image: ubuntu-20.04
+            apt: clang-12 clang++-12
+          - image: ubuntu-20.04
             toolchain: gnu
-            webkitgtk-api: '4.0'
+            compiler-name: gcc10
+            cc: gcc-10
+            cxx: g++-10
+            apt: gcc-10 g++-10
+          # WebKitGTK
+          - webkitgtk-api: '6.0'
+            apt-webkitgtk: libgtk-4-dev libwebkitgtk-6.0-dev
+          - webkitgtk-api: '4.1'
+            apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.1-dev
+          - webkitgtk-api: '4.0'
+            apt-webkitgtk: libgtk-3-dev libwebkit2gtk-4.0-dev
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -81,19 +55,19 @@ jobs:
       - name: Set up environment
         uses: ./.github/workflows/setup-env
         with:
-          apt: ${{ matrix.config.apt }}
+          apt: ${{ matrix.apt }} ${{ matrix.apt-webkitgtk }}
 
       - name: Build
         uses: ./.github/workflows/cmake/build
         with:
-          artifacts-name: ${{ runner.os }}_${{ matrix.config.toolchain }}_${{ matrix.config.compiler-name }}_cxx${{ matrix.config.cxx-std }}_webkitgtk${{ matrix.config.webkitgtk-api }}
+          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}
           build-dir: build
-          cc: ${{ matrix.config.cc }}
-          cxx: ${{ matrix.config.cxx }}
-          cxx-std: ${{ matrix.config.cxx-std }}
+          cc: ${{ matrix.cc }}
+          cxx: ${{ matrix.cxx }}
+          cxx-std: ${{ matrix.cxx-std }}
           generator: Ninja Multi-Config
           # Source code should be packaged only once
-          package-source: ${{ matrix.config.toolchain == 'llvm' && matrix.config.compiler-name == 'clang15' && matrix.config.cxx-std == 20 && matrix.config.webkitgtk-api == '6.0' }}
+          package-source: ${{ matrix.toolchain == 'llvm' && matrix.compiler-name == 'clang15' && matrix.cxx-std == 20 && matrix.webkitgtk-api == '6.0' }}
           shell: bash
           source-dir: .
           test-wrapper-cmd: xvfb-run
