@@ -95,6 +95,9 @@ jobs:
           echo "generator=Xcode" >> "${GITHUB_OUTPUT}"
           echo "source-dir=." >> "${GITHUB_OUTPUT}"
 
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Configure
         run: >
           cmake
