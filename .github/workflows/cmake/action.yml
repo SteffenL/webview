@@ -26,14 +26,12 @@ inputs:
   cc:
     description: Sets CMAKE_C_COMPILER
     required: false
-    default: cc
   cmake-options:
     description: Sets extra CMake options in the form A=1 (one per line)
     required: false
   cxx:
     description: Sets CMAKE_CXX_COMPILER
     required: false
-    default: c++
   cxx-std:
     description: Sets CMAKE_CXX_STANDARD
     required: true
@@ -82,6 +80,9 @@ inputs:
   test-wrapper-cmd:
     description: Test wrapper command
     required: false
+  toolchain-file:
+    description: CMake toolchain file
+    required: false
 runs:
   using: composite
   steps:
@@ -115,15 +116,24 @@ runs:
           -G "${{ inputs.generator }}"
           -B "${{ inputs.build-dir }}"
           -S "${{ inputs.source-dir }}"
-          -D "CMAKE_C_COMPILER=${{ matrix.cc }}"
-          -D "CMAKE_CXX_COMPILER=${{ matrix.cxx }}"
-          -D "CMAKE_CXX_STANDARD=${{ matrix.cxx-std }}"
         )
+        if [[ ! -z "${{ inputs.cc }}" ]]; then
+          cmake_cmd+=(-D "CMAKE_C_COMPILER=${{ inputs.cc }}")
+        fi
+        if [[ ! -z "${{ inputs.cxx }}" ]]; then
+          cmake_cmd+=(-D "CMAKE_CXX_COMPILER=${{ inputs.cxx }}")
+        fi
+        if [[ ! -z "${{ inputs.cxx-std }}" ]]; then
+          cmake_cmd+=(-D "CMAKE_CXX_STANDARD=${{ inputs.cxx-std }}")
+        fi
         if [[ ! -z "${{ inputs.generator-platform }}" ]]; then
           cmake_cmd+=(-D "CMAKE_GENERATOR_PLATFORM=${{ inputs.generator-platform }}")
         fi
         if [[ ! -z "${{ inputs.osx-deployment-target }}" ]]; then
           cmake_cmd+=(-D "CMAKE_OSX_DEPLOYMENT_TARGET=${{ inputs.osx-deployment-target }}")
+        fi
+        if [[ ! -z "${{ inputs.toolchain-file }}" ]]; then
+          cmake_cmd+=(-D "CMAKE_TOOLCHAIN_FILE=${{ inputs.toolchain-file }}")
         fi
         while read opt; do
           if [[ ! -z "${opt}" ]]; then

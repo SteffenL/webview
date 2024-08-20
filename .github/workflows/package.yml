@@ -3,27 +3,35 @@ on:
   workflow_call:
 jobs:
   package:
-    name: ${{ matrix.os }} (c++${{ matrix.cxx-std }}, ${{ matrix.tc }}, ${{ matrix.cn }}, ${{ matrix.i }}${{ matrix.name-suffix }})
+    name: ${{ matrix.os }} (c++${{ matrix.cxx-std }}, ${{ matrix.a }}, ${{ matrix.t }}${{ matrix.ces }}${{ matrix.name-suffix }})
     runs-on: ${{ matrix.i }}
     strategy:
       matrix:
         include:
+          # a:   architecture
+          # ces: CMAKE_EXECUTABLE_SUFFIX
           # cn:  compiler-name
           # i:   image
           # g:   generator
           # gp:  generator-platform
           # sh:  shell
-          # tc:  toolchain
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '6.0', docs: true, package-source: true }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.1' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.0' }
-          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, tc: gnu,                cn: gcc10, cc: gcc-10, cxx: g++-10,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10, webkitgtk-api: '4.0' }
-          - { os: macos,   i: macos-14,     cxx-std: 20, tc: llvm,               cn: clang, cc: clang,  cxx: clang++, g: Xcode,                 sh: bash,        name-suffix: '',               osx-deployment-target: '10.9' }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        name-suffix: ', ARM64',        gp: ARM64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        name-suffix: ', x64',          gp: x64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        name-suffix: ', Win32',        gp: Win32 }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-gnu-ucrt64,   cn: gcc,   cc: gcc,    cxx: g++,     g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-llvm-clang64, cn: clang, cc: clang,  cxx: clang++, g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      msys: CLANG64 }
+          # t:   toolchain
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: linux-gnu,          ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '6.0', docs: true, package-source: true }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: linux-gnu,          ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '4.1' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: linux-gnu,          ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '4.0' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: linux-llvm,         ces: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '6.0' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: linux-llvm,         ces: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.1' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: linux-llvm,         ces: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.0' }
+          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, a: x86_64,    t: linux-gnu,          ces: '-10',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10,       webkitgtk-api: '4.0' }
+          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, a: x86_64,    t: linux-llvm,         ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: clang-10 clang++-10, webkitgtk-api: '4.0' }
+          - { os: macos,   i: macos-14,     cxx-std: 20, a: universal, t: macos-llvm,         ces: '',       g: Xcode,                 sh: bash,        name-suffix: '',               osx-deployment-target: '10.9' }
+          - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: w64-mingw32,        ces: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               apt: mingw-w64 }
+          - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: i686,      t: w64-mingw32,        ces: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               apt: mingw-w64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: msys2,     t: gnu-ucrt64,         ces: '-posix', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: msys2,     t: gnu-ucrt64,         ces: '-posix', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,13 +47,9 @@ jobs:
         id: vars
         run: |
           if [[ "${{ matrix.os }}" == "linux" ]]; then
-            name="${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}"
-          elif [[ "${{ matrix.os }}" == "macos" ]]; then
-            name="${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}"
-          elif [[ "${{ matrix.os }}" == "windows" && "${{ matrix.cn }}" == "msvc" ]]; then
-            name="${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_${{ matrix.gp }}"
-          elif [[ "${{ matrix.os }}" == "windows" && ! -z "${{ matrix.msys }}" ]]; then
-            name="${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}"
+            name="${{ runner.os }}_${{ matrix.i }}_cxx${{ matrix.cxx-std }}_${{ matrix.a }}_${{ matrix.t }}${{ matrix.ces }}_webkitgtk${{ matrix.webkitgtk-api }}"
+          else
+            name="${{ runner.os }}_${{ matrix.i }}_cxx${{ matrix.cxx-std }}_${{ matrix.a }}_${{ matrix.t }}${{ matrix.ces }}"
           fi
           echo "artifacts-name=${name}" >> "${GITHUB_OUTPUT}"
 
@@ -76,6 +80,7 @@ jobs:
           shell: ${{ matrix.sh }}
           source-dir: .
           test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}
+          toolchain-file: cmake/toolchains/${{ matrix.a }}-${{ matrix.t }}.cmake
 
   merge-package-artifacts:
     needs: package
