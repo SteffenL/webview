@@ -4,7 +4,6 @@ on:
 jobs:
   linux:
     name: linux (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }}, webkitgtk${{ matrix.webkitgtk-api }})
-    needs: setup-build-matrix
     runs-on: ${{ matrix.image }}
     strategy:
       matrix:
