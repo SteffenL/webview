@@ -8,6 +8,18 @@ inputs:
     description: CMake build directory
     required: false
     default: build
+  build-config-debug:
+    description: CMake build config for debug
+    required: false
+    default: Debug
+  build-config-release:
+    description: CMake build config for release
+    required: false
+    default: Release
+  build-config-profile:
+    description: CMake build config for profiling
+    required: false
+    default: Profile
   coverage:
     description: Enable code coverage?
     required: false
@@ -118,55 +130,28 @@ runs:
         --config Profile
       shell: ${{ inputs.shell }}
 
-    - if: inputs.coverage == '' || !fromJSON(inputs.coverage)
-      name: Test (Debug)
+    - name: Test
       run: |
-        config=Debug
-        cmake_cmd=()
-        if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
-          cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
+        configs=()
+        if [[ "${{ inputs.coverage }}" == "true" ]]; then
+          configs+=("${{ inputs.build-config-debug }}")
+          configs+=("${{ inputs.build-config-release }}")
+        elif [[ "${{ inputs.coverage }}" == "true" ]]; then
+          configs+=("${{ inputs.build-config-profile }}")
         fi
-        cmake_cmd+=(
-          ctest
-          --test-dir "${{ inputs.build-dir }}"
-          --output-on-failure
-          --build-config "${config}"
-        )
-        "${cmake_cmd[@]}"
-      shell: ${{ inputs.shell }}
-
-    - if: inputs.coverage == '' || !fromJSON(inputs.coverage)
-      name: Test (Release)
-      run: |
-        config=Release
-        cmake_cmd=()
-        if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
-          cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
-        fi
-        cmake_cmd+=(
-          ctest
-          --test-dir "${{ inputs.build-dir }}"
-          --output-on-failure
-          --build-config "${config}"
-        )
-        "${cmake_cmd[@]}"
-      shell: ${{ inputs.shell }}
-
-    - if: inputs.coverage != '' && fromJSON(inputs.coverage)
-      name: Test (Profile)
-      run: |
-        config=Profile
-        cmake_cmd=()
-        if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
-          cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
-        fi
-        cmake_cmd+=(
-          ctest
-          --test-dir "${{ inputs.build-dir }}"
-          --output-on-failure
-          --build-config "${config}"
-        )
-        "${cmake_cmd[@]}"
+        for config in "${configs[@]}"; do
+          cmake_cmd=()
+          if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
+            cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
+          fi
+          cmake_cmd+=(
+            ctest
+            --test-dir "${{ inputs.build-dir }}"
+            --output-on-failure
+            --build-config "${config}"
+          )
+          "${cmake_cmd[@]}"
+        done
       shell: ${{ inputs.shell }}
 
     - if: inputs.package != '' && fromJSON(inputs.package)
