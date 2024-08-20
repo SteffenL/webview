@@ -44,13 +44,13 @@ jobs:
         id: generate-artifacts-name
         run: |
           if [[ "${{ matrix.os }}" == "linux" ]]; then
-            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}" >> "${GITHUB_OUTPUT}"
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.std }}_webkitgtk${{ matrix.webkitgtk-api }}" >> "${GITHUB_OUTPUT}"
           elif [[ "${{ matrix.os }}" == "macos" ]]; then
-            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.std }}" >> "${GITHUB_OUTPUT}"
           elif [[ "${{ matrix.os }}" == "windows" && "${{ matrix.cn }}" == "msvc" ]]; then
-            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_${{ matrix.gp }}" >> "${GITHUB_OUTPUT}"
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.std }}_${{ matrix.gp }}" >> "${GITHUB_OUTPUT}"
           elif [[ "${{ matrix.os }}" == "windows" && ! -z "${{ matrix.msys }}" ]]; then
-            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}" >> "${GITHUB_OUTPUT}"
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.std }}_${{ matrix.msys }}" >> "${GITHUB_OUTPUT}"
           fi
 
       - name: Build
