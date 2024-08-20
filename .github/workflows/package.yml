@@ -2,17 +2,25 @@ name: CI / Package
 on:
   workflow_call:
 jobs:
-  linux:
-    name: linux (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }}, webkitgtk${{ matrix.webkitgtk-api }})
+  package:
+#    name: ${{ matrix.os }} (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }}, webkitgtk${{ matrix.webkitgtk-api }})
+#    name: macos (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }})
+#    name: windows-msvc (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.generator-platform }})
+#    name: windows-msys2 (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.msys }})
     runs-on: ${{ matrix.image }}
     strategy:
       matrix:
         include:
-          - { image: ubuntu-22.04, cxx-std: 20, toolchain: llvm, compiler-name: gcc12, cc: gcc-12, cxx: g++-12, apt: gcc-12 g++-12, webkitgtk-api: '6.0',
-              package-source: true }
-          - { image: ubuntu-22.04, cxx-std: 20, toolchain: llvm, compiler-name: gcc12, cc: gcc-12, cxx: g++-12, apt: gcc-12 g++-12, webkitgtk-api: '4.1' }
-          - { image: ubuntu-22.04, cxx-std: 20, toolchain: llvm, compiler-name: gcc12, cc: gcc-12, cxx: g++-12, apt: gcc-12 g++-12, webkitgtk-api: '4.0' }
-          - { image: ubuntu-20.04, cxx-std: 20, toolchain: llvm, compiler-name: gcc10, cc: gcc-10, cxx: g++-10, apt: gcc-10 g++-10, webkitgtk-api: '4.0' }
+          - { os: linux,   image: ubuntu-22.04, cxx-std: 20, toolchain: gnu,                compiler-name: gcc12, cc: gcc-12, cxx: g++-12,  gen: Ninja Multi-Config,    shell: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '6.0', package-source: true }
+          - { os: linux,   image: ubuntu-22.04, cxx-std: 20, toolchain: gnu,                compiler-name: gcc12, cc: gcc-12, cxx: g++-12,  gen: Ninja Multi-Config,    shell: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.1' }
+          - { os: linux,   image: ubuntu-22.04, cxx-std: 20, toolchain: gnu,                compiler-name: gcc12, cc: gcc-12, cxx: g++-12,  gen: Ninja Multi-Config,    shell: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.0' }
+          - { os: linux,   image: ubuntu-20.04, cxx-std: 20, toolchain: gnu,                compiler-name: gcc10, cc: gcc-10, cxx: g++-10,  gen: Ninja Multi-Config,    shell: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10, webkitgtk-api: '4.0' }
+          - { os: macos,   image: macos-14,     cxx-std: 20, toolchain: llvm,               compiler-name: clang, cc: clang,  cxx: clang++, gen: Xcode,                 shell: bash,        osx-deployment-target: '10.9' }
+          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: vs,                 compiler-name: msvc,  cc: cl,     cxx: cl,      gen: Visual Studio 17 2022, shell: bash,        gen-platform: ARM64 }
+          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: vs,                 compiler-name: msvc,  cc: cl,     cxx: cl,      gen: Visual Studio 17 2022, shell: bash,        gen-platform: x64 }
+          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: vs,                 compiler-name: msvc,  cc: cl,     cxx: cl,      gen: Visual Studio 17 2022, shell: bash,        gen-platform: Win32 }
+          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: msys2-gnu-ucrt64,   compiler-name: gcc,   cc: gcc,    cxx: g++,     gen: Ninja Multi-Config,    shell: 'msys2 {0}', msys: UCRT64 }
+          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: msys2-llvm-clang64, compiler-name: clang, cc: clang,  cxx: clang++, gen: Ninja Multi-Config,    shell: 'msys2 {0}', msys: CLANG64 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,130 +29,40 @@ jobs:
         uses: ./.github/workflows/setup-env
         with:
           apt: ${{ matrix.apt }}
+          msys: ${{ matrix.msys }}
           webkitgtk-api: ${{ matrix.webkitgtk-api }}
+
+      - if: runner.os == 'Linux'
+        name: Generate artifacts name
+        id: generate-artifacts-name
+        run: |
+          if [[ "${{ matrix.os }}" == "linux" ]]; then
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}" >> "${GITHUB_OUTPUT}"
+          elif [[ "${{ matrix.os }}" == "macos" ]]; then
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
+          elif [[ "${{ matrix.os }}" == "windows" && "${{ matrix.toolchain }}" == "vs" ]]; then
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.generator-platform }}" >> "${GITHUB_OUTPUT}"
+          elif [[ "${{ matrix.os }}" == "windows" && ! -z "${{ matrix.msys }}" == "" ]]; then
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}" >> "${GITHUB_OUTPUT}"
+          fi
 
       - name: Build
         uses: ./.github/workflows/cmake/build
         with:
-          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}
+          artifacts-name: ${{ steps.generate-artifacts-name.outputs.artifacts-name }}
           build-dir: build
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
-          generator: Ninja Multi-Config
+          generator: ${{ matrix.gen }}
+          generator-platform: ${{ matrix.gen-platform }}
+          msys: ${{ matrix.msys }}
+          osx-deployment-target: ${{ matrix.osx-deployment-target }}
           package-source: ${{ matrix.package-source }}
-          shell: bash
+          shell: ${{ matrix.shell }}
           source-dir: .
-          test-wrapper-cmd: xvfb-run
+          test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}
 
-#  macos:
-#    name: macos (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }})
-#    runs-on: ${{ matrix.image }}
-#    strategy:
-#      matrix:
-#        cxx-std: [20]
-#        image: [macos-14]
-#        include:
-#          # Compilers
-#          - toolchain: llvm
-#            compiler-name: clang
-#            cc: clang
-#            cxx: clang++
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#
-#      - name: Set up environment
-#        uses: ./.github/workflows/setup-env
-#
-#      - name: Build
-#        uses: ./.github/workflows/cmake/build
-#        with:
-#          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}
-#          build-dir: build
-#          cc: ${{ matrix.cc }}
-#          cxx: ${{ matrix.cxx }}
-#          cxx-std: ${{ matrix.cxx-std }}
-#          generator: Xcode
-#          osx-deployment-target: '10.9'
-#          shell: bash
-#          source-dir: .
-#
-#  windows-msvc:
-#    name: windows-msvc (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.generator-platform }})
-#    runs-on: ${{ matrix.image }}
-#    strategy:
-#      matrix:
-#        cxx-std: [20]
-#        image: [windows-2022]
-#        generator-platform: [ARM64, x64, Win32]
-#        include:
-#          # Compilers
-#          - toolchain: vs2022
-#            compiler-name: msvc
-#            cc: cl
-#            cxx: cl
-#            generator: Visual Studio 17 2022
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#
-#      - name: Set up environment
-#        uses: ./.github/workflows/setup-env
-#
-#      - name: Build
-#        uses: ./.github/workflows/cmake/build
-#        with:
-#          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.generator-platform }}
-#          build-dir: build
-#          cc: ${{ matrix.cc }}
-#          cxx: ${{ matrix.cxx }}
-#          cxx-std: ${{ matrix.cxx-std }}
-#          generator: ${{ matrix.generator }}
-#          generator-platform: ${{ matrix.generator-platform }}
-#          shell: bash
-#          source-dir: .
-#
-#  windows-msys2:
-#    name: windows-msys2 (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.msys }})
-#    runs-on: ${{ matrix.image }}
-#    strategy:
-#      matrix:
-#        cxx-std: [20]
-#        image: [windows-2022]
-#        include:
-#          # Compilers
-#          - toolchain: msys2-gnu-ucrt64
-#            compiler-name: gcc
-#            cc: gcc
-#            cxx: g++
-#            msys: UCRT64
-#          - toolchain: msys2-llvm-clang64
-#            compiler-name: clang
-#            cc: clang
-#            cxx: clang++
-#            msys: CLANG64
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#
-#      - name: Set up environment
-#        uses: ./.github/workflows/setup-env
-#        with:
-#          msys: ${{ matrix.msys }}
-#
-#      - name: Build
-#        uses: ./.github/workflows/cmake/build
-#        with:
-#          artifacts-name: ${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}
-#          build-dir: build
-#          cc: ${{ matrix.cc }}
-#          cxx: ${{ matrix.cxx }}
-#          cxx-std: ${{ matrix.cxx-std }}
-#          generator: Ninja Multi-Config
-#          shell: msys2 {0}
-#          source-dir: .
-#
 #  merge-package-artifacts:
 #    needs:
 #      - linux
