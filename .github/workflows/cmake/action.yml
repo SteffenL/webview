@@ -200,7 +200,8 @@ runs:
     # CPack produces checksum files with CRLF on Windows but the CR being present can cause
     # verification with shasum to fail on Unix-like systems.
     # find and grep were combined to work around incompatibilities between Linux and macOS.
-    - name: Fix newlines in checksum files
+    - if: (inputs.package != '' && fromJSON(inputs.package)) || (inputs.package-source != '' && fromJSON(inputs.package-source))
+      name: Fix newlines in checksum files
       run: |
         while read f; do
           sed -i.bak 's/\\r\\n/\n/g' "${f}"
