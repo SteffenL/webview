@@ -34,6 +34,13 @@ inputs:
   cxx-std:
     description: Sets CMAKE_CXX_STANDARD
     required: true
+  docs:
+    description: Build documentation
+    required: false
+  docs-target:
+    description: CMake target for documentation
+    required: false
+    default: webview_docs
   gcov:
     description: gcov executable
     required: false
@@ -148,6 +155,11 @@ runs:
           )
           "${cmake_cmd[@]}"
         done
+      shell: ${{ inputs.shell }}
+
+    - if: inputs.docs != '' && fromJSON(inputs.docs)
+      name: Build documentation
+      run: cmake --build "${{ inputs.build-dir }}" --target "${{ inputs.docs-target }}"
       shell: ${{ inputs.shell }}
 
     - if: inputs.package != '' && fromJSON(inputs.package)

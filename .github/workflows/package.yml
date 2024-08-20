@@ -14,7 +14,7 @@ jobs:
           # gp:  generator-platform
           # sh:  shell
           # tc:  toolchain
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '6.0', package-source: true }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '6.0', docs: true, package-source: true }
           - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.1' }
           - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.0' }
           - { os: linux,   i: ubuntu-20.04, cxx-std: 20, tc: gnu,                cn: gcc10, cc: gcc-10, cxx: g++-10,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10, webkitgtk-api: '4.0' }
@@ -77,33 +77,3 @@ jobs:
           name: package
           pattern: package_*
           delete-merged: true
-
-  api-docs:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: sudo apt-get install --no-install-recommends -y doxygen graphviz cmake ninja-build
-
-      - name: Configure
-        run: cmake -G Ninja -B build -S . -D WEBVIEW_BUILD_DOCS=ON
-
-      - name: Build
-        run: cmake --build build --target webview_api_docs
-
-      - name: Create package
-        run: cpack -C "Debug;Release" --config CPackConfig.cmake
-        working-directory: ${{ inputs.build-dir }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: docs
-          path: |
-            build/*.gz
-            build/*.sha256
-            build/*.zip
-          retention-days: 1
-          if-no-files-found: error
