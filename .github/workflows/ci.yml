@@ -12,5 +12,5 @@ jobs:
 #    uses: ./.github/workflows/package.yml
 
   test-coverage:
-    needs: check
+#    needs: check
     uses: ./.github/workflows/test-coverage.yml
