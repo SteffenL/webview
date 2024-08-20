@@ -112,7 +112,7 @@ runs:
         if [[ "${{ inputs.coverage }}" == "true" ]]; then
           configs+=("${{ inputs.build-config-debug }}")
           configs+=("${{ inputs.build-config-release }}")
-        elif [[ "${{ inputs.coverage }}" == "true" ]]; then
+        else
           configs+=("${{ inputs.build-config-profile }}")
         fi
         for config in "${configs[@]}"; do
@@ -135,7 +135,7 @@ runs:
         if [[ "${{ inputs.coverage }}" == "true" ]]; then
           configs+=("${{ inputs.build-config-debug }}")
           configs+=("${{ inputs.build-config-release }}")
-        elif [[ "${{ inputs.coverage }}" == "true" ]]; then
+        else
           configs+=("${{ inputs.build-config-profile }}")
         fi
         for config in "${configs[@]}"; do
