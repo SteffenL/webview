@@ -106,28 +106,27 @@ runs:
         "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
-    - if: inputs.coverage == '' || !fromJSON(inputs.coverage)
-      name: Build (Debug)
-      run: >
-        cmake
-        --build "${{ inputs.build-dir }}"
-        --config Debug
-      shell: ${{ inputs.shell }}
-
-    - if: inputs.coverage == '' || !fromJSON(inputs.coverage)
-      name: Build (Release)
-      run: >
-        cmake
-        --build "${{ inputs.build-dir }}"
-        --config Release
-      shell: ${{ inputs.shell }}
-
-    - if: inputs.coverage != '' && fromJSON(inputs.coverage)
-      name: Build (Profile)
-      run: >
-        cmake
-        --build "${{ inputs.build-dir }}"
-        --config Profile
+    - name: Build
+      run: |
+        configs=()
+        if [[ "${{ inputs.coverage }}" == "true" ]]; then
+          configs+=("${{ inputs.build-config-debug }}")
+          configs+=("${{ inputs.build-config-release }}")
+        elif [[ "${{ inputs.coverage }}" == "true" ]]; then
+          configs+=("${{ inputs.build-config-profile }}")
+        fi
+        for config in "${configs[@]}"; do
+          cmake_cmd=()
+          if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
+            cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
+          fi
+          cmake_cmd+=(
+            cmake
+            --build "${{ inputs.build-dir }}"
+            --config "${config}"
+          )
+          "${cmake_cmd[@]}"
+        done
       shell: ${{ inputs.shell }}
 
     - name: Test
