@@ -68,12 +68,9 @@ jobs:
           build-dir: build
           docs: ${{ matrix.docs }}
           docs-target: webview_docs
-          cc: ${{ matrix.cc }}
           cmake-options: ${{ steps.vars.outputs.cmake-options }}
-          cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
           generator: ${{ matrix.g }}
-          generator-platform: ${{ matrix.gp }}
           osx-deployment-target: ${{ matrix.osx-deployment-target }}
           package: true
           package-source: ${{ matrix.package-source }}
