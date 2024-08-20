@@ -58,7 +58,9 @@ jobs:
             cmake_options+=(WEBVIEW_BUILD_DOCS=ON)
             cmake_options+=(WEBVIEW_INSTALL_DOCS=ON)
           fi
-          cmake_options+=("CMAKE_EXECUTABLE_SUFFIX=${{ matrix.ces }}")
+          if [[ ! -z "${{ matrix.ces }}" ]]; then
+            cmake_options+=("CMAKE_EXECUTABLE_SUFFIX=${{ matrix.ces }}")
+          fi
           echo "cmake-options=$(printf '%s\n' "${cmake_options[@]}")" >> "${GITHUB_OUTPUT}"
         shell: bash
 
