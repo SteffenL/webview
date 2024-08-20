@@ -56,7 +56,6 @@ jobs:
           cxx-std: ${{ matrix.cxx-std }}
           generator: ${{ matrix.gen }}
           generator-platform: ${{ matrix.gen-platform }}
-          msys: ${{ matrix.msys }}
           osx-deployment-target: ${{ matrix.osx-deployment-target }}
           package-source: ${{ matrix.package-source }}
           shell: ${{ matrix.shell }}
