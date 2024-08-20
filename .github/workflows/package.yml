@@ -7,6 +7,7 @@ jobs:
 #    name: macos (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }})
 #    name: windows-msvc (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.generator-platform }})
 #    name: windows-msys2 (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.msys }})
+    name: ${{ matrix.os }} (c++${{ matrix.cxx-std }}, ${{ matrix.tc }}, ${{ matrix.cn }}, ${{ matrix.i }}${{ matrix.name-suffix }})
     runs-on: ${{ matrix.i }}
     strategy:
       matrix:
@@ -17,16 +18,16 @@ jobs:
           # gp:  generator-platform
           # sh:  shell
           # tc:  toolchain
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '6.0', package-source: true }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.1' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.0' }
-          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, tc: gnu,                cn: gcc10, cc: gcc-10, cxx: g++-10,  g: Ninja Multi-Config,    sh: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10, webkitgtk-api: '4.0' }
-          - { os: macos,   i: macos-14,     cxx-std: 20, tc: llvm,               cn: clang, cc: clang,  cxx: clang++, g: Xcode,                 sh: bash,        osx-deployment-target: '10.9' }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        gp: ARM64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        gp: x64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        gp: Win32 }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-gnu-ucrt64,   cn: gcc,   cc: gcc,    cxx: g++,     g: Ninja Multi-Config,    sh: 'msys2 {0}', msys: UCRT64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-llvm-clang64, cn: clang, cc: clang,  cxx: clang++, g: Ninja Multi-Config,    sh: 'msys2 {0}', msys: CLANG64 }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '6.0', package-source: true }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.1' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.0' }
+          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, tc: gnu,                cn: gcc10, cc: gcc-10, cxx: g++-10,  g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10, webkitgtk-api: '4.0' }
+          - { os: macos,   i: macos-14,     cxx-std: 20, tc: llvm,               cn: clang, cc: clang,  cxx: clang++, g: Xcode,                 sh: bash,        name-suffix: '',               osx-deployment-target: '10.9' }
+          - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        name-suffix: ', ARM64',        gp: ARM64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        name-suffix: ', x64',          gp: x64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        name-suffix: ', Win32',        gp: Win32 }
+          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-gnu-ucrt64,   cn: gcc,   cc: gcc,    cxx: g++,     g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-llvm-clang64, cn: clang, cc: clang,  cxx: clang++, g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      msys: CLANG64 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,61 +70,56 @@ jobs:
           source-dir: .
           test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}
 
-#  merge-package-artifacts:
-#    needs:
-#      - linux
-#      - macos
-#      - windows-msvc
-#      - windows-msys2
-#    runs-on: ubuntu-22.04
-#    steps:
-#      - name: Merge package artifacts
-#        uses: actions/upload-artifact/merge@v4
-#        with:
-#          name: package
-#          pattern: package_*
-#          delete-merged: true
-#
-#  api-docs:
-#    runs-on: ubuntu-22.04
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#
-#      - name: Install doxygen
-#        run: sudo apt-get install -y doxygen
-#
-#      - name: Prepare output directory
-#        run: mkdir -p build/docs
-#
-#      - name: Run doxygen
-#        run: doxygen
-#
-#      - name: Create package (tar.gz)
-#        run: tar -czvf docs.tar.gz docs
-#        working-directory: build
-#
-#      - name: Create package (zip)
-#        run: zip -r9 docs.zip docs
-#        working-directory: build
-#
-#      - name: Generate checksum files
-#        run: |
-#          while read f; do
-#            shasum --algorithm 256 "${f}" > "${f}.sha256"
-#          done << EOF
-#          $(find . -maxdepth 1 -type f -name '*.gz' -or -name '*.zip')
-#          EOF
-#        working-directory: build
-#
-#      - name: Upload distributable artifacts
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: docs
-#          path: |
-#            build/*.gz
-#            build/*.sha256
-#            build/*.zip
-#          retention-days: 1
-#          if-no-files-found: error
-#
+  merge-package-artifacts:
+    needs: package
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Merge package artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: package
+          pattern: package_*
+          delete-merged: true
+
+  api-docs:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install doxygen
+        run: sudo apt-get install -y doxygen
+
+      - name: Prepare output directory
+        run: mkdir -p build/docs
+
+      - name: Run doxygen
+        run: doxygen
+
+      - name: Create package (tar.gz)
+        run: tar -czvf docs.tar.gz docs
+        working-directory: build
+
+      - name: Create package (zip)
+        run: zip -r9 docs.zip docs
+        working-directory: build
+
+      - name: Generate checksum files
+        run: |
+          while read f; do
+            shasum --algorithm 256 "${f}" > "${f}.sha256"
+          done << EOF
+          $(find . -maxdepth 1 -type f -name '*.gz' -or -name '*.zip')
+          EOF
+        working-directory: build
+
+      - name: Upload distributable artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs
+          path: |
+            build/*.gz
+            build/*.sha256
+            build/*.zip
+          retention-days: 1
+          if-no-files-found: error
