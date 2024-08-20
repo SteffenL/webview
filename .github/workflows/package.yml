@@ -38,8 +38,7 @@ jobs:
           msys: ${{ matrix.msys }}
           webkitgtk-api: ${{ matrix.webkitgtk-api }}
 
-      - if: runner.os == 'Linux'
-        name: Generate artifacts name
+      - name: Generate artifacts name
         id: generate-artifacts-name
         run: |
           if [[ "${{ matrix.os }}" == "linux" ]]; then
