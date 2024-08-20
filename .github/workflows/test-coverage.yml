@@ -57,6 +57,7 @@ jobs:
           artifacts-name: ${{ steps.generate-artifacts-name.outputs.artifacts-name }}
           build-dir: build
           cc: ${{ matrix.cc }}
+          coverage: true
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
           gcov: ${{ matrix.gcov }}
