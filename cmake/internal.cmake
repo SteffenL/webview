@@ -199,6 +199,7 @@ macro(webview_internal_options)
         set(WEBVIEW_IS_TOP_LEVEL_BUILD TRUE)
     endif()
 
+    option(WEBVIEW_BUILD_DOCS "Build documentation" ${WEBVIEW_IS_TOP_LEVEL_BUILD})
     option(WEBVIEW_BUILD_TESTS "Build tests" ${WEBVIEW_IS_TOP_LEVEL_BUILD})
     option(WEBVIEW_BUILD_EXAMPLES "Build examples" ${WEBVIEW_IS_TOP_LEVEL_BUILD})
     option(WEBVIEW_INSTALL_TARGETS "Install targets" ${WEBVIEW_IS_TOP_LEVEL_BUILD})

@@ -84,33 +84,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install doxygen
-        run: sudo apt-get install -y doxygen
+      - name: Install dependencies
+        run: sudo apt-get install --no-install-recommends -y doxygen dot cmake ninja-build
 
-      - name: Prepare output directory
-        run: mkdir -p build/docs
+      - name: Configure
+        run: cmake -G Ninja -B build -S .
 
-      - name: Run doxygen
-        run: doxygen
+      - name: Build
+        run: cmake --build build --target webview_api_docs
 
-      - name: Create package (tar.gz)
-        run: tar -czvf docs.tar.gz docs
-        working-directory: build
+      - name: Create package
+        run: cpack -C "Debug;Release" --config CPackConfig.cmake
+        working-directory: ${{ inputs.build-dir }}
 
-      - name: Create package (zip)
-        run: zip -r9 docs.zip docs
-        working-directory: build
-
-      - name: Generate checksum files
-        run: |
-          while read f; do
-            shasum --algorithm 256 "${f}" > "${f}.sha256"
-          done << EOF
-          $(find . -maxdepth 1 -type f -name '*.gz' -or -name '*.zip')
-          EOF
-        working-directory: build
-
-      - name: Upload distributable artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: docs
