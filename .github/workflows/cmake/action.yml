@@ -91,10 +91,10 @@ runs:
       run: |
         configs=()
         if [[ "${{ inputs.coverage }}" == "true" ]]; then
+          configs+=("${{ inputs.build-config-profile }}")
+        else
           configs+=("${{ inputs.build-config-debug }}")
           configs+=("${{ inputs.build-config-release }}")
-        else
-          configs+=("${{ inputs.build-config-profile }}")
         fi
         echo "configs=${configs[@]}" >> "${GITHUB_OUTPUT}"
       shell: bash
