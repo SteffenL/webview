@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         include:
-          # os:      Operating systme
+          # os:      Target operating systme
           # a:       Architecture
           # i:       Image
           # cxx-std: C++ standard
