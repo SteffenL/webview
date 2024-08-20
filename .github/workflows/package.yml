@@ -51,6 +51,7 @@ jobs:
             name="${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}"
           fi
           echo "artifacts-name=${name}" >> "${GITHUB_OUTPUT}"
+        shell: bash
 
       - name: Build
         uses: ./.github/workflows/cmake/build
