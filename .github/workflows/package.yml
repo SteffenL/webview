@@ -7,20 +7,27 @@ jobs:
 #    name: macos (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }})
 #    name: windows-msvc (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.generator-platform }})
 #    name: windows-msys2 (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.msys }})
-    runs-on: ${{ matrix.image }}
+    runs-on: ${{ matrix.i }}
     strategy:
       matrix:
         include:
-          - { os: linux,   image: ubuntu-22.04, cxx-std: 20, toolchain: gnu,                compiler-name: gcc12, cc: gcc-12, cxx: g++-12,  gen: Ninja Multi-Config,    shell: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '6.0', package-source: true }
-          - { os: linux,   image: ubuntu-22.04, cxx-std: 20, toolchain: gnu,                compiler-name: gcc12, cc: gcc-12, cxx: g++-12,  gen: Ninja Multi-Config,    shell: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.1' }
-          - { os: linux,   image: ubuntu-22.04, cxx-std: 20, toolchain: gnu,                compiler-name: gcc12, cc: gcc-12, cxx: g++-12,  gen: Ninja Multi-Config,    shell: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.0' }
-          - { os: linux,   image: ubuntu-20.04, cxx-std: 20, toolchain: gnu,                compiler-name: gcc10, cc: gcc-10, cxx: g++-10,  gen: Ninja Multi-Config,    shell: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10, webkitgtk-api: '4.0' }
-          - { os: macos,   image: macos-14,     cxx-std: 20, toolchain: llvm,               compiler-name: clang, cc: clang,  cxx: clang++, gen: Xcode,                 shell: bash,        osx-deployment-target: '10.9' }
-          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: vs,                 compiler-name: msvc,  cc: cl,     cxx: cl,      gen: Visual Studio 17 2022, shell: bash,        gen-platform: ARM64 }
-          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: vs,                 compiler-name: msvc,  cc: cl,     cxx: cl,      gen: Visual Studio 17 2022, shell: bash,        gen-platform: x64 }
-          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: vs,                 compiler-name: msvc,  cc: cl,     cxx: cl,      gen: Visual Studio 17 2022, shell: bash,        gen-platform: Win32 }
-          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: msys2-gnu-ucrt64,   compiler-name: gcc,   cc: gcc,    cxx: g++,     gen: Ninja Multi-Config,    shell: 'msys2 {0}', msys: UCRT64 }
-          - { os: windows, image: windows-2022, cxx-std: 20, toolchain: msys2-llvm-clang64, compiler-name: clang, cc: clang,  cxx: clang++, gen: Ninja Multi-Config,    shell: 'msys2 {0}', msys: CLANG64 }
+          # cn:  compiler-name
+          # i:   image
+          # g:   generator
+          # gp:  generator-platform
+          # sh:  shell
+          # std: cxx-std
+          # tc:  toolchain
+          - { os: linux,   i: ubuntu-22.04, std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '6.0', package-source: true }
+          - { os: linux,   i: ubuntu-22.04, std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.1' }
+          - { os: linux,   i: ubuntu-22.04, std: 20, tc: gnu,                cn: gcc12, cc: gcc-12, cxx: g++-12,  g: Ninja Multi-Config,    sh: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12, webkitgtk-api: '4.0' }
+          - { os: linux,   i: ubuntu-20.04, std: 20, tc: gnu,                cn: gcc10, cc: gcc-10, cxx: g++-10,  g: Ninja Multi-Config,    sh: bash,        test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10, webkitgtk-api: '4.0' }
+          - { os: macos,   i: macos-14,     std: 20, tc: llvm,               cn: clang, cc: clang,  cxx: clang++, g: Xcode,                 sh: bash,        osx-deployment-target: '10.9' }
+          - { os: windows, i: windows-2022, std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        gp: ARM64 }
+          - { os: windows, i: windows-2022, std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        gp: x64 }
+          - { os: windows, i: windows-2022, std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        gp: Win32 }
+          - { os: windows, i: windows-2022, std: 20, tc: msys2-gnu-ucrt64,   cn: gcc,   cc: gcc,    cxx: g++,     g: Ninja Multi-Config,    sh: 'msys2 {0}', msys: UCRT64 }
+          - { os: windows, i: windows-2022, std: 20, tc: msys2-llvm-clang64, cn: clang, cc: clang,  cxx: clang++, g: Ninja Multi-Config,    sh: 'msys2 {0}', msys: CLANG64 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,13 +44,13 @@ jobs:
         id: generate-artifacts-name
         run: |
           if [[ "${{ matrix.os }}" == "linux" ]]; then
-            echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}" >> "${GITHUB_OUTPUT}"
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}" >> "${GITHUB_OUTPUT}"
           elif [[ "${{ matrix.os }}" == "macos" ]]; then
-            echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
-          elif [[ "${{ matrix.os }}" == "windows" && "${{ matrix.toolchain }}" == "vs" ]]; then
-            echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.generator-platform }}" >> "${GITHUB_OUTPUT}"
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
+          elif [[ "${{ matrix.os }}" == "windows" && "${{ matrix.cn }}" == "msvc" ]]; then
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_${{ matrix.gp }}" >> "${GITHUB_OUTPUT}"
           elif [[ "${{ matrix.os }}" == "windows" && ! -z "${{ matrix.msys }}" ]]; then
-            echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}" >> "${GITHUB_OUTPUT}"
+            echo "artifacts-name=${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}" >> "${GITHUB_OUTPUT}"
           fi
 
       - name: Build
@@ -53,12 +60,12 @@ jobs:
           build-dir: build
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
-          cxx-std: ${{ matrix.cxx-std }}
-          generator: ${{ matrix.gen }}
-          generator-platform: ${{ matrix.gen-platform }}
+          cxx-std: ${{ matrix.std }}
+          generator: ${{ matrix.g }}
+          generator-platform: ${{ matrix.gp }}
           osx-deployment-target: ${{ matrix.osx-deployment-target }}
           package-source: ${{ matrix.package-source }}
-          shell: ${{ matrix.shell }}
+          shell: ${{ matrix.sh }}
           source-dir: .
           test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}
 
