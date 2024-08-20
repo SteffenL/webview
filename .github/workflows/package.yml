@@ -8,14 +8,14 @@ jobs:
     strategy:
       matrix:
         include:
-          # a:   architecture
-          # ces: CMAKE_EXECUTABLE_SUFFIX
-          # cn:  compiler-name
-          # i:   image
-          # g:   generator
-          # gp:  generator-platform
-          # sh:  shell
-          # t:   toolchain
+          # os:      Operating systme
+          # a:       Architecture
+          # i:       Image
+          # cxx-std: C++ standard
+          # ces:     CMAKE_EXECUTABLE_SUFFIX
+          # g:       CMake generator
+          # t:       Toolchain
+          # sh:      Shell
           - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: linux-gnu,          ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '6.0', docs: true, package-source: true }
           - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: linux-gnu,          ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '4.1' }
           - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: linux-gnu,          ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '4.0' }
