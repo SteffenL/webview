@@ -40,7 +40,6 @@ inputs:
   docs-target:
     description: CMake target for documentation
     required: false
-    default: webview_docs
   gcov:
     description: gcov executable
     required: false
