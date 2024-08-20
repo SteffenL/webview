@@ -6,6 +6,7 @@ jobs:
     name: ${{ matrix.os }} (c++${{ matrix.cxx-std }}, ${{ matrix.a }}, ${{ matrix.t }}${{ matrix.ces }}${{ matrix.name-suffix }})
     runs-on: ${{ matrix.i }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           # os:      Target operating systme
