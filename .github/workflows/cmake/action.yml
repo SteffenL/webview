@@ -126,8 +126,8 @@ runs:
           cmake_cmd+=(-D "CMAKE_OSX_DEPLOYMENT_TARGET=${{ inputs.osx-deployment-target }}")
         fi
         while read opt; do
-          echo "opt = ${opt}"
           if [[ ! -z "{opt}" ]]; then
+            echo "opt = ${opt}"
             cmake_cmd+=(-D "${opt}")
           fi
         done << EOF
