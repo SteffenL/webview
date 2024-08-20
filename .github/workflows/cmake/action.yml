@@ -27,6 +27,9 @@ inputs:
     description: Sets CMAKE_C_COMPILER
     required: false
     default: cc
+  cmake-options:
+    description: Sets extra CMake options in the form A=1 (one per line)
+    required: false
   cxx:
     description: Sets CMAKE_CXX_COMPILER
     required: false
@@ -122,6 +125,11 @@ runs:
         if [[ ! -z "${{ inputs.osx-deployment-target }}" ]]; then
           cmake_cmd+=(-D "CMAKE_OSX_DEPLOYMENT_TARGET=${{ inputs.osx-deployment-target }}")
         fi
+        while read opt; do
+          cmake_cmd+=(-D "${opt}")
+        done <<< EOF
+        ${{ inputs.cmake-options }}
+        EOF
         "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
