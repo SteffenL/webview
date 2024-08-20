@@ -55,6 +55,7 @@ jobs:
         with:
           artifacts-name: ${{ steps.generate-artifacts-name.outputs.artifacts-name }}
           build-dir: build
+          docs: ${{ matrix.docs }}
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
