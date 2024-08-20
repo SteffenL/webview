@@ -30,8 +30,8 @@ jobs:
           - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,     ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
           - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,     ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
           - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,     ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64-,   t: msys2-gnu-ucrt64, ces: '-posix', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64-,   t: msys2-gnu-ucrt64, ces: '-posix', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-gnu-ucrt64, ces: '-posix', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-gnu-ucrt64, ces: '-posix', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
