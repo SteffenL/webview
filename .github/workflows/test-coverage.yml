@@ -51,8 +51,8 @@ jobs:
           echo "artifacts-name=${name}" >> "${GITHUB_OUTPUT}"
         shell: bash
 
-      - name: Test
-        uses: ./.github/workflows/cmake/test
+      - name: CMake
+        uses: ./.github/workflows/cmake
         with:
           artifacts-name: ${{ steps.generate-artifacts-name.outputs.artifacts-name }}
           build-dir: build
@@ -62,9 +62,6 @@ jobs:
           gcov: ${{ matrix.gcov }}
           gcovr-version: ${{ inputs.gcovr-version }}
           generator: ${{ matrix.g }}
-          generator-platform: ${{ matrix.gp }}
-          osx-deployment-target: ${{ matrix.osx-deployment-target }}
-          package-source: ${{ matrix.package-source }}
           shell: ${{ matrix.sh }}
           source-dir: .
           test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}

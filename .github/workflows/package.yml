@@ -50,8 +50,8 @@ jobs:
           echo "artifacts-name=${name}" >> "${GITHUB_OUTPUT}"
         shell: bash
 
-      - name: Build
-        uses: ./.github/workflows/cmake/build
+      - name: CMake
+        uses: ./.github/workflows/cmake
         with:
           artifacts-name: ${{ steps.generate-artifacts-name.outputs.artifacts-name }}
           build-dir: build
@@ -61,6 +61,7 @@ jobs:
           generator: ${{ matrix.g }}
           generator-platform: ${{ matrix.gp }}
           osx-deployment-target: ${{ matrix.osx-deployment-target }}
+          package: true
           package-source: ${{ matrix.package-source }}
           shell: ${{ matrix.sh }}
           source-dir: .
