@@ -25,7 +25,7 @@ runs:
         elif [[ "${{ inputs.webkitgtk-api }}" == "4.0" ]]; then
           packages+=(libgtk-3-dev libwebkit2gtk-4.0-dev)
         fi
-        echo "packages=${packages}" >> "${GITHUB_OUTPUT}"
+        echo "packages=${packages[@]}" >> "${GITHUB_OUTPUT}"
       shell: bash
 
     - if: runner.os == 'Linux'
