@@ -86,6 +86,19 @@ runs:
       run: pip install "gcovr==${{ inputs.gcovr-version }}"
       shell: ${{ inputs.shell }}
 
+    - name: Generate build config names
+      id: generate-build-config-names
+      run: |
+        configs=()
+        if [[ "${{ inputs.coverage }}" == "true" ]]; then
+          configs+=("${{ inputs.build-config-debug }}")
+          configs+=("${{ inputs.build-config-release }}")
+        else
+          configs+=("${{ inputs.build-config-profile }}")
+        fi
+        echo "configs=${configs[@]}" >> "${GITHUB_OUTPUT}"
+      shell: bash
+
     - name: Configure
       run: |
         cmake_cmd=(
@@ -108,19 +121,9 @@ runs:
 
     - name: Build
       run: |
-        configs=()
-        if [[ "${{ inputs.coverage }}" == "true" ]]; then
-          configs+=("${{ inputs.build-config-debug }}")
-          configs+=("${{ inputs.build-config-release }}")
-        else
-          configs+=("${{ inputs.build-config-profile }}")
-        fi
+        configs=(${{ steps.generate-build-config-names.outputs.configs }})
         for config in "${configs[@]}"; do
-          cmake_cmd=()
-          if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
-            cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
-          fi
-          cmake_cmd+=(
+          cmake_cmd=(
             cmake
             --build "${{ inputs.build-dir }}"
             --config "${config}"
@@ -131,13 +134,7 @@ runs:
 
     - name: Test
       run: |
-        configs=()
-        if [[ "${{ inputs.coverage }}" == "true" ]]; then
-          configs+=("${{ inputs.build-config-debug }}")
-          configs+=("${{ inputs.build-config-release }}")
-        else
-          configs+=("${{ inputs.build-config-profile }}")
-        fi
+        configs=(${{ steps.generate-build-config-names.outputs.configs }})
         for config in "${configs[@]}"; do
           cmake_cmd=()
           if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
