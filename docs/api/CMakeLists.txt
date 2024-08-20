@@ -14,3 +14,9 @@ add_custom_target(
     COMMAND ${DOXYGEN_EXECUTABLE} "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
     VERBATIM
 )
+
+if(WEBVIEW_INSTALL_DOCS)
+    install(DIRECTORY "${WEBVIEW_DOXYFILE_OUTPUT_DIRECTORY}"
+        DESTINATION "${CMAKE_INSTALL_DOCDIR}"
+        COMPONENT webview_development)
+endif()
