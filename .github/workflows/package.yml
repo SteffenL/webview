@@ -22,8 +22,8 @@ jobs:
           - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        name-suffix: ', ARM64',        gp: ARM64, package: true }
           - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        name-suffix: ', x64',          gp: x64, package: true }
           - { os: windows, i: windows-2022, cxx-std: 20, tc: vs2022,             cn: msvc,  cc: cl,     cxx: cl,      g: Visual Studio 17 2022, sh: bash,        name-suffix: ', Win32',        gp: Win32, package: true }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-gnu-ucrt64,   cn: gcc,   cc: gcc,    cxx: g++,     g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-llvm-clang64, cn: clang, cc: clang,  cxx: clang++, g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      msys: CLANG64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-gnu-ucrt64,   cn: gcc,   cc: gcc,    cxx: g++,     g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64, package: true }
+          - { os: windows, i: windows-2022, cxx-std: 20, tc: msys2-llvm-clang64, cn: clang, cc: clang,  cxx: clang++, g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      msys: CLANG64, package: true }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
