@@ -2,64 +2,18 @@ name: CI / Package
 on:
   workflow_call:
 jobs:
-  setup-build-matrix:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Build matrix
-        id: build-matrix
-        uses: jgiannuzzi/setup-build-matrix@1228c081ba616d5b12efe78fd51e667536a7f114 # v1.1
-        with:
-          config: |
-            matrix:
-              # Base matrix
-              image: [ubuntu-20.04, ubuntu-22.04]
-              cxx-std: []
-              webkitgtk-api: []
-              config: []
-            operations:
-              - type: merge
-                match: [image]
-                matrix:
-                  image: [ubuntu-22.04]
-                  cxx-std: [20]
-                  webkitgtk-api: ['4.0', '4.1', '6.0']
-                  config:
-                    - toolchain: llvm
-                      compiler-name: clang15
-                      cc: clang-15
-                      cxx: clang++-15
-                      apt: clang-15 clang++-15
-                    - toolchain: gnu
-                      compiler-name: gcc12
-                      cc: gcc-12
-                      cxx: g++-12
-                      apt: gcc-12 g++-12
-              - type: merge
-                match: [image]
-                matrix:
-                  image: [ubuntu-20.04]
-                  cxx-std: [20]
-                  webkitgtk-api: ['4.0']
-                  config:
-                  - toolchain: llvm
-                    compiler-name: clang12
-                    cc: clang-12
-                    cxx: clang++-12
-                    apt: clang-12 clang++-12
-                  - toolchain: gnu
-                    compiler-name: gcc10
-                    cc: gcc-10
-                    cxx: g++-10
-                    apt: gcc-10 g++-10
-    outputs:
-      matrix: ${{ steps.build-matrix.outputs.matrix }}
-
   linux:
     name: linux (c++${{ matrix.cxx-std }}, ${{ matrix.toolchain }}, ${{ matrix.compiler-name }}, ${{ matrix.image }}, webkitgtk${{ matrix.webkitgtk-api }})
     needs: setup-build-matrix
     runs-on: ${{ matrix.image }}
     strategy:
-      matrix: ${{ fromJson(needs.setup-build-matrix.outputs.matrix) }}
+      matrix:
+        include:
+          - { image: ubuntu-22.04, cxx-std: 20, toolchain: llvm, compiler-name: gcc12, cc: gcc-12, cxx: g++-12, apt: gcc-12 g++-12, webkitgtk-api: '6.0',
+              package-source: true }
+          - { image: ubuntu-22.04, cxx-std: 20, toolchain: llvm, compiler-name: gcc12, cc: gcc-12, cxx: g++-12, apt: gcc-12 g++-12, webkitgtk-api: '4.1' }
+          - { image: ubuntu-22.04, cxx-std: 20, toolchain: llvm, compiler-name: gcc12, cc: gcc-12, cxx: g++-12, apt: gcc-12 g++-12, webkitgtk-api: '4.0' }
+          - { image: ubuntu-20.04, cxx-std: 20, toolchain: llvm, compiler-name: gcc10, cc: gcc-10, cxx: g++-10, apt: gcc-10 g++-10, webkitgtk-api: '4.0' }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,8 +33,7 @@ jobs:
           cxx: ${{ matrix.cxx }}
           cxx-std: ${{ matrix.cxx-std }}
           generator: Ninja Multi-Config
-          # Source code should be packaged only once
-          package-source: ${{ matrix.toolchain == 'llvm' && matrix.compiler-name == 'clang15' && matrix.cxx-std == 20 && matrix.webkitgtk-api == '6.0' }}
+          package-source: ${{ matrix.package-source }}
           shell: bash
           source-dir: .
           test-wrapper-cmd: xvfb-run
