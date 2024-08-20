@@ -8,7 +8,7 @@ on:
         required: false
         default: '7.2'
 jobs:
-  package:
+  test:
     name: ${{ matrix.os }} (c++${{ matrix.cxx-std }}, ${{ matrix.tc }}, ${{ matrix.cn }}, ${{ matrix.i }}${{ matrix.name-suffix }})
     runs-on: ${{ matrix.i }}
     strategy:
@@ -70,10 +70,7 @@ jobs:
           test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}
 
   report:
-    needs:
-      - linux
-      - macos
-      - windows
+    needs: test
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
