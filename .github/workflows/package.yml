@@ -42,7 +42,7 @@ jobs:
             echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}" >> "${GITHUB_OUTPUT}"
           elif [[ "${{ matrix.os }}" == "windows" && "${{ matrix.toolchain }}" == "vs" ]]; then
             echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.generator-platform }}" >> "${GITHUB_OUTPUT}"
-          elif [[ "${{ matrix.os }}" == "windows" && ! -z "${{ matrix.msys }}" == "" ]]; then
+          elif [[ "${{ matrix.os }}" == "windows" && ! -z "${{ matrix.msys }}" ]]; then
             echo "artifacts-name=${{ runner.os }}_${{ matrix.toolchain }}_${{ matrix.compiler-name }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}" >> "${GITHUB_OUTPUT}"
           fi
 
