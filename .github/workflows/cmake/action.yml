@@ -94,14 +94,16 @@ runs:
         "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
-    - name: Build (Debug)
+    - if: inputs.coverage == '' || !fromJSON(inputs.coverage)
+      name: Build (Debug)
       run: >
         cmake
         --build "${{ inputs.build-dir }}"
         --config Debug
       shell: ${{ inputs.shell }}
 
-    - name: Build (Release)
+    - if: inputs.coverage == '' || !fromJSON(inputs.coverage)
+      name: Build (Release)
       run: >
         cmake
         --build "${{ inputs.build-dir }}"
@@ -116,7 +118,8 @@ runs:
         --config Profile
       shell: ${{ inputs.shell }}
 
-    - name: Test (Debug)
+    - if: inputs.coverage == '' || !fromJSON(inputs.coverage)
+      name: Test (Debug)
       run: |
         config=Debug
         cmake_cmd=()
@@ -132,7 +135,8 @@ runs:
         "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
-    - name: Test (Release)
+    - if: inputs.coverage == '' || !fromJSON(inputs.coverage)
+      name: Test (Release)
       run: |
         config=Release
         cmake_cmd=()
