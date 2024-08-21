@@ -87,7 +87,7 @@ jobs:
           script: |
             const option = (k, v, t) => [k, ({
                 Boolean: () => JSON.parse(v) ? "ON" : "OFF"
-              }[t.name] || (() => v))()
+              }[t ? t.name : undefined] || (() => v))()
             ].join("=");
             const docs = JSON.parse(process.env.DOCS);
             return [
