@@ -55,7 +55,7 @@ jobs:
         with:
           script: |
             const matrix = JSON.parse(process.env.MATRIX);
-            return Object.entries(matrix).flatmap(kv => kv).join("_")
+            return Object.entries(matrix).flatMap(kv => kv).join("_")
           result-encoding: string
 
       - name: Build CMake options
