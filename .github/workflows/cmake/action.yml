@@ -24,11 +24,8 @@ inputs:
     description: Enable code coverage?
     required: false
   cmake-options:
-    description: Sets extra CMake options in the form A=1 (one per line), base64-encoded to work around line limitations
+    description: Sets extra CMake options in the form ["K=V", ...]
     required: false
-  cxx-std:
-    description: Sets CMAKE_CXX_STANDARD
-    required: true
   docs:
     description: Build documentation
     required: false
@@ -51,12 +48,6 @@ inputs:
     description: CMake generator
     required: false
     default: Ninja
-  generator-platform:
-    description: Sets CMAKE_GENERATOR_PLATFORM
-    required: false
-  osx-deployment-target:
-    description: Sets CMAKE_OSX_DEPLOYMENT_TARGET
-    required: false
   package:
     description: Package?
     required: false
@@ -73,9 +64,6 @@ inputs:
     default: .
   test-wrapper-cmd:
     description: Test wrapper command
-    required: false
-  toolchain-file:
-    description: CMake toolchain file
     required: false
 runs:
   using: composite
@@ -103,7 +91,18 @@ runs:
         echo "configs=${configs[@]}" >> "${GITHUB_OUTPUT}"
       shell: bash
 
+    - name: Parse CMake options
+      uses: actions/github-script@v7
+      id: cmake-options
+      env:
+        OPTIONS: ${{ matrix.cmake-options }}
+      with:
+        script: return JSON.parse(process.env.OPTIONS).join("\n")
+        result-encoding: string
+
     - name: Configure
+      env:
+        OPTIONS: ${{ steps.cmake-options.outputs.result }}
       run: |
         cmake_cmd=(
           cmake
@@ -111,23 +110,13 @@ runs:
           -B "${{ inputs.build-dir }}"
           -S "${{ inputs.source-dir }}"
         )
-        if [[ ! -z "${{ inputs.cxx-std }}" ]]; then
-          cmake_cmd+=(-D "CMAKE_CXX_STANDARD=${{ inputs.cxx-std }}")
-        fi
-        if [[ ! -z "${{ inputs.generator-platform }}" ]]; then
-          cmake_cmd+=(-D "CMAKE_GENERATOR_PLATFORM=${{ inputs.generator-platform }}")
-        fi
-        if [[ ! -z "${{ inputs.osx-deployment-target }}" ]]; then
-          cmake_cmd+=(-D "CMAKE_OSX_DEPLOYMENT_TARGET=${{ inputs.osx-deployment-target }}")
-        fi
-        if [[ ! -z "${{ inputs.toolchain-file }}" ]]; then
-          cmake_cmd+=(-D "CMAKE_TOOLCHAIN_FILE=${{ inputs.toolchain-file }}")
-        fi
         while read opt; do
           if [[ ! -z "${opt}" ]]; then
             cmake_cmd+=(-D "${opt}")
           fi
-        done <<< "$(base64 -d <<< "${{ inputs.cmake-options }}")"
+        done << EOF
+        ${OPTIONS}
+        EOF
         "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
