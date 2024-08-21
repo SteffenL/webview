@@ -107,7 +107,7 @@ jobs:
           build-dir: build
           docs: ${{ matrix.docs }}
           docs-target: webview_docs
-          cmake-options: ${{ steps.vars.outputs.cmake-options }}
+          cmake-options: ${{ steps.cmake-options.outputs.result }}
           generator: ${{ matrix.g }}
           package: true
           package-source: ${{ matrix.package-source }}

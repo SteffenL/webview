@@ -40,57 +40,60 @@ jobs:
           msys: ${{ matrix.msys }}
           webkitgtk-api: ${{ matrix.webkitgtk-api }}
 
-      - name: Generate variables
-        id: vars
-        run: |
-          if [[ "${{ matrix.os }}" == "linux" ]]; then
-            name="${{ runner.os }}_${{ matrix.i }}_cxx${{ matrix.cxx-std }}_${{ matrix.a }}_${{ matrix.t }}${{ matrix.tes }}_webkitgtk${{ matrix.webkitgtk-api }}"
-          else
-            name="${{ runner.os }}_${{ matrix.i }}_cxx${{ matrix.cxx-std }}_${{ matrix.a }}_${{ matrix.t }}${{ matrix.tes }}"
-          fi
-          echo "artifacts-name=${name}" >> "${GITHUB_OUTPUT}"
+      - name: Build artifacts name
+        uses: actions/github-script@v7
+        id: artifacts-name
+        env:
+          OS: ${{ matrix.os }}
+          IMAGE: ${{ matrix.i }}
+          CXX_STD: ${{ matrix.cxx-std }}
+          TOOLCHAIN: ${{ matrix.t }}
+          TOOLCHAIN_EXECUTABLE_SUFFIX: ${{ matrix.tes }}
+          WEBKITGTK_API: ${{ matrix.webkitgtk-api }}
+        with:
+          script: |
+            return [
+              process.env.OS,
+              process.env.IMAGE,
+              process.env.CXX_STD,
+              process.env.TOOLCHAIN,
+              process.env.TOOLCHAIN_EXECUTABLE_SUFFIX,
+              process.env.WEBKITGTK_API,
+            ].filter(v => v !== undefined && v !== "").join("_")
 
-          cmake_options=()
-
-          if [[ ! -z "${{ matrix.tes }}" ]]; then
-            cmake_options+=("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX:STRING=${{ matrix.tes }}")
-          fi
-
-          cmake_options+=("WEBVIEW_ENABLE_CHECKS:BOOL=OFF")
-
-          echo "cmake-options=$(printf '%s\n' "${cmake_options[@]}" | base64 -w0)" >> "${GITHUB_OUTPUT}"
-        shell: bash
+      - name: Build CMake options
+        uses: actions/github-script@v7
+        id: cmake-options
+        env:
+          ARCH: ${{ matrix.a }}
+          CXX_STD: ${{ matrix.cxx-std }}
+          TOOLCHAIN: ${{ matrix.t }}
+          TOOLCHAIN_EXECUTABLE_SUFFIX: ${{ matrix.tes }}
+        with:
+          script: |
+            const option = (k, v, t) => [k, ({
+                Boolean: () => JSON.parse((v === undefined || v === "") ? false : v) ? "ON" : "OFF"
+              }[t ? t.name : undefined] || (() => v))()
+            ].join("=");
+            return [
+              option("CMAKE_CXX_STANDARD", process.env.CXX_STD),
+              option("CMAKE_TOOLCHAIN_FILE", `cmake/toolchains/${process.env.ARCH}-${process.env.TOOLCHAIN}.cmake`),
+              option("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX", process.env.TOOLCHAIN_EXECUTABLE_SUFFIX),
+            ];
 
       - name: CMake
         uses: ./.github/workflows/cmake
         with:
-          artifacts-name: ${{ steps.vars.outputs.artifacts-name }}
+          artifacts-name: ${{ steps.artifacts-name.outputs.result }}
           build-dir: build
-          cmake-options: ${{ steps.vars.outputs.cmake-options }}
+          cmake-options: ${{ steps.cmake-options.outputs.result }}
           coverage: true
-          cxx-std: ${{ matrix.cxx-std }}
           gcov: ${{ matrix.gcov }}
           gcovr-version: ${{ inputs.gcovr-version }}
           generator: ${{ matrix.g }}
           shell: ${{ matrix.sh }}
           source-dir: .
           test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}
-          toolchain-file: cmake/toolchains/${{ matrix.a }}-${{ matrix.t }}.cmake
-
-      - name: Generate artifacts name
-        id: generate-artifacts-name
-        run: |
-          if [[ "${{ matrix.os }}" == "linux" ]]; then
-            name="${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_webkitgtk${{ matrix.webkitgtk-api }}"
-          elif [[ "${{ matrix.os }}" == "macos" ]]; then
-            name="${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}"
-          elif [[ "${{ matrix.os }}" == "windows" && "${{ matrix.cn }}" == "msvc" ]]; then
-            name="${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_${{ matrix.gp }}"
-          elif [[ "${{ matrix.os }}" == "windows" && ! -z "${{ matrix.msys }}" ]]; then
-            name="${{ runner.os }}_${{ matrix.tc }}_${{ matrix.cn }}_cxx${{ matrix.cxx-std }}_${{ matrix.msys }}"
-          fi
-          echo "artifacts-name=${name}" >> "${GITHUB_OUTPUT}"
-        shell: bash
 
   report:
     needs: test
