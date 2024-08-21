@@ -1,4 +1,4 @@
-job_type,os,image,cxx-std,arch,toolchain,toolchain_executable_suffix,generator,shell,job_name_suffix,checks,apt,webkitgtk-api,test-wrapper-cmd,docs,package-source,osx-deployment-target,msvc-mt,msys,msys-pacboy,gcov
+job-type,os,image,cxx-std,arch,toolchain,toolchain-executable-suffix,generator,shell,job-name-suffix,checks,apt,webkitgtk-api,test-wrapper-cmd,docs,package-source,osx-deployment-target,msvc-mt,msys,msys-pacboy,gcov
 package,linux,ubuntu-22.04,20,host,gnu,-12,Ninja Multi-Config,bash,", webkitgtk6.0",FALSE,gcc-12 g++-12,6.0,xvfb-run,TRUE,TRUE,,,,,
 package,linux,ubuntu-22.04,20,host,gnu,-12,Ninja Multi-Config,bash,", webkitgtk4.1",FALSE,gcc-12 g++-12,4.1,xvfb-run,,,,,,,
 package,linux,ubuntu-22.04,20,host,gnu,-12,Ninja Multi-Config,bash,", webkitgtk4.0",FALSE,gcc-12 g++-12,4.0,xvfb-run,,,,,,,
