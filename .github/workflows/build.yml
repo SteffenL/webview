@@ -8,47 +8,48 @@ on:
         required: false
         default: '7.2'
 jobs:
-  package:
-    name: ${{ matrix.os }} (c++${{ matrix.cxx-std }}, ${{ matrix.a }}, ${{ matrix.t }}${{ matrix.tes }}${{ matrix.name-suffix }})
+  build:
+    name: ${{ matrix.jt }} (${{ matrix.os }}, c++${{ matrix.cxx-std }}, ${{ matrix.a }}, ${{ matrix.t }}${{ matrix.tes }}${{ matrix.name-suffix }})
     runs-on: ${{ matrix.i }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # os:      Target operating systme
           # a:       Architecture
-          # i:       Image
           # cxx-std: C++ standard
           # g:       CMake generator
+          # i:       Image
+          # j:       Job type
+          # jns:     Job name suffix
           # msvc-mt: Use static MSVC runtime library
+          # os:      Target operating system
+          # sh:      Shell
           # t:       Toolchain
           # tes:     Toolchain executable suffix
-          # sh:      Shell
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: gnu,                tes: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', checks: false, test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,                     webkitgtk-api: '6.0', docs: true, package-source: true }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: gnu,                tes: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', checks: false, test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,                     webkitgtk-api: '4.1' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: gnu,                tes: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', checks: false, test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,                     webkitgtk-api: '4.0' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', checks: true,  test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15 clang-tidy-15, webkitgtk-api: '6.0' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', checks: true,  test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15 clang-tidy-15, webkitgtk-api: '4.1' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', checks: true,  test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15 clang-tidy-15, webkitgtk-api: '4.0' }
-          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, a: host,      t: gnu,                tes: '-10',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', checks: false, test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10,                     webkitgtk-api: '4.0' }
-          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, a: host,      t: llvm,               tes: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', checks: false, test-wrapper-cmd: xvfb-run, apt: clang-12 clang++-12 clang-tidy-12, webkitgtk-api: '4.0' }
-          - { os: macos,   i: macos-14,     cxx-std: 20, a: universal, t: macos-llvm,         tes: '',       g: Xcode,                 sh: bash,        name-suffix: '',               checks: false, osx-deployment-target: '10.9' }
-          - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: w64-mingw32,        tes: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               checks: false, apt: mingw-w64 }
-          - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: i686,      t: w64-mingw32,        tes: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               checks: false, apt: mingw-w64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', mt',           checks: false, msvc-mt: true }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', mt',           checks: false, msvc-mt: true }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', mt',           checks: false, msvc-mt: true }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           checks: false, msvc-mt: false }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           checks: false, msvc-mt: false }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           checks: false, msvc-mt: false }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-gnu-ucrt64,   tes: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       checks: false, msys: UCRT64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-llvm-clang64, tes: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      checks: true,  msys: CLANG64, msys-pacboy: 'clang-tools-extra:p' }
-          # Code coverage
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', checks: false, coverage: true, gcov: llvm-cov-15 gcov,   test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '6.0' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', checks: false, coverage: true, gcov: llvm-cov-15 gcov,   test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.1' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', checks: false, coverage: true, gcov: llvm-cov-15 gcov,   test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.0' }
-          - { os: macos,   i: macos-14,     cxx-std: 20, a: universal, t: macos-llvm,         tes: '',       g: Xcode,                 sh: bash,        name-suffix: '',               checks: false, coverage: true, gcov: xcrun llvm-cov gcov }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-llvm-clang64, tes: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      checks: false, coverage: true, gcov: llvm-cov gcov,      msys: CLANG64 }
+          - { j: package,  os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: gnu,                tes: '-12',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk6.0', checks: false, test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,                     webkitgtk-api: '6.0', docs: true, package-source: true }
+          - { j: package,  os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: gnu,                tes: '-12',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk4.1', checks: false, test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,                     webkitgtk-api: '4.1' }
+          - { j: package,  os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: gnu,                tes: '-12',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk4.0', checks: false, test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,                     webkitgtk-api: '4.0' }
+          - { j: package,  os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk6.0', checks: true,  test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15 clang-tidy-15, webkitgtk-api: '6.0' }
+          - { j: package,  os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk4.1', checks: true,  test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15 clang-tidy-15, webkitgtk-api: '4.1' }
+          - { j: package,  os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk4.0', checks: true,  test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15 clang-tidy-15, webkitgtk-api: '4.0' }
+          - { j: package,  os: linux,   i: ubuntu-20.04, cxx-std: 20, a: host,      t: gnu,                tes: '-10',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk4.0', checks: false, test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10,                     webkitgtk-api: '4.0' }
+          - { j: package,  os: linux,   i: ubuntu-20.04, cxx-std: 20, a: host,      t: llvm,               tes: '-12',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk4.0', checks: false, test-wrapper-cmd: xvfb-run, apt: clang-12 clang++-12 clang-tidy-12, webkitgtk-api: '4.0' }
+          - { j: package,  os: macos,   i: macos-14,     cxx-std: 20, a: universal, t: macos-llvm,         tes: '',       g: Xcode,                 sh: bash,        jns: '',               checks: false, osx-deployment-target: '10.9' }
+          - { j: package,  os: windows, i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: w64-mingw32,        tes: '-posix', g: Ninja Multi-Config,    sh: bash,        jns: '',               checks: false, apt: mingw-w64 }
+          - { j: package,  os: windows, i: ubuntu-22.04, cxx-std: 20, a: i686,      t: w64-mingw32,        tes: '-posix', g: Ninja Multi-Config,    sh: bash,        jns: '',               checks: false, apt: mingw-w64 }
+          - { j: package,  os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        jns: ', mt',           checks: false, msvc-mt: true }
+          - { j: package,  os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        jns: ', mt',           checks: false, msvc-mt: true }
+          - { j: package,  os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        jns: ', mt',           checks: false, msvc-mt: true }
+          - { j: package,  os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        jns: ', md',           checks: false, msvc-mt: false }
+          - { j: package,  os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        jns: ', md',           checks: false, msvc-mt: false }
+          - { j: package,  os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        jns: ', md',           checks: false, msvc-mt: false }
+          - { j: package,  os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-gnu-ucrt64,   tes: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', jns: ', UCRT64',       checks: false, msys: UCRT64 }
+          - { j: package,  os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-llvm-clang64, tes: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', jns: ', CLANG64',      checks: true,  msys: CLANG64, msys-pacboy: 'clang-tools-extra:p' }
+          - { j: coverage, os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk6.0', checks: false, gcov: llvm-cov-15 gcov,   test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '6.0' }
+          - { j: coverage, os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk4.1', checks: false, gcov: llvm-cov-15 gcov,   test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.1' }
+          - { j: coverage, os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        jns: ', webkitgtk4.0', checks: false, gcov: llvm-cov-15 gcov,   test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.0' }
+          - { j: coverage, os: macos,   i: macos-14,     cxx-std: 20, a: universal, t: macos-llvm,         tes: '',       g: Xcode,                 sh: bash,        jns: '',               checks: false, gcov: xcrun llvm-cov gcov }
+          - { j: coverage, os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-llvm-clang64, tes: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', jns: ', CLANG64',      checks: false, gcov: llvm-cov gcov,      msys: CLANG64 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -129,12 +130,12 @@ jobs:
           source-dir: .
           test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}
           # Specific to code coverage
-          coverage: true
+          coverage: ${{ matrix.j == 'coverage' }}
           gcov: ${{ matrix.gcov }}
           gcovr-version: ${{ inputs.gcovr-version }}
 
   merge-package-artifacts:
-    needs: package
+    needs: build
     runs-on: ubuntu-22.04
     steps:
       - name: Merge package artifacts
@@ -143,3 +144,99 @@ jobs:
           name: package
           pattern: package_*
           delete-merged: true
+
+  report:
+    if: matrix.j == 'coverage'
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        run: >
+          sudo apt-get install --no-install-recommends -y
+          python3
+          python3-lxml
+          python3-markupsafe
+          python3-pip
+
+      - name: Install gcovr
+        run: pip install "gcovr==${{ inputs.gcovr-version }}"
+
+      - name: Merge test coverage artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: test_coverage_data
+          pattern: test_coverage_data_*
+          delete-merged: true
+          retention-days: 1
+          separate-directories: true
+
+      - name: Download merged test coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: test_coverage_data
+
+      - name: Generate report
+        id: generate-report
+        run: |
+          tracefile_args=()
+          while read f; do
+            tracefile_args+=(--add-tracefile "${f}")
+          done <<< "$(find . -type f -name "coverage.json")"
+
+          artifact_dir="temp_${RANDOM}/report"
+          mkdir -p "${artifact_dir}/html"
+
+          gcovr --config gcovr.ci.cfg --json "${artifact_dir}/gcovr.json" "${tracefile_args[@]}"
+          gcovr --config gcovr.ci.cfg --coveralls "${artifact_dir}/coveralls.json" --add-tracefile "${artifact_dir}/gcovr.json"
+          gcovr --config gcovr.ci.cfg --json-summary "${artifact_dir}/summary.json" --add-tracefile "${artifact_dir}/gcovr.json"
+          gcovr --config gcovr.ci.cfg --html-details "${artifact_dir}/html/index.html" --add-tracefile "${artifact_dir}/gcovr.json"
+
+          echo "upload-dir=${artifact_dir}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test_coverage_report
+          path: ${{ steps.generate-report.outputs.upload-dir }}
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Add report to CI job summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const numberOr = (value, alternative) => Number.isNaN(value = parseInt(value)) ? alternative : value;
+            const percentValue = (value, percentSymbol = "%") => numberOr(value, "-") + percentSymbol;
+            const data = require("./${{ steps.generate-report.outputs.upload-dir }}/summary.json");
+            await core.summary
+              .addHeading("Test Coverage Summary")
+              .addTable([
+                [
+                  { data: "Lines", header: true },
+                  { data: "Functions", header: true },
+                  { data: "Branches", header: true }
+                ],
+                [
+                  `${percentValue(data.line_percent)} ${data.line_covered}/${data.line_total}`,
+                  `${percentValue(data.function_percent)} ${data.function_covered}/${data.function_total}`,
+                  `${percentValue(data.branch_percent)} ${data.branch_covered}/${data.branch_total}`
+                ]
+              ])
+              .addTable([
+                [
+                  { data: "File", header: true },
+                  { data: "Lines", header: true },
+                  { data: "Functions", header: true },
+                  { data: "Branches", header: true }
+                ],
+                ...data.files.map(file => [
+                  file.filename,
+                  `${percentValue(file.line_percent)} ${file.line_covered}/${file.line_total}`,
+                  `${percentValue(file.function_percent)} ${file.function_covered}/${file.function_total}`,
+                  `${percentValue(file.branch_percent)} ${file.branch_covered}/${file.branch_total}`
+                ])
+              ])
+              .write();
