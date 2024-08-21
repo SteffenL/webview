@@ -87,7 +87,7 @@ macro(webview_init)
             # Allow skipping clang-tidy outside of CI environment
 
             set(WEBVIEW_CLANG_TIDY_EXE_HINT "clang-tidy${WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX}")
-            set(WEBVIEW_FIND_CLANG_TIDY_ARGS WEBVIEW_CLANG_TIDY_EXE "${CLANG_TIDY_EXE_HINT}")
+            set(WEBVIEW_FIND_CLANG_TIDY_ARGS WEBVIEW_CLANG_TIDY_EXE "${WEBVIEW_CLANG_TIDY_EXE_HINT}")
             if(DEFINED ENV{CI})
                 list(APPEND WEBVIEW_FIND_CLANG_TIDY_ARGS REQUIRED)
             endif()
