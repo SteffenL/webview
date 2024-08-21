@@ -53,12 +53,12 @@ jobs:
           cmake_options=()
 
           if [[ ! -z "${{ matrix.tes }}" ]]; then
-            cmake_options+=("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX=${{ matrix.tes }}")
+            cmake_options+=("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX:STRING=${{ matrix.tes }}")
           fi
 
-          cmake_options+=("WEBVIEW_ENABLE_CHECKS=OFF")
+          cmake_options+=("WEBVIEW_ENABLE_CHECKS:BOOL=OFF")
 
-          echo "cmake-options=$(printf '%s\n' "${cmake_options[@]}")" >> "${GITHUB_OUTPUT}"
+          echo "cmake-options=$(printf '%s\n' "${cmake_options[@]}" | base64 -w0)" >> "${GITHUB_OUTPUT}"
         shell: bash
 
       - name: CMake

@@ -63,21 +63,21 @@ jobs:
           cmake_options=()
 
           if [[ "${{ matrix.docs }}" == "true" ]]; then
-            cmake_options+=(WEBVIEW_BUILD_DOCS=ON)
-            cmake_options+=(WEBVIEW_INSTALL_DOCS=ON)
+            cmake_options+=(WEBVIEW_BUILD_DOCS:BOOL=ON)
+            cmake_options+=(WEBVIEW_INSTALL_DOCS:BOOL=ON)
           fi
 
           if [[ ! -z "${{ matrix.tes }}" ]]; then
-            cmake_options+=("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX=${{ matrix.tes }}")
+            cmake_options+=("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX:STRING=${{ matrix.tes }}")
           fi
 
           if [[ ! -z "${{ matrix.msvc-mt }}" ]]; then
-            cmake_options+=("WEBVIEW_USE_STATIC_MSVC_RUNTIME=${{ matrix.msvc-mt }}")
+            cmake_options+=("WEBVIEW_USE_STATIC_MSVC_RUNTIME:BOOL=${{ matrix.msvc-mt }}")
           fi
 
-          cmake_options+=("WEBVIEW_ENABLE_CHECKS=${{ matrix.checks }}")
+          cmake_options+=("WEBVIEW_ENABLE_CHECKS:BOOL=${{ matrix.checks }}")
 
-          echo "cmake-options=$(printf '%s\n' "${cmake_options[@]}")" >> "${GITHUB_OUTPUT}"
+          echo "cmake-options=$(printf '%s\n' "${cmake_options[@]}" | base64 -w0)" >> "${GITHUB_OUTPUT}"
         shell: bash
 
       - name: CMake

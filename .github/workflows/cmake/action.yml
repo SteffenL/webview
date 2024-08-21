@@ -24,7 +24,7 @@ inputs:
     description: Enable code coverage?
     required: false
   cmake-options:
-    description: Sets extra CMake options in the form A=1 (one per line)
+    description: Sets extra CMake options in the form A=1 (one per line), base64-encoded to work around line limitations
     required: false
   cxx-std:
     description: Sets CMAKE_CXX_STANDARD
@@ -127,9 +127,7 @@ runs:
           if [[ ! -z "${opt}" ]]; then
             cmake_cmd+=(-D "${opt}")
           fi
-        done << EOF
-        ${{ inputs.cmake-options }}
-        EOF
+        done <<< "$(base64 -d <<< "${{ inputs.cmake-options }}")"
         "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
