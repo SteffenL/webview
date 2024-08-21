@@ -17,22 +17,22 @@ jobs:
           # g:       CMake generator
           # t:       Toolchain
           # sh:      Shell
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,       t: gnu,               ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '6.0', docs: true, package-source: true }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,       t: gnu,               ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '4.1' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,       t: gnu,               ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '4.0' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,       t: llvm,              ces: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '6.0' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,       t: llvm,              ces: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.1' }
-          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,       t: llvm,              ces: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.0' }
-          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, a: host,       t: gnu,               ces: '-10',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10,       webkitgtk-api: '4.0' }
-          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, a: host,       t: llvm,              ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: clang-10 clang++-10, webkitgtk-api: '4.0' }
-          - { os: macos,   i: macos-14,     cxx-std: 20, a: universal, t: macos-llvm,        ces: '',       g: Xcode,                 sh: bash,        name-suffix: '',               osx-deployment-target: '10.9' }
-          - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: w64-mingw32,       ces: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               apt: mingw-w64 }
-          - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: i686,      t: w64-mingw32,       ces: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               apt: mingw-w64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,      ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,      ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,      ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-gnu-ucrt64,  ces: '', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-gnu-clang64, ces: '', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      msys: CLANG64 }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: gnu,               ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '6.0', docs: true, package-source: true }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: gnu,               ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '4.1' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: gnu,               ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-12 g++-12,       webkitgtk-api: '4.0' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,              ces: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '6.0' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,              ces: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.1' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,              ces: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.0' }
+          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, a: host,      t: gnu,               ces: '-10',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: gcc-10 g++-10,       webkitgtk-api: '4.0' }
+          - { os: linux,   i: ubuntu-20.04, cxx-std: 20, a: host,      t: llvm,              ces: '-12',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', test-wrapper-cmd: xvfb-run, apt: clang-10 clang++-10, webkitgtk-api: '4.0' }
+          - { os: macos,   i: macos-14,     cxx-std: 20, a: universal, t: macos-llvm,         ces: '',       g: Xcode,                 sh: bash,        name-suffix: '',               osx-deployment-target: '10.9' }
+          - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: w64-mingw32,        ces: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               apt: mingw-w64 }
+          - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: i686,      t: w64-mingw32,        ces: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               apt: mingw-w64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: '' }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-gnu-ucrt64,   ces: '', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-llvm-clang64, ces: '', g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      msys: CLANG64 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
