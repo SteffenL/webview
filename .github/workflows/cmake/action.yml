@@ -95,7 +95,7 @@ runs:
       uses: actions/github-script@v7
       id: cmake-options
       env:
-        OPTIONS: ${{ matrix.cmake-options }}
+        OPTIONS: ${{ inputs.cmake-options }}
       with:
         script: return JSON.parse(process.env.OPTIONS).join("\n")
         result-encoding: string
