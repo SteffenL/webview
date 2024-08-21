@@ -93,7 +93,7 @@ jobs:
             return [
               option("CMAKE_CXX_STANDARD", process.env.CXX_STD),
               option("CMAKE_OSX_DEPLOYMENT_TARGET", process.env.OSX_DEPLOYMENT_TARGET),
-              option("CMAKE_TOOLCHAIN_FILE", `cmake/toolchains/${process.env.ARCH}-${proess.env.TOOLCcHAIN}.cmake`),
+              option("CMAKE_TOOLCHAIN_FILE", `cmake/toolchains/${process.env.ARCH}-${process.env.TOOLCcHAIN}.cmake`),
               option("WEBVIEW_BUILD_DOCS", docs, Boolean),
               option("WEBVIEW_INSTALL_DOCS", docs, Boolean),
               option("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX", process.env.TOOLCHAIN_EXECUTABLE_SUFFIX),
