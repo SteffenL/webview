@@ -23,7 +23,30 @@ jobs:
           script: |
             const csv = require("./.github/workflows/csv.js");
             const path = require("node:path");
-            return { include: csv.loadFile(path.join(".github", "workflows", "build_matrix.csv")) };
+            const schema = {
+              "job-type": String,
+              "os": String,
+              "image": String,
+              "cxx-std": Number,
+              "arch": String,
+              "toolchain": String,
+              "toolchain-executable-suffix": String,
+              "generator": String,
+              "shell": String,
+              "job-name-suffix": String,
+              "checks": Boolean,
+              "apt": String,
+              "webkitgtk-api": String,
+              "test-wrapper-cmd": String,
+              "docs": Boolean,
+              "package-source": Boolean,
+              "osx-deployment-target": String,
+              "msvc-mt": Boolean,
+              "msys": String,
+              "msys-pacboy": String,
+              "gcov": String,
+            };
+            return { include: csv.loadFile(path.join(".github", "workflows", "build_matrix.csv"), schema) };
 
   build:
     needs: load-matrix

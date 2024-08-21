@@ -52,8 +52,23 @@ function extractLines(content) {
     return content.split("\n").filter(s => s.length > 0);
 }
 
-function processRows(rows, transform) {
-    transform = transform || (v => ({ "TRUE": true, "FALSE": false }[v] || v));
+function transform(key, value, schema) {
+    const type = schema[key];
+    const converters = {
+        Boolean(v) {
+            return {
+                TRUE() { return true; },
+                FALSE() { return false; }
+            }[v];
+        },
+        String(v) { return v; },
+        Number(v) { return parseInt(v); },
+    };
+    return converters[type.name](value);
+
+}
+
+function processRows(rows, schema) {
     if (rows.length === 0) {
         return [];
     }
@@ -65,19 +80,19 @@ function processRows(rows, transform) {
     for (let i = 1; i < rows.length; ++i) {
         const rowObject = {};
         for (const j in header) {
-            rowObject[header[j]] = transform(rows[i][j]);
+            rowObject[header[j]] = transform(header[j], rows[i][j], schema);
         }
         result.push(rowObject);
     }
     return result;
 }
 
-function loadString(content, transform) {
-    return processRows(parseRows(extractLines(content)), transform);
+function loadString(content, schema) {
+    return processRows(parseRows(extractLines(content)), schema);
 }
 
-function loadFile(filePath, transform) {
-    return loadString(fs.readFileSync(filePath, "utf-8"), transform);
+function loadFile(filePath, schema) {
+    return loadString(fs.readFileSync(filePath, "utf-8"), schema);
 }
 
 module.exports = {
