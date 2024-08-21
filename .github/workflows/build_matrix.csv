@@ -1,0 +1,25 @@
+job_type,os,image,cxx-std,arch,toolchain,toolchain_executable_suffix,generator,shell,job_name_suffix,checks,apt,webkitgtk-api,test-wrapper-cmd,docs,package-source,osx-deployment-target,msvc-mt,msys,msys-pacboy,gcov
+package,linux,ubuntu-22.04,20,host,gnu,-12,Ninja Multi-Config,bash,", webkitgtk6.0",FALSE,gcc-12 g++-12,6.0,xvfb-run,TRUE,TRUE,,,,,
+package,linux,ubuntu-22.04,20,host,gnu,-12,Ninja Multi-Config,bash,", webkitgtk4.1",FALSE,gcc-12 g++-12,4.1,xvfb-run,,,,,,,
+package,linux,ubuntu-22.04,20,host,gnu,-12,Ninja Multi-Config,bash,", webkitgtk4.0",FALSE,gcc-12 g++-12,4.0,xvfb-run,,,,,,,
+package,linux,ubuntu-22.04,20,host,llvm,-15,Ninja Multi-Config,bash,", webkitgtk6.0",TRUE,clang-15 clang++-15 clang-tidy-15,6.0,xvfb-run,,,,,,,
+package,linux,ubuntu-22.04,20,host,llvm,-15,Ninja Multi-Config,bash,", webkitgtk4.1",TRUE,clang-15 clang++-15 clang-tidy-15,4.1,xvfb-run,,,,,,,
+package,linux,ubuntu-22.04,20,host,llvm,-15,Ninja Multi-Config,bash,", webkitgtk4.0",TRUE,clang-15 clang++-15 clang-tidy-15,4.0,xvfb-run,,,,,,,
+package,linux,ubuntu-20.04,20,host,gnu,-10,Ninja Multi-Config,bash,", webkitgtk4.0",FALSE,gcc-10 g++-10,4.0,xvfb-run,,,,,,,
+package,linux,ubuntu-20.04,20,host,llvm,-12,Ninja Multi-Config,bash,", webkitgtk4.0",FALSE,clang-12 clang++-12 clang-tidy-12,4.0,xvfb-run,,,,,,,
+package,macos,macos-14,20,universal,macos-llvm,,Xcode,bash,,FALSE,,,,,,10.9,,,,
+package,windows,ubuntu-22.04,20,x86_64,w64-mingw32,,Ninja Multi-Config,bash,,FALSE,mingw-w64,,,,,,,,,
+package,windows,ubuntu-22.04,20,i686,w64-mingw32,-posix,Ninja Multi-Config,bash,,FALSE,mingw-w64,,,,,,,,,
+package,windows,windows-2022,20,arm64,windows-msvc,-posix,Visual Studio 17 2022,bash,", mt",FALSE,,,,,,,TRUE,,,
+package,windows,windows-2022,20,x86_64,windows-msvc,,Visual Studio 17 2022,bash,", mt",FALSE,,,,,,,TRUE,,,
+package,windows,windows-2022,20,i686,windows-msvc,,Visual Studio 17 2022,bash,", mt",FALSE,,,,,,,TRUE,,,
+package,windows,windows-2022,20,arm64,windows-msvc,,Visual Studio 17 2022,bash,", md",FALSE,,,,,,,FALSE,,,
+package,windows,windows-2022,20,x86_64,windows-msvc,,Visual Studio 17 2022,bash,", md",FALSE,,,,,,,FALSE,,,
+package,windows,windows-2022,20,i686,windows-msvc,,Visual Studio 17 2022,bash,", md",FALSE,,,,,,,FALSE,,,
+package,windows,windows-2022,20,x86_64,msys2-gnu-ucrt64,,Ninja Multi-Config,msys2 {0},", UCRT64",FALSE,,,,,,,,UCRT64,,
+package,windows,windows-2022,20,x86_64,msys2-llvm-clang64,,Ninja Multi-Config,msys2 {0},", CLANG64",TRUE,,,,,,,,CLANG64,clang-tools-extra:p,
+coverage,linux,ubuntu-22.04,20,host,llvm,,Ninja Multi-Config,bash,", webkitgtk6.0",FALSE,clang-15 clang++-15 clang-tidy-15,6.0,xvfb-run,,,,,,,llvm-cov-15 gcov
+coverage,linux,ubuntu-22.04,20,host,llvm,,Ninja Multi-Config,bash,", webkitgtk4.1",FALSE,clang-15 clang++-15 clang-tidy-15,4.1,xvfb-run,,,,,,,llvm-cov-15 gcov
+coverage,linux,ubuntu-22.04,20,host,llvm,-15,Ninja Multi-Config,bash,", webkitgtk4.0",FALSE,clang-15 clang++-15 clang-tidy-15,4.0,xvfb-run,,,,,,,llvm-cov-15 gcov
+coverage,macos,macos-14,20,universal,macos-llvm,-15,Xcode,bash,,FALSE,,,,,,,,,,xcrun llvm-cov gcov
+coverage,windows,windows-2022,20,x86_64,msys2-llvm-clang64,-15,Ninja Multi-Config,msys2 {0},", CLANG64",FALSE,,,,,,,,CLANG64,,llvm-cov gcov
