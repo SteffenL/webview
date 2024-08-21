@@ -16,7 +16,7 @@ package,windows,windows-2022,20,i686,windows-msvc,,Visual Studio 17 2022,bash,",
 package,windows,windows-2022,20,arm64,windows-msvc,,Visual Studio 17 2022,bash,", md",FALSE,,,,,,,FALSE,,,
 package,windows,windows-2022,20,x86_64,windows-msvc,,Visual Studio 17 2022,bash,", md",FALSE,,,,,,,FALSE,,,
 package,windows,windows-2022,20,i686,windows-msvc,,Visual Studio 17 2022,bash,", md",FALSE,,,,,,,FALSE,,,
-package,windows,windows-2022,20,x86_64,msys2-gnu-ucrt64,-posix,Ninja Multi-Config,msys2 {0},", UCRT64",FALSE,,,,,,,,UCRT64,,
+package,windows,windows-2022,20,x86_64,msys2-gnu-ucrt64,,Ninja Multi-Config,msys2 {0},", UCRT64",FALSE,,,,,,,,UCRT64,,
 package,windows,windows-2022,20,x86_64,msys2-llvm-clang64,,Ninja Multi-Config,msys2 {0},", CLANG64",TRUE,,,,,,,,CLANG64,clang-tools-extra:p,
 coverage,linux,ubuntu-22.04,20,host,llvm,,Ninja Multi-Config,bash,", webkitgtk6.0",FALSE,clang-15 clang++-15 clang-tidy-15,6.0,xvfb-run,,,,,,,llvm-cov-15 gcov
 coverage,linux,ubuntu-22.04,20,host,llvm,,Ninja Multi-Config,bash,", webkitgtk4.1",FALSE,clang-15 clang++-15 clang-tidy-15,4.1,xvfb-run,,,,,,,llvm-cov-15 gcov
