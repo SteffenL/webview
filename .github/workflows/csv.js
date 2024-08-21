@@ -1,4 +1,4 @@
-import fs from "node:fs";
+const fs = require("node:fs");
 
 function parseRow(line) {
     const row = [];
@@ -71,10 +71,15 @@ function processRows(rows) {
     return result;
 }
 
-export function loadString(content) {
+function loadString(content) {
     return processRows(parseRows(extractLines(content)));
 }
 
-export function loadFile(filePath) {
+function loadFile(filePath) {
     return loadString(fs.readFileSync(filePath, "utf-8"));
 }
+
+module.exports = {
+    loadString,
+    loadFile
+};
