@@ -28,11 +28,14 @@ jobs:
   build2:
     needs: load-matrix
     runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.load-matrix.outputs.matrix) }}
+    env:
+      MATRIX: ${{ needs.load-matrix.outputs.matrix }}
+    #strategy:
+    #  fail-fast: false
+    #  matrix: ${{ fromJSON(needs.load-matrix.outputs.matrix) }}
     steps:
-      - run: echo "job_type = ${{ matrix.job_type }}"
+      #- run: echo "job_type = ${{ matrix.job_type }}"
+      - run: echo "${MATRIX}"
 
   build:
     if: false
