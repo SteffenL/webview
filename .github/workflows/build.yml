@@ -1,6 +1,12 @@
 name: CI / Package
 on:
   workflow_call:
+    inputs:
+      gcovr-version:
+        type: string
+        description: gcovr version
+        required: false
+        default: '7.2'
 jobs:
   package:
     name: ${{ matrix.os }} (c++${{ matrix.cxx-std }}, ${{ matrix.a }}, ${{ matrix.t }}${{ matrix.tes }}${{ matrix.name-suffix }})
@@ -37,6 +43,12 @@ jobs:
           - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       tes: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           checks: false, msvc-mt: false }
           - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-gnu-ucrt64,   tes: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       checks: false, msys: UCRT64 }
           - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-llvm-clang64, tes: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      checks: true,  msys: CLANG64, msys-pacboy: 'clang-tools-extra:p' }
+          # Code coverage
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk6.0', checks: false, coverage: true, gcov: llvm-cov-15 gcov,   test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '6.0' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.1', checks: false, coverage: true, gcov: llvm-cov-15 gcov,   test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.1' }
+          - { os: linux,   i: ubuntu-22.04, cxx-std: 20, a: host,      t: llvm,               tes: '-15',    g: Ninja Multi-Config,    sh: bash,        name-suffix: ', webkitgtk4.0', checks: false, coverage: true, gcov: llvm-cov-15 gcov,   test-wrapper-cmd: xvfb-run, apt: clang-15 clang++-15, webkitgtk-api: '4.0' }
+          - { os: macos,   i: macos-14,     cxx-std: 20, a: universal, t: macos-llvm,         tes: '',       g: Xcode,                 sh: bash,        name-suffix: '',               checks: false, coverage: true, gcov: xcrun llvm-cov gcov }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-llvm-clang64, tes: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      checks: false, coverage: true, gcov: llvm-cov gcov,      msys: CLANG64 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
