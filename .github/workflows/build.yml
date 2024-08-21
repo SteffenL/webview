@@ -54,9 +54,12 @@ jobs:
           MATRIX: ${{ toJson(matrix) }}
         with:
           script: |
+            const crypto = require("node:crypto");
             const matrix = JSON.parse(process.env.MATRIX);
             const name = Object.entries(matrix).flatMap(kv => kv).join("_")
             console.log(name);
+            const hashedName = crypto.createHash('sha256').update(name).digest("hex");
+            console.log(hashedName);
             return name;
           result-encoding: string
 
