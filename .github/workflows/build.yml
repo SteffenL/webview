@@ -30,12 +30,11 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       MATRIX: ${{ needs.load-matrix.outputs.matrix }}
-    #strategy:
-    #  fail-fast: false
-    #  matrix: ${{ fromJSON(needs.load-matrix.outputs.matrix) }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.load-matrix.outputs.matrix) }}
     steps:
-      #- run: echo "job_type = ${{ matrix.job_type }}"
-      - run: echo "${MATRIX}"
+      - run: echo "job_type = ${{ matrix.job_type }}"
 
   build:
     if: false
