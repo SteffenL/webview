@@ -83,7 +83,7 @@ macro(webview_init)
 
         webview_set_install_rpath()
 
-        if(WEBVIEW_ENABLE_CLANG_TIDY)
+        if(WEBVIEW_ENABLE_CHECKS AND WEBVIEW_ENABLE_CLANG_TIDY)
             # Allow skipping clang-tidy outside of CI environment
 
             set(CLANG_TIDY_EXE_HINT "clang-tidy${WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX}")
