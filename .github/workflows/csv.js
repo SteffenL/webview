@@ -55,12 +55,11 @@ function extractLines(content) {
 function transform(key, value, schema) {
     const type = schema[key];
     const converters = {
-        Boolean(v) { return ["1", "true", "TRUE"].includes(v); },
-        String(v) { return v; },
-        Number(v) { return parseInt(v); },
+        boolean(v) { return ["1", "true", "TRUE"].includes(v); },
+        string(v) { return v; },
+        number(v) { return parseInt(v); },
     };
-    return converters[type.name](value);
-
+    return converters[type](value);
 }
 
 function processRows(rows, schema) {

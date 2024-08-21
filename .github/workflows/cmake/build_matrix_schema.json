@@ -1,0 +1,23 @@
+{
+    "job-type": "string",
+    "os": "string",
+    "image": "string",
+    "cxx-std": "number",
+    "arch": "string",
+    "toolchain": "string",
+    "toolchain-executable-suffix": "string",
+    "generator": "string",
+    "shell": "string",
+    "job-name-suffix": "string",
+    "checks": "boolean",
+    "apt": "string",
+    "webkitgtk-api": "string",
+    "test-wrapper-cmd": "string",
+    "docs": "boolean",
+    "package-source": "boolean",
+    "osx-deployment-target": "string",
+    "msvc-mt": "boolean",
+    "msys": "string",
+    "msys-pacboy": "string",
+    "gcov": "string"
+}
