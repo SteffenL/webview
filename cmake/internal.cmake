@@ -76,14 +76,6 @@ macro(webview_init)
             set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
         endif()
 
-        # Settings used when creating an official build
-        if(WEBVIEW_IS_OFFICIAL_BUILD)
-            if(MSVC AND NOT CMAKE_MSVC_RUNTIME_LIBRARY)
-                # Use static MSVC runtime library
-                set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-            endif()
-        endif()
-
         webview_set_install_rpath()
     endif()
 
