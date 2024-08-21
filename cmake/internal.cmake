@@ -82,6 +82,26 @@ macro(webview_init)
         endif()
 
         webview_set_install_rpath()
+
+        if(WEBVIEW_ENABLE_CLANG_TIDY)
+            # Allow skipping clang-tidy outside of CI environment
+
+            set(CLANG_TIDY_EXE_HINT "clang-tidy${WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX}")
+            message("CLANG_TIDY_EXE_HINT = ${CLANG_TIDY_EXE_HINT}")
+            set(FIND_ARGS CLANG_TIDY_EXE "${CLANG_TIDY_EXE_HINT}")
+            if(DEFINED ENV{CI})
+                list(APPEND FIND_ARGS REQUIRED)
+            endif()
+
+            find_program(${FIND_ARGS})
+
+            if(CLANG_TIDY_EXE)
+                set(CMAKE_C_CLANG_TIDY "${CLANG_TIDY_EXE}")
+                set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+            else()
+                message(WARNING "Skipping clang-tidy checks due to clang-tidy was not found: ${CLANG_TIDY_EXE_HINT}")
+            endif()
+        endif()
     endif()
 
     webview_find_dependencies()
@@ -206,6 +226,8 @@ macro(webview_internal_options)
     option(WEBVIEW_BUILD_STATIC_LIBRARY "Build static libraries" ON)
     option(WEBVIEW_USE_COMPAT_MINGW "Use compatibility helper for MinGW" ${WEBVIEW_IS_TOP_LEVEL_BUILD})
     option(WEBVIEW_USE_STATIC_MSVC_RUNTIME "Use static runtime library (MSVC)" OFF)
+    option(WEBVIEW_ENABLE_CHECKS "Enable checks" ${WEBVIEW_IS_TOP_LEVEL_BUILD})
+    option(WEBVIEW_ENABLE_CLANG_TIDY "Enable clang-tidy" ${WEBVIEW_ENABLE_CHECKS})
 endmacro()
 
 macro(webview_set_install_rpath)

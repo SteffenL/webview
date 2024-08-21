@@ -67,10 +67,9 @@ jobs:
             cmake_options+=(WEBVIEW_INSTALL_DOCS=ON)
           fi
 
-          cmake_options+=(
-            "CMAKE_C_CLANG_TIDY=clang-tidy${{ matrix.tes }}"
-            "CMAKE_CXX_CLANG_TIDY=clang-tidy${{ matrix.tes }}"
-          )
+          if [[ ! -z "${{ matrix.tes }}" ]]; then
+            cmake_options+=("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX=${{ matrix.tes }}")
+          fi
 
           if [[ ! -z "${{ matrix.msvc-mt }}" ]]; then
             cmake_options+=("WEBVIEW_USE_STATIC_MSVC_RUNTIME=${{ matrix.msvc-mt }}")
