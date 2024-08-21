@@ -46,7 +46,9 @@ jobs:
               "msys-pacboy": String,
               "gcov": String,
             };
-            return { include: csv.loadFile(path.join(".github", "workflows", "build_matrix.csv"), schema) };
+            const matrix = { include: csv.loadFile(path.join(".github", "workflows", "build_matrix.csv"), schema) };
+            console.log(matrix);
+            return matrix;
 
   build:
     needs: load-matrix
