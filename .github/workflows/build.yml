@@ -51,55 +51,34 @@ jobs:
         uses: actions/github-script@v7
         id: artifacts-name
         env:
-          OS: ${{ matrix.os }}
-          IMAGE: ${{ matrix.image }}
-          ARCH: ${{ matrix.arch }}
-          CXX_STD: ${{ matrix.cxx-std }}
-          TOOLCHAIN: ${{ matrix.toolchain }}
-          TOOLCHAIN_EXECUTABLE_SUFFIX: ${{ matrix.toolchain-executable-suffix }}
-          WEBKITGTK_API: ${{ matrix.webkitgtk-api }}
-          MSVC_MT: ${{ matrix.msvc-mt }}
+          MATRIX: ${{ toJson(matrix) }}
         with:
           script: |
-            return [
-              process.env.OS,
-              process.env.IMAGE,
-              process.env.ARCH,
-              process.env.CXX_STD,
-              process.env.TOOLCHAIN,
-              process.env.TOOLCHAIN_EXECUTABLE_SUFFIX,
-              process.env.WEBKITGTK_API,
-              process.env.MSVC_MT,
-            ].filter(v => v !== undefined && v !== "").join("_")
+            const matrix = JSON.parse(process.env.MATRIX);
+            return Object.entries(matrix).flatmap(kv => kv).join("_")
           result-encoding: string
 
       - name: Build CMake options
         uses: actions/github-script@v7
         id: cmake-options
         env:
-          ARCH: ${{ matrix.arch }}
-          CHECKS: ${{ matrix.checks }}
-          DOCS: ${{ matrix.docs }}
-          CXX_STD: ${{ matrix.cxx-std }}
-          OSX_DEPLOYMENT_TARGET: ${{ matrix.osx-deployment-target }}
-          TOOLCHAIN: ${{ matrix.toolchain }}
-          TOOLCHAIN_EXECUTABLE_SUFFIX: ${{ matrix.toolchain-executable-suffix }}
-          MSVC_MT: ${{ matrix.msvc-mt }}
+          MATRIX: ${{ toJson(matrix) }}
         with:
           script: |
-            const option = (k, v, t) => v === undefined ? undefined : [k, ({
-                Boolean: () => v ? "ON" : "OFF"
-              }[t ? t.name : undefined] || (() => v))()
+            const matrix = JSON.parse(process.env.MATRIX);
+            const option = (k, v) => v === undefined ? undefined : [k, ({
+                boolean: () => v ? "ON" : "OFF"
+              }[typeof v] || (() => v))()
             ].join("=");
             return [
-              option("CMAKE_CXX_STANDARD", process.env.CXX_STD),
-              option("CMAKE_OSX_DEPLOYMENT_TARGET", process.env.OSX_DEPLOYMENT_TARGET),
-              option("CMAKE_TOOLCHAIN_FILE", `cmake/toolchains/${process.env.ARCH}-${process.env.TOOLCHAIN}.cmake`),
-              option("WEBVIEW_BUILD_DOCS", process.env.DOCS, Boolean),
-              option("WEBVIEW_INSTALL_DOCS", process.env.DOCS, Boolean),
-              option("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX", process.env.TOOLCHAIN_EXECUTABLE_SUFFIX),
-              option("WEBVIEW_USE_STATIC_MSVC_RUNTIME", process.env.MSVC_MT, Boolean),
-              option("WEBVIEW_ENABLE_CHECKS", process.env.CHECKS, Boolean),
+              option("CMAKE_CXX_STANDARD", matrix["cxx-std"]),
+              option("CMAKE_OSX_DEPLOYMENT_TARGET", matrix["osx-deployment-target"]),
+              option("CMAKE_TOOLCHAIN_FILE", `cmake/toolchains/${matrix["arch"]}-${matrix["toolchain"]}.cmake`),
+              option("WEBVIEW_BUILD_DOCS", matrix["docs"]),
+              option("WEBVIEW_INSTALL_DOCS", matrix["docs"]),
+              option("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX", matrix["toolchain-executable-suffix"]),
+              option("WEBVIEW_USE_STATIC_MSVC_RUNTIME", matrix["msvc-mt"]),
+              option("WEBVIEW_ENABLE_CHECKS", matrix["checks"]),
             ].filter(v => v !== undefined).filter(v => {
               console.log(v);
               return true;
