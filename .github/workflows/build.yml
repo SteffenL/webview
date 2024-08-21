@@ -21,7 +21,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            import csv from "./csv.mjs";
+            import csv from "./csv.js";
             import path from "node:path";
             return csv.loadFile(path.join(__dirname, "build_matrix.csv"));
 
