@@ -60,7 +60,7 @@ jobs:
             console.log(name);
             const hashedName = crypto.createHash('sha256').update(name).digest("hex");
             console.log(hashedName);
-            return name;
+            return hashedName;
           result-encoding: string
 
       - name: Build CMake options
