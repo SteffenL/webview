@@ -38,6 +38,7 @@ jobs:
         with:
           apt: ${{ matrix.apt }}
           msys: ${{ matrix.msys }}
+          msys-pacboy: ${{ matrix.msys-pacboy }}
           webkitgtk-api: ${{ matrix.webkitgtk-api }}
 
       - name: Build artifacts name
@@ -46,19 +47,23 @@ jobs:
         env:
           OS: ${{ matrix.os }}
           IMAGE: ${{ matrix.i }}
+          ARCH: ${{ matrix.a }}
           CXX_STD: ${{ matrix.cxx-std }}
           TOOLCHAIN: ${{ matrix.t }}
           TOOLCHAIN_EXECUTABLE_SUFFIX: ${{ matrix.tes }}
           WEBKITGTK_API: ${{ matrix.webkitgtk-api }}
+          MSVC_MT: ${{ matrix.msvc-mt }}
         with:
           script: |
             return [
               process.env.OS,
               process.env.IMAGE,
+              process.env.ARCH,
               process.env.CXX_STD,
               process.env.TOOLCHAIN,
               process.env.TOOLCHAIN_EXECUTABLE_SUFFIX,
               process.env.WEBKITGTK_API,
+              process.env.MSVC_MT,
             ].filter(v => v !== undefined && v !== "").join("_")
           result-encoding: string
 
@@ -67,20 +72,29 @@ jobs:
         id: cmake-options
         env:
           ARCH: ${{ matrix.a }}
+          CHECKS: ${{ matrix.checks }}
+          DOCS: ${{ matrix.docs }}
           CXX_STD: ${{ matrix.cxx-std }}
+          OSX_DEPLOYMENT_TARGET: ${{ matrix.osx-deployment-target }}
           TOOLCHAIN: ${{ matrix.t }}
           TOOLCHAIN_EXECUTABLE_SUFFIX: ${{ matrix.tes }}
+          MSVC_MT: ${{ matrix.msvc-mt }}
         with:
           script: |
-            const option = (k, v, t) => [k, ({
+            const option = (k, v, t) => v === undefined ? undefined : [k, ({
                 Boolean: () => JSON.parse((v === undefined || v === "") ? false : v) ? "ON" : "OFF"
               }[t ? t.name : undefined] || (() => v))()
             ].join("=");
             return [
               option("CMAKE_CXX_STANDARD", process.env.CXX_STD),
+              option("CMAKE_OSX_DEPLOYMENT_TARGET", process.env.OSX_DEPLOYMENT_TARGET),
               option("CMAKE_TOOLCHAIN_FILE", `cmake/toolchains/${process.env.ARCH}-${process.env.TOOLCHAIN}.cmake`),
+              option("WEBVIEW_BUILD_DOCS", process.env.DOCS, Boolean),
+              option("WEBVIEW_INSTALL_DOCS", process.env.DOCS, Boolean),
               option("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX", process.env.TOOLCHAIN_EXECUTABLE_SUFFIX),
-            ];
+              option("WEBVIEW_USE_STATIC_MSVC_RUNTIME", process.env.MSVC_MT, Boolean),
+              option("WEBVIEW_ENABLE_CHECKS", process.env.CHECKS, Boolean),
+            ].filter(v => v !== undefined);
 
       - name: CMake
         uses: ./.github/workflows/cmake

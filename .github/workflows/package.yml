@@ -89,7 +89,7 @@ jobs:
           MSVC_MT: ${{ matrix.msvc-mt }}
         with:
           script: |
-            const option = (k, v, t) => [k, ({
+            const option = (k, v, t) => v === undefined ? undefined : [k, ({
                 Boolean: () => JSON.parse((v === undefined || v === "") ? false : v) ? "ON" : "OFF"
               }[t ? t.name : undefined] || (() => v))()
             ].join("=");
@@ -102,7 +102,7 @@ jobs:
               option("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX", process.env.TOOLCHAIN_EXECUTABLE_SUFFIX),
               option("WEBVIEW_USE_STATIC_MSVC_RUNTIME", process.env.MSVC_MT, Boolean),
               option("WEBVIEW_ENABLE_CHECKS", process.env.CHECKS, Boolean),
-            ];
+            ].filter(v => v !== undefined);
 
       - name: CMake
         uses: ./.github/workflows/cmake
@@ -113,11 +113,13 @@ jobs:
           docs-target: webview_docs
           cmake-options: ${{ steps.cmake-options.outputs.result }}
           generator: ${{ matrix.g }}
-          package: true
-          package-source: ${{ matrix.package-source }}
           shell: ${{ matrix.sh }}
           source-dir: .
           test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}
+          # Specific to code coverage
+          coverage: true
+          gcov: ${{ matrix.gcov }}
+          gcovr-version: ${{ inputs.gcovr-version }}
 
   merge-package-artifacts:
     needs: package
