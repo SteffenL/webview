@@ -55,12 +55,7 @@ function extractLines(content) {
 function transform(key, value, schema) {
     const type = schema[key];
     const converters = {
-        Boolean(v) {
-            return {
-                TRUE() { return true; },
-                FALSE() { return false; }
-            }[v]();
-        },
+        Boolean(v) { return ["1", "true", "TRUE"].includes(v); },
         String(v) { return v; },
         Number(v) { return parseInt(v); },
     };
