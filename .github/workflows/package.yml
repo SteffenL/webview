@@ -29,12 +29,12 @@ jobs:
           - { os: macos,   i: macos-14,     cxx-std: 20, a: universal, t: macos-llvm,         ces: '',       g: Xcode,                 sh: bash,        name-suffix: '',               osx-deployment-target: '10.9' }
           - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: x86_64,    t: w64-mingw32,        ces: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               apt: mingw-w64 }
           - { os: windows, i: ubuntu-22.04, cxx-std: 20, a: i686,      t: w64-mingw32,        ces: '-posix', g: Ninja Multi-Config,    sh: bash,        name-suffix: '',               apt: mingw-w64 }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', mt',           msvc-mt: true }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', mt',           msvc-mt: true }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', mt',           msvc-mt: true }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           msvc-mt: false }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           msvc-mt: false }
-          - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           msvc-mt: false }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', mt',           msvc-mt: ON }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', mt',           msvc-mt: ON }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', mt',           msvc-mt: ON }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: arm64,     t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           msvc-mt: OFF }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           msvc-mt: OFF }
+          - { os: windows, i: windows-2022, cxx-std: 20, a: i686,      t: windows-msvc,       ces: '',       g: Visual Studio 17 2022, sh: bash,        name-suffix: ', md',           msvc-mt: OFF }
           - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-gnu-ucrt64,   ces: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', UCRT64',       msys: UCRT64 }
           - { os: windows, i: windows-2022, cxx-std: 20, a: x86_64,    t: msys2-llvm-clang64, ces: '',       g: Ninja Multi-Config,    sh: 'msys2 {0}', name-suffix: ', CLANG64',      msys: CLANG64 }
     steps:
@@ -70,7 +70,7 @@ jobs:
           fi
 
           if [[ ! -z "${{ matrix.msvc-mt }}" ]]; then
-            cmake_options+=("CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>")
+            cmake_options+=("WEBVIEW_USE_STATIC_MSVC_RUNTIME=${{ matrix.msvc-mt }}")
           fi
 
           echo "cmake-options=$(printf '%s\n' "${cmake_options[@]}")" >> "${GITHUB_OUTPUT}"
