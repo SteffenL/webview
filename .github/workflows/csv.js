@@ -52,7 +52,7 @@ function extractLines(content) {
     return content.split("\n").filter(s => s.length > 0);
 }
 
-function processRows(rows) {
+function processRows(rows, transform) {
     if (rows.length === 0) {
         return [];
     }
@@ -64,19 +64,19 @@ function processRows(rows) {
     for (let i = 1; i < rows.length; ++i) {
         const rowObject = {};
         for (const j in header) {
-            rowObject[header[j]] = rows[i][j];
+            rowObject[header[j]] = transform(rows[i][j]);
         }
         result.push(rowObject);
     }
     return result;
 }
 
-function loadString(content) {
-    return processRows(parseRows(extractLines(content)));
+function loadString(content, transform) {
+    return processRows(parseRows(extractLines(content)), transform);
 }
 
-function loadFile(filePath) {
-    return loadString(fs.readFileSync(filePath, "utf-8"));
+function loadFile(filePath, transform) {
+    return loadString(fs.readFileSync(filePath, "utf-8"), transform);
 }
 
 module.exports = {

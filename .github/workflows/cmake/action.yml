@@ -68,12 +68,12 @@ inputs:
 runs:
   using: composite
   steps:
-    - if: inputs.coverage != '' && fromJSON(inputs.coverage)
+    - if: inputs.coverage != '' && fromJson(inputs.coverage)
       name: gcov version
       run: ${{ inputs.gcov }} --version
       shell: ${{ inputs.shell }}
 
-    - if: inputs.coverage != '' && fromJSON(inputs.coverage)
+    - if: inputs.coverage != '' && fromJson(inputs.coverage)
       name: Install gcovr
       run: pip install "gcovr==${{ inputs.gcovr-version }}"
       shell: ${{ inputs.shell }}
@@ -151,24 +151,24 @@ runs:
         done
       shell: ${{ inputs.shell }}
 
-    - if: inputs.docs != '' && fromJSON(inputs.docs)
+    - if: inputs.docs != '' && fromJson(inputs.docs)
       name: Build documentation
       run: cmake --build "${{ inputs.build-dir }}" --target "${{ inputs.docs-target }}"
       shell: ${{ inputs.shell }}
 
-    - if: inputs.package != '' && fromJSON(inputs.package)
+    - if: inputs.package != '' && fromJson(inputs.package)
       name: Create multi-config package
       run: cpack -C "Debug;Release" --config CPackConfig.cmake
       working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
 
-    - if: inputs.package-source != '' && fromJSON(inputs.package-source)
+    - if: inputs.package-source != '' && fromJson(inputs.package-source)
       name: Create source package
       run: cpack --config CPackSourceConfig.cmake
       working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
 
-    - if: inputs.coverage != '' && fromJSON(inputs.coverage)
+    - if: inputs.coverage != '' && fromJson(inputs.coverage)
       name: Generate coverage data
       id: prepare-coverage-artifacts
       run: |
@@ -191,7 +191,7 @@ runs:
     # CPack produces checksum files with CRLF on Windows but the CR being present can cause
     # verification with shasum to fail on Unix-like systems.
     # find and grep were combined to work around incompatibilities between Linux and macOS.
-    - if: (inputs.package != '' && fromJSON(inputs.package)) || (inputs.package-source != '' && fromJSON(inputs.package-source))
+    - if: (inputs.package != '' && fromJson(inputs.package)) || (inputs.package-source != '' && fromJson(inputs.package-source))
       name: Fix newlines in checksum files
       run: |
         while read f; do
@@ -200,7 +200,7 @@ runs:
       working-directory: ${{ inputs.build-dir }}
       shell: ${{ inputs.shell }}
 
-    - if: inputs.package != '' && fromJSON(inputs.package)
+    - if: inputs.package != '' && fromJson(inputs.package)
       name: Upload package artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -212,7 +212,7 @@ runs:
         retention-days: 1
         if-no-files-found: error
 
-    - if: inputs.coverage != '' && fromJSON(inputs.coverage)
+    - if: inputs.coverage != '' && fromJson(inputs.coverage)
       name: Upload coverage artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -221,7 +221,7 @@ runs:
         retention-days: 1
         if-no-files-found: error
 
-    - if: inputs.coverage != '' && fromJSON(inputs.coverage)
+    - if: inputs.coverage != '' && fromJson(inputs.coverage)
       name: Clean up temporary coverage files
       run: rm -rf "${{ steps.prepare-coverage-artifacts.outputs.upload-dir }}"
       shell: ${{ inputs.shell }}
