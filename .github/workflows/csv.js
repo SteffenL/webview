@@ -38,9 +38,7 @@ function parseRow(line) {
                 break;
         }
     }
-    if (chars.length > 0) {
-        row.push(String.fromCodePoint(...chars));
-    }
+    row.push(String.fromCodePoint(...chars));
     return row;
 }
 
