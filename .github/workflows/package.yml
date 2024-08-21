@@ -54,6 +54,7 @@ jobs:
         env:
           OS: ${{ matrix.os }}
           IMAGE: ${{ matrix.i }}
+          ARCH: ${{ matrix.a }}
           CXX_STD: ${{ matrix.cxx-std }}
           TOOLCHAIN: ${{ matrix.t }}
           TOOLCHAIN_EXECUTABLE_SUFFIX: ${{ matrix.tes }}
@@ -64,6 +65,7 @@ jobs:
             return [
               process.env.OS,
               process.env.IMAGE,
+              process.env.ARCH,
               process.env.CXX_STD,
               process.env.TOOLCHAIN,
               process.env.TOOLCHAIN_EXECUTABLE_SUFFIX,
