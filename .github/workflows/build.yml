@@ -58,9 +58,9 @@ jobs:
             const matrix = JSON.parse(process.env.MATRIX);
             const name = Object.entries(matrix).flatMap(kv => kv).join("_")
             console.log(name);
-            const hashedName = crypto.createHash('sha256').update(name).digest("hex");
-            console.log(hashedName);
-            return hashedName;
+            const nameDigest = crypto.createHash("sha256").update(name).digest("hex");
+            console.log(nameDigest);
+            return nameDigest;
           result-encoding: string
 
       - name: Build CMake options
