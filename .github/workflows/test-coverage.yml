@@ -56,6 +56,8 @@ jobs:
             cmake_options+=("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX=${{ matrix.tes }}")
           fi
 
+          cmake_options+=("WEBVIEW_ENABLE_CHECKS=OFF")
+
           echo "cmake-options=$(printf '%s\n' "${cmake_options[@]}")" >> "${GITHUB_OUTPUT}"
         shell: bash
 
