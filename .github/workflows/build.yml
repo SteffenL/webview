@@ -85,7 +85,7 @@ jobs:
         with:
           script: |
             const option = (k, v, t) => v === undefined ? undefined : [k, ({
-                Boolean: () => JSON.parse((v === undefined || v === "") ? false : ({ TRUE: true }[v] || false)) ? "ON" : "OFF"
+                Boolean: () => JSON.parse((v === undefined || v === "") ? false : ({ 1: true, TRUE: true }[v] || false)) ? "ON" : "OFF"
               }[t ? t.name : undefined] || (() => v))()
             ].join("=");
             return [
