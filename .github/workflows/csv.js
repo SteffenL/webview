@@ -59,7 +59,7 @@ function transform(key, value, schema) {
             return {
                 TRUE() { return true; },
                 FALSE() { return false; }
-            }[v];
+            }[v]();
         },
         String(v) { return v; },
         Number(v) { return parseInt(v); },
