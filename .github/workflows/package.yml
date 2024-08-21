@@ -53,6 +53,8 @@ jobs:
         run: |
           if [[ "${{ matrix.os }}" == "linux" ]]; then
             name="${{ runner.os }}_${{ matrix.i }}_cxx${{ matrix.cxx-std }}_${{ matrix.a }}_${{ matrix.t }}${{ matrix.ces }}_webkitgtk${{ matrix.webkitgtk-api }}"
+          elif [[ "${{ matrix.t }}" == "windows-msvc" ]]; then
+            name="${{ runner.os }}_${{ matrix.i }}_cxx${{ matrix.cxx-std }}_${{ matrix.a }}_${{ matrix.t }}${{ matrix.ces }}_mt-${{ matrix.msvc-mt }}"
           else
             name="${{ runner.os }}_${{ matrix.i }}_cxx${{ matrix.cxx-std }}_${{ matrix.a }}_${{ matrix.t }}${{ matrix.ces }}"
           fi
