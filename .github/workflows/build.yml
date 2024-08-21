@@ -21,9 +21,9 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const csv = require("./csv.js");
+            const csv = require("./.github/workflows/csv.js");
             const path = require("node:path");
-            return csv.loadFile(path.join(__dirname, "build_matrix.csv"));
+            return csv.loadFile(path.join(__dirname, ".github", "workflows", "build_matrix.csv"));
 
   build2:
     needs: load-matrix
