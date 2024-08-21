@@ -53,6 +53,7 @@ function extractLines(content) {
 }
 
 function processRows(rows, transform) {
+    transform = transform || (v => ({ "TRUE": true, "FALSE": false }[v] || v));
     if (rows.length === 0) {
         return [];
     }

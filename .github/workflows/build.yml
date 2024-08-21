@@ -23,8 +23,7 @@ jobs:
           script: |
             const csv = require("./.github/workflows/csv.js");
             const path = require("node:path");
-            const transform = v => { "TRUE": true, "FALSE": false }[v] || v;
-            return { include: csv.loadFile(path.join(".github", "workflows", "build_matrix.csv"), transform) };
+            return { include: csv.loadFile(path.join(".github", "workflows", "build_matrix.csv")) };
 
   build:
     needs: load-matrix
