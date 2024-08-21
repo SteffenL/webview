@@ -9,7 +9,7 @@ on:
         default: '7.2'
 jobs:
   build:
-    name: ${{ matrix.jt }} (${{ matrix.os }}, c++${{ matrix.cxx-std }}, ${{ matrix.a }}, ${{ matrix.t }}${{ matrix.tes }}${{ matrix.name-suffix }})
+    name: ${{ matrix.j }} (${{ matrix.os }}, c++${{ matrix.cxx-std }}, ${{ matrix.a }}, ${{ matrix.t }}${{ matrix.tes }}${{ matrix.name-suffix }})
     runs-on: ${{ matrix.i }}
     strategy:
       fail-fast: false
@@ -145,7 +145,7 @@ jobs:
           pattern: package_*
           delete-merged: true
 
-  report:
+  coverage-report:
     needs: build
     runs-on: ubuntu-22.04
     steps:
