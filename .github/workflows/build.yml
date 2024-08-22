@@ -84,6 +84,7 @@ jobs:
               option("WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX", matrix["toolchain-executable-suffix"]),
               option("WEBVIEW_USE_STATIC_MSVC_RUNTIME", matrix["msvc-mt"]),
               option("WEBVIEW_ENABLE_CHECKS", matrix["checks"]),
+              option("WEBVIEW_WEBKITGTK_API", matrix["webkitgtk-api"]),
             ].filter(v => v !== undefined).filter(v => {
               console.log(v);
               return true;
@@ -98,6 +99,8 @@ jobs:
           docs-target: webview_docs
           cmake-options: ${{ steps.cmake-options.outputs.result }}
           generator: ${{ matrix.generator }}
+          package: ${{ matrix.package }}
+          package-source: ${{ matrix.package-source }}
           shell: ${{ matrix.shell }}
           source-dir: .
           test-wrapper-cmd: ${{ matrix.test-wrapper-cmd }}
