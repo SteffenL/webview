@@ -84,21 +84,27 @@ macro(webview_init)
         webview_set_install_rpath()
 
         if(WEBVIEW_ENABLE_CHECKS AND WEBVIEW_ENABLE_CLANG_TIDY)
-            # Allow skipping clang-tidy outside of CI environment
+            if((CMAKE_C_COMPILER_ID MATCHES "Clang$") AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang$"))
+                # Allow skipping clang-tidy outside of CI environment
 
-            set(WEBVIEW_CLANG_TIDY_EXE_HINT "clang-tidy${WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX}")
-            set(WEBVIEW_FIND_CLANG_TIDY_ARGS WEBVIEW_CLANG_TIDY_EXE "${WEBVIEW_CLANG_TIDY_EXE_HINT}")
-            if(DEFINED ENV{CI})
-                list(APPEND WEBVIEW_FIND_CLANG_TIDY_ARGS REQUIRED)
-            endif()
+                set(WEBVIEW_CLANG_TIDY_EXE_HINT "clang-tidy${WEBVIEW_TOOLCHAIN_EXECUTABLE_SUFFIX}")
+                set(WEBVIEW_FIND_CLANG_TIDY_ARGS WEBVIEW_CLANG_TIDY_EXE "${WEBVIEW_CLANG_TIDY_EXE_HINT}")
+                if(DEFINED ENV{CI})
+                    list(APPEND WEBVIEW_FIND_CLANG_TIDY_ARGS REQUIRED)
+                endif()
 
-            find_program(${WEBVIEW_FIND_CLANG_TIDY_ARGS})
+                find_program(${WEBVIEW_FIND_CLANG_TIDY_ARGS})
 
-            if(WEBVIEW_CLANG_TIDY_EXE)
-                set(CMAKE_C_CLANG_TIDY "${WEBVIEW_CLANG_TIDY_EXE}")
-                set(CMAKE_CXX_CLANG_TIDY "${WEBVIEW_CLANG_TIDY_EXE}")
+                if(WEBVIEW_CLANG_TIDY_EXE)
+                    set(CMAKE_C_CLANG_TIDY "${WEBVIEW_CLANG_TIDY_EXE}")
+                    set(CMAKE_CXX_CLANG_TIDY "${WEBVIEW_CLANG_TIDY_EXE}")
+                else()
+                    message(WARNING "Skipping clang-tidy checks due to clang-tidy was not found: ${WEBVIEW_CLANG_TIDY_EXE_HINT}")
+                endif()
             else()
-                message(WARNING "Skipping clang-tidy checks due to clang-tidy was not found: ${WEBVIEW_CLANG_TIDY_EXE_HINT}")
+                # Skip check when clang isn't used with clang-tidy to avoid errors due to unsupported compiler flags
+                # such as -fno-keep-inline-dllexport (tested GCC 14, Clang-Tidy 18)
+                message(WARNING "Skipping clang-tidy checks for non-clang compiler.")
             endif()
         endif()
     endif()
