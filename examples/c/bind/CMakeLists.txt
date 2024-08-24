@@ -1,7 +1,9 @@
 find_package(Threads REQUIRED)
 
 add_executable(webview_example_bind_c WIN32)
-target_sources(webview_example_bind_c PRIVATE src/main.c)
+target_sources(webview_example_bind_c PRIVATE
+    src/main.c
+    $<$<PLATFORM_ID:Windows>:../../shared/win32/resources.rc>)
 target_link_libraries(webview_example_bind_c PRIVATE webview::static Threads::Threads)
 
 if(MSVC)
