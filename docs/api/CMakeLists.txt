@@ -1,4 +1,9 @@
-find_package(Doxygen REQUIRED dot)
+find_package(Doxygen COMPONENTS dot)
+
+if(NOT Doxygen_FOUND)
+    message(WARNING "Skipping docs as Doxygen was not found")
+    return()
+endif()
 
 # We can set this to "-$<CONFIG>" if we need per-config documentation
 set(CONFIG_SUFFIX "")

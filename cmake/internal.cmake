@@ -116,7 +116,7 @@ macro(webview_init)
                     COMMENT "Reformatting files with clang-format..."
                     VERBATIM)
             else()
-                message(WARNING "Skipping clang-format checks as clang-format was not found: ${WEBVIEW_CLANG_FORMAT_EXE_HINT}")
+                message(WARNING "Skipping clang-format checks as clang-format was not found")
             endif()
         endif()
 
