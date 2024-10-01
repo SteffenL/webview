@@ -186,7 +186,8 @@ jobs:
               .write();
 
   gh-release:
-    if: github.event_name == 'push' && github.ref_type == 'tag' && fromJson(needs.vars.outputs.is-release-tag)
+# Temporary: Always publish
+#    if: github.event_name == 'push' && github.ref_type == 'tag' && fromJson(needs.vars.outputs.is-release-tag)
     needs:
       - generate-coverage-report
       - merge-package-artifacts
