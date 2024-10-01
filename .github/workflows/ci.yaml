@@ -202,13 +202,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: package
-          path: package
+          path: release
+
+      - name: Create checksum file
+        run: sha256sum * > SHA256SUMS
+        working-directory: release
 
       - name: List artifacts
-        run: find package/ || exit 1
+        run: find release/ || exit 1
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create --verify-tag --draft "${GITHUB_REF_NAME}" package/* || exit 1
+        run: gh release create --verify-tag --draft "${GITHUB_REF_NAME}" release/* || exit 1
         shell: bash
