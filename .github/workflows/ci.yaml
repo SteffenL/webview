@@ -48,7 +48,7 @@ jobs:
       - name: Merge package artifacts
         uses: actions/upload-artifact/merge@v4
         with:
-          name: package
+          name: dist
           pattern: package_*
           delete-merged: true
           retention-days: 1
