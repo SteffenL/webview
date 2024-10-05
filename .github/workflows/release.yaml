@@ -1,163 +1,150 @@
-name: CI
+name: Release
 on:
   push:
     branches:
-      # Branch for tagged releases
-      - 'releases'
-      # Temporary release preparation/support branches
-      - 'release/**'
+      - 'release/*'
 defaults:
   run:
     shell: bash
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  check:
-    uses: ./.github/workflows/check.yaml
-
-  vars:
+  init:
     runs-on: ubuntu-22.04
     outputs:
       gcovr-version: ${{ steps.vars.outputs.gcovr-version }}
+      release-tag: ${{ steps.vars.outputs.release-version }}
       release-version: ${{ steps.vars.outputs.release-version }}
-    steps:
-      - id: vars
-        run: |
-          echo "gcovr-version=7.2" >> "${GITHUB_OUTPUT}"
-          echo "release-branch=releases"
-          echo "release-version=$(cmake -P cmake/extract_version.cmake)" >> "${GITHUB_OUTPUT}"
-
-  build:
-    needs:
-      - check
-      - vars
-    uses: ./.github/workflows/build.yaml
-    with:
-      gcovr-version: ${{ needs.vars.outputs.gcovr-version }}
-
-  build-pr:
-    if: github.event_name == 'pull_request'
-    needs:
-      - check
-      - vars
-    uses: ./.github/workflows/build.yaml
-    with:
-      gcovr-version: ${{ needs.vars.outputs.gcovr-version }}
-      pr: true
-
-  merge-package-artifacts:
-    needs: build
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Merge package artifacts
-        uses: actions/upload-artifact/merge@v4
-        with:
-          name: package
-          pattern: package_*
-          delete-merged: true
-          retention-days: 1
-
-  generate-coverage-report:
-    needs:
-      - build
-      - vars
-    runs-on: ubuntu-22.04
+      run-id: ${{ steps.vars.outputs.run-id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Python
-        run: >
-          sudo apt-get update && sudo apt-get install --no-install-recommends -y
-          python3
-          python3-lxml
-          python3-markupsafe
-          python3-pip
+      - id: vars
+        run: |
+          echo "gcovr-version=7.2" >> "${GITHUB_OUTPUT}"
+          echo "release-tag=$(cat version.txt)" >> "${GITHUB_OUTPUT}"
+          echo "release-version=$(cmake -P cmake/extract_version.cmake)" >> "${GITHUB_OUTPUT}"
+          echo "run-id=${{ github.run_id }}_${{ github.run_number }}_${{ github.run_attempt }}" >> "${GITHUB_OUTPUT}"
 
-      - name: Install gcovr
-        run: pip install "gcovr==${{ needs.vars.outputs.gcovr-version }}"
+  build:
+    needs:
+      - check
+      - init
+    uses: ./.github/workflows/build.yaml
+    with:
+      gcovr-version: ${{ needs.init.outputs.gcovr-version }}
 
-      - name: Merge test coverage artifacts
-        uses: actions/upload-artifact/merge@v4
-        with:
-          name: test_coverage_data
-          pattern: test_coverage_data_*
-          delete-merged: true
-          retention-days: 1
-          separate-directories: true
+  pre-create-github-release-draft:
+    needs:
+      - build
+      - init
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "Awaiting approval to create GitHub release draft." >> "${GITHUB_STEP_SUMMARY}"
 
-      - name: Download merged test coverage artifacts
+  create-github-release-draft:
+    needs:
+      - init
+      - pre-create-github-release-draft
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: test_coverage_data
+          name: dist_files_${{ needs.init.outputs.run-id }}
+          path: dist
 
-      - name: Generate report
-        id: generate-report
-        run: |
-          tracefile_args=()
-          while read f; do
-            tracefile_args+=(--add-tracefile "${f}")
-          done <<< "$(find . -type f -name "coverage.json")"
+      - name: Set up signing
+        uses: ./.github/actions/setup-sign
+        with:
+          pgp-key-id: ${{ vars.PGP_KEY_ID }}
+          pgp-key-passphrase: ${{ secrets.PGP_KEY_PASSPHRASE }}
+          pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY }}
+          git-user-email: ${{ vars.GIT_USER_EMAIL }}
+          git-user-name: ${{ vars.GIT_USER_NAME }}
 
-          artifact_dir="temp_${RANDOM}/report"
-          mkdir -p "${artifact_dir}/html"
+      - name: Sign artifacts
+        uses: ./.github/actions/sign-artifacts
+        with:
+          directory: dist
 
-          gcovr --config gcovr.ci.cfg --json "${artifact_dir}/gcovr.json" "${tracefile_args[@]}"
-          gcovr --config gcovr.ci.cfg --coveralls "${artifact_dir}/coveralls.json" --add-tracefile "${artifact_dir}/gcovr.json"
-          gcovr --config gcovr.ci.cfg --json-summary "${artifact_dir}/summary.json" --add-tracefile "${artifact_dir}/gcovr.json"
-          gcovr --config gcovr.ci.cfg --html-details "${artifact_dir}/html/index.html" --add-tracefile "${artifact_dir}/gcovr.json"
+      - name: List artifacts
+        run: find dist/
 
-          echo "upload-dir=${artifact_dir}" >> "${GITHUB_OUTPUT}"
-
-      - name: Upload report artifacts
+      - name: Upload signature artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: test_coverage_report
-          path: ${{ steps.generate-report.outputs.upload-dir }}
+          name: dist_signatures_${{ needs.init.outputs.run-id }}
+          path: |
+            dist/*.asc
+            dist/*SUMS
           retention-days: 1
           if-no-files-found: error
 
-      - name: Add report to CI job summary
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const numberOr = (value, alternative) => Number.isNaN(value = parseInt(value)) ? alternative : value;
-            const percentValue = (value, percentSymbol = "%") => numberOr(value, "-") + percentSymbol;
-            const data = require("./${{ steps.generate-report.outputs.upload-dir }}/summary.json");
-            await core.summary
-              .addHeading("Test Coverage Summary")
-              .addTable([
-                [
-                  { data: "Lines", header: true },
-                  { data: "Functions", header: true },
-                  { data: "Branches", header: true }
-                ],
-                [
-                  `${percentValue(data.line_percent)} ${data.line_covered}/${data.line_total}`,
-                  `${percentValue(data.function_percent)} ${data.function_covered}/${data.function_total}`,
-                  `${percentValue(data.branch_percent)} ${data.branch_covered}/${data.branch_total}`
-                ]
-              ])
-              .addTable([
-                [
-                  { data: "File", header: true },
-                  { data: "Lines", header: true },
-                  { data: "Functions", header: true },
-                  { data: "Branches", header: true }
-                ],
-                ...data.files.map(file => [
-                  file.filename,
-                  `${percentValue(file.line_percent)} ${file.line_covered}/${file.line_total}`,
-                  `${percentValue(file.function_percent)} ${file.function_covered}/${file.function_total}`,
-                  `${percentValue(file.branch_percent)} ${file.branch_covered}/${file.branch_total}`
-                ])
-              ])
-              .write();
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.init.outputs.release-tag }}
+        run: gh release create --draft "${RELEASE_TAG}" dist/*
 
-  gh-release:
-    if: github.event_name == 'push' && github.ref_name == needs.vars.release-branch
+      - name: Update status
+        run: echo "Please review the release draft and edit if needed. Don't publish the draft manually." >> "${GITHUB_STEP_SUMMARY}"
+
+  pre-publish-release:
+    needs: create-github-release-draft
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "Awaiting approval to publish release." >> "${GITHUB_STEP_SUMMARY}"
+
+  publish-release:
     needs:
-      - generate-coverage-report
-      - merge-package-artifacts
-      - vars
+      - create-github-release-draft
+      - init
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up signing
+        uses: ./.github/actions/setup-sign
+        with:
+          pgp-key-id: ${{ vars.PGP_KEY_ID }}
+          pgp-key-passphrase: ${{ secrets.PGP_KEY_PASSPHRASE }}
+          pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY }}
+          git-user-email: ${{ vars.GIT_USER_EMAIL }}
+          git-user-name: ${{ vars.GIT_USER_NAME }}
+
+      - name: Tag release
+        env:
+          RELEASE_VERSION: ${{ needs.init.outputs.release-version }}
+          RELEASE_TAG: ${{ needs.init.outputs.release-tag }}
+        run: |
+          git tag --sign --message "Release ${RELEASE_VERSION}" "${RELEASE_TAG}"
+          git push origin "${RELEASE_TAG}"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.init.outputs.release-tag }}
+        run: gh release edit --verify-tag --draft=false "${RELEASE_TAG}"
+
+  cleanup-branch:
+    if: success() && startsWith(github.ref_name, 'release/')
+    needs:
+      - publish-release
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -165,20 +152,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download package artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: package
-          path: release
-
-      - name: Create checksum file
-        run: sha256sum * > SHA256SUMS
-        working-directory: release
-
-      - name: List artifacts
-        run: find release/ || exit 1
-
-      - name: Create GitHub Release
+      - name: Delete release branch
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create --draft "${{ vars.release-tag }}" release/* || exit 1
+          REF: ${{ github.ref_name }}
+        run: git push origin ":${REF}"
+
+  cleanup-deployments:
+    if: always()
+    needs:
+      - publish-release
+    runs-on: ubuntu-22.04
+    permissions:
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Delete deployments
+        uses: ./.github/actions/delete-deployments

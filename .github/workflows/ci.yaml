@@ -2,12 +2,8 @@ name: CI
 on:
   push:
     branches:
-      # Main stable branch
-      - 'master'
-      # Branch for tagged releases
-      - 'releases'
-      # Temporary release preparation/support branches
-      - 'release/**'
+      - '*'
+      - '!release/*'
     paths-ignore:
       - '*.md'
   pull_request:
@@ -18,34 +14,31 @@ jobs:
   check:
     uses: ./.github/workflows/check.yaml
 
-  vars:
+  init:
     runs-on: ubuntu-22.04
     outputs:
       gcovr-version: ${{ steps.vars.outputs.gcovr-version }}
-      release-version: ${{ steps.vars.outputs.release-version }}
     steps:
       - id: vars
         run: |
           echo "gcovr-version=7.2" >> "${GITHUB_OUTPUT}"
-          echo "release-branch=releases"
-          echo "release-version=$(cmake -P cmake/extract_version.cmake)" >> "${GITHUB_OUTPUT}"
 
   build:
     needs:
       - check
-      - vars
+      - init
     uses: ./.github/workflows/build.yaml
     with:
-      gcovr-version: ${{ needs.vars.outputs.gcovr-version }}
+      gcovr-version: ${{ needs.init.outputs.gcovr-version }}
 
   build-pr:
     if: github.event_name == 'pull_request'
     needs:
       - check
-      - vars
+      - init
     uses: ./.github/workflows/build.yaml
     with:
-      gcovr-version: ${{ needs.vars.outputs.gcovr-version }}
+      gcovr-version: ${{ needs.init.outputs.gcovr-version }}
       pr: true
 
   merge-package-artifacts:
@@ -63,7 +56,7 @@ jobs:
   generate-coverage-report:
     needs:
       - build
-      - vars
+      - init
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -78,7 +71,7 @@ jobs:
           python3-pip
 
       - name: Install gcovr
-        run: pip install "gcovr==${{ needs.vars.outputs.gcovr-version }}"
+        run: pip install "gcovr==${{ needs.init.outputs.gcovr-version }}"
 
       - name: Merge test coverage artifacts
         uses: actions/upload-artifact/merge@v4
@@ -156,34 +149,3 @@ jobs:
                 ])
               ])
               .write();
-
-  gh-release:
-    if: github.event_name == 'push' && github.ref_name == needs.vars.release-branch
-    needs:
-      - generate-coverage-report
-      - merge-package-artifacts
-      - vars
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download package artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: package
-          path: release
-
-      - name: Create checksum file
-        run: sha256sum * > SHA256SUMS
-        working-directory: release
-
-      - name: List artifacts
-        run: find release/ || exit 1
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create --draft "${{ vars.release-tag }}" release/* || exit 1

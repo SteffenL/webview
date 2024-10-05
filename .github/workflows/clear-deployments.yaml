@@ -1,0 +1,16 @@
+name: Clear Deployments
+on:
+  workflow_dispatch:
+defaults:
+  run:
+    shell: bash
+jobs:
+  clear-deployments:
+    runs-on: ubuntu-22.04
+    permissions:
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/clear-deployments
