@@ -11,9 +11,6 @@ defaults:
   run:
     shell: bash
 jobs:
-  check:
-    uses: ./.github/workflows/check.yaml
-
   init:
     runs-on: ubuntu-22.04
     outputs:
@@ -22,6 +19,9 @@ jobs:
       - id: vars
         run: |
           echo "gcovr-version=7.2" >> "${GITHUB_OUTPUT}"
+
+  check:
+    uses: ./.github/workflows/check.yaml
 
   build:
     needs:
