@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up environment
-        uses: ./.github/workflows/setup-env
+        uses: ./.github/actions/setup-env
         with:
           apt: ${{ matrix.apt }}
           msys: ${{ matrix.msys }}
@@ -96,7 +96,7 @@ jobs:
             });
 
       - name: CMake
-        uses: ./.github/workflows/cmake
+        uses: ./.github/actions/cmake
         with:
           artifacts-name: ${{ matrix.id }}
           build-dir: build
