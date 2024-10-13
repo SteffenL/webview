@@ -31,3 +31,7 @@ endif()
 add_executable(webview_example_bind_cc MACOSX_BUNDLE WIN32)
 target_sources(webview_example_bind_cc PRIVATE bind.cc ${SHARED_SOURCES})
 target_link_libraries(webview_example_bind_cc PRIVATE webview::core Threads::Threads)
+
+add_executable(webview_example_next_api_cc MACOSX_BUNDLE WIN32)
+target_sources(webview_example_next_api_cc PRIVATE next_api.cc ${SHARED_SOURCES})
+target_link_libraries(webview_example_next_api_cc PRIVATE webview::core)
