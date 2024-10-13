@@ -42,7 +42,8 @@ public:
   application() : m_run_loop{new run_loop{}} {
     m_impl = std::unique_ptr<detail::application_impl>{
         new detail::application_impl{m_run_loop}};
-    while (!m_impl->is_ready()) {
+    m_impl->events().ready.bind([&] { m_ready = true; });
+    while (!m_ready) {
       m_run_loop->iterate(true);
     }
   }
@@ -54,6 +55,7 @@ public:
 private:
   std::shared_ptr<run_loop> m_run_loop;
   std::unique_ptr<detail::application_impl> m_impl;
+  bool m_ready{};
 };
 
 } // namespace webview

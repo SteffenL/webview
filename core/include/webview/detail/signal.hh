@@ -23,54 +23,39 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH) &&                    \
-    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-#define WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
+#ifndef WEBVIEW_DETAIL_SIGNAL_HH
+#define WEBVIEW_DETAIL_SIGNAL_HH
 
-#include "../../../detail/platform/linux/gtk/compat.hh"
-#include "../../../detail/signal.hh"
-#include "../../../types.hh"
-#include "../run_loop.hh"
-
-#include <gtk/gtk.h>
+#include <algorithm>
+#include <functional>
+#include <vector>
 
 namespace webview {
 namespace detail {
 
-class gtk_application {
+template <typename T> class signal {
 public:
-  class events_t {
-  public:
-    signal<void()> ready;
-  };
+  void bind(std::function<T> handler) { m_handlers.push_back(handler); }
 
-  gtk_application(std::shared_ptr<run_loop> run_loop) : m_run_loop{run_loop} {
-    if (!gtk_compat::init_check()) {
-      throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
+  void unbind(std::function<T> handler) {
+    auto found{std::find(m_handlers.begin(), m_handlers.end(), handler)};
+    if (found != m_handlers.end()) {
+      m_handlers.erase(found);
     }
-
-    dispatch([&] { m_events.ready.emit(); });
   }
 
-  gtk_application(const gtk_application &) = delete;
-  gtk_application &operator=(const gtk_application &) = delete;
-  gtk_application(gtk_application &&) = delete;
-  gtk_application &operator=(gtk_application &&) = delete;
-  ~gtk_application() = default;
-
-  void run() { m_run_loop->run(); }
-  void terminate() { m_run_loop->stop(); }
-  void dispatch(dispatch_fn_t f) { m_run_loop->dispatch(f); }
-  events_t &events() { return m_events; }
+  template <typename... Args> void emit(Args &&...args) {
+    const auto handlers{m_handlers};
+    for (const auto &handler : handlers) {
+      handler(std::forward<Args>(args)...);
+    }
+  }
 
 private:
-  events_t m_events;
-  std::shared_ptr<run_loop> m_run_loop;
+  std::vector<std::function<T>> m_handlers;
 };
-
-using application_impl = gtk_application;
 
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
+#endif // WEBVIEW_DETAIL_SIGNAL_HH
