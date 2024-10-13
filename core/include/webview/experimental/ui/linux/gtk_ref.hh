@@ -23,39 +23,56 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_APPLICATION_HH
-#define WEBVIEW_DETAIL_UI_APPLICATION_HH
+#if !defined(WEBVIEW_DETAIL_UI_LINUX_GTK_REF_HH) &&                            \
+    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+#define WEBVIEW_DETAIL_UI_LINUX_GTK_REF_HH
 
-#include "../../macros.h"
-#include "run_loop.hh"
+#include <utility>
 
-#include <memory>
-
-#if defined(WEBVIEW_PLATFORM_LINUX)
-#include "linux/gtk_application.hh"
-#endif
+#include <gtk/gtk.h>
 
 namespace webview {
+namespace detail {
 
-class application {
+template <typename T> class gtk_ref {
 public:
-  application() : m_run_loop{new run_loop{}} {
-    m_impl = std::unique_ptr<detail::application_impl>{
-        new detail::application_impl{m_run_loop}};
-    while (!m_impl->is_ready()) {
-      m_run_loop->iterate(true);
+  gtk_ref() = default;
+  gtk_ref(T *ptr) : m_ptr{ptr} { ref(); }
+
+  gtk_ref(const gtk_ref &other) { *this = other; }
+
+  gtk_ref &operator=(const gtk_ref &other) {
+    if (this != &other) {
+      m_ptr = other.m_ptr;
+      ref();
+    }
+    return *this;
+  }
+
+  gtk_ref(gtk_ref &&other) noexcept { *this = std::move(other); }
+
+  gtk_ref &operator=(gtk_ref &&other) noexcept {
+    m_ptr = other.m_ptr;
+    other.m_ptr = nullptr;
+    return *this;
+  }
+
+  ~gtk_ref() {
+    if (m_ptr) {
+      unref();
     }
   }
 
-  void run() { m_run_loop->run(); }
-  void terminate() { m_run_loop->stop(); }
-  void dispatch(dispatch_fn_t f) { m_run_loop->dispatch(f); }
+  T *get() const noexcept { return m_ptr; }
 
 private:
-  std::shared_ptr<run_loop> m_run_loop;
-  std::unique_ptr<detail::application_impl> m_impl;
+  void ref() { g_object_ref(m_ptr); }
+  void unref() { g_object_unref(m_ptr); }
+
+  T *m_ptr{};
 };
 
+} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_APPLICATION_HH
+#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_REF_HH

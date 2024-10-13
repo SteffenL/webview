@@ -23,35 +23,39 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_APPLICATION_HH
-#define WEBVIEW_DETAIL_UI_APPLICATION_HH
+#ifndef WEBVIEW_DETAIL_UI_RUN_LOOP_HH
+#define WEBVIEW_DETAIL_UI_RUN_LOOP_HH
 
 #include "../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX)
-#include "linux/gtk_application.hh"
+#include "linux/gtk_run_loop.hh"
 #endif
 
 namespace webview {
 
-class application {
+class run_loop {
 public:
-    void run() {
-        m_impl.run();
+  void run() {
+    m_stop_run_loop = false;
+    while (!m_stop_run_loop) {
+      m_impl.iterate(true);
     }
+  }
 
-    void terminate() {
-        m_impl.terminate();
-    }
+  void iterate(bool block) { m_impl.iterate(block); }
 
-    void dispatch(dispatch_fn_t f) {
-        m_impl.dispatch(f);
-    }
+  void stop() {
+    dispatch([&] { m_stop_run_loop = true; });
+  }
+
+  void dispatch(dispatch_fn_t f) { m_impl.dispatch(f); }
 
 private:
-    detail::application_impl m_impl;
+  detail::run_loop_impl m_impl;
+  bool m_stop_run_loop{};
 };
 
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_APPLICATION_HH
+#endif // WEBVIEW_DETAIL_UI_RUN_LOOP_HH

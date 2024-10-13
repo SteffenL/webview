@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_UI_LINUX_GTK_RUN_LOOP) &&                    \
+#if !defined(WEBVIEW_UI_LINUX_GTK_RUN_LOOP) &&                                 \
     defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 #define WEBVIEW_UI_LINUX_GTK_RUN_LOOP
 
@@ -36,15 +36,8 @@ namespace detail {
 
 class gtk_run_loop {
 public:
-  void run() {
-    m_stop_run_loop = false;
-    while (!m_stop_run_loop) {
-      g_main_context_iteration(nullptr, TRUE);
-    }
-  }
-
-  void stop() {
-    dispatch([&] { m_stop_run_loop = true; });
+  void iterate(bool block) {
+    g_main_context_iteration(nullptr, block ? TRUE : FALSE);
   }
 
   void dispatch(dispatch_fn_t f) {
@@ -55,9 +48,6 @@ public:
                     new dispatch_fn_t(f),
                     [](void *fn) { delete static_cast<dispatch_fn_t *>(fn); });
   }
-
-private:
-  bool m_stop_run_loop{};
 };
 
 using run_loop_impl = gtk_run_loop;

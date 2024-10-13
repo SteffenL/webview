@@ -23,11 +23,13 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_DETAIL_UI_LINUX_APPLICATION_GTK_HH) &&                    \
+#if !defined(WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH) &&                    \
     defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-#define WEBVIEW_DETAIL_UI_LINUX_APPLICATION_GTK_HH
+#define WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
 
 #include "../../../types.hh"
+#include "../run_loop.hh"
+#include "gtk_ref.hh"
 
 #include <gtk/gtk.h>
 
@@ -36,28 +38,36 @@ namespace detail {
 
 class gtk_application {
 public:
-  void run() {
-    m_stop_run_loop = false;
-    while (!m_stop_run_loop) {
-      g_main_context_iteration(nullptr, TRUE);
-    }
+  gtk_application(std::shared_ptr<run_loop> run_loop) : m_run_loop{run_loop} {
+    m_native_app = gtk_application_new(nullptr, G_APPLICATION_DEFAULT_FLAGS);
+
+    auto on_activate{+[](GtkApplication *, gpointer user_data) {
+      auto *self = static_cast<gtk_application *>(user_data);
+      self->on_activate();
+    }};
+
+    g_signal_connect(G_OBJECT(m_native_app.get()), "activate",
+                     G_CALLBACK(on_activate), this);
   }
 
-  void terminate() {
-    dispatch([&] { m_stop_run_loop = true; });
-  }
+  gtk_application(const gtk_application &) = delete;
+  gtk_application &operator=(const gtk_application &) = delete;
+  gtk_application(gtk_application &&) = delete;
+  gtk_application &operator=(gtk_application &&) = delete;
+  ~gtk_application() = default;
 
-  void dispatch(dispatch_fn_t f) {
-    g_idle_add_full(G_PRIORITY_HIGH_IDLE, (GSourceFunc)([](void *fn) -> int {
-                      (*static_cast<dispatch_fn_t *>(fn))();
-                      return G_SOURCE_REMOVE;
-                    }),
-                    new dispatch_fn_t(f),
-                    [](void *fn) { delete static_cast<dispatch_fn_t *>(fn); });
-  }
+  void run() { m_run_loop->run(); }
+  void terminate() { m_run_loop->stop(); }
+  void dispatch(dispatch_fn_t f) { m_run_loop->dispatch(f); }
+
+  bool is_ready() const noexcept { return m_ready; }
 
 private:
-  bool m_stop_run_loop{};
+  void on_activate() { m_ready = true; }
+
+  bool m_ready{};
+  std::shared_ptr<run_loop> m_run_loop;
+  gtk_ref<GtkApplication> m_native_app;
 };
 
 using application_impl = gtk_application;
@@ -65,4 +75,4 @@ using application_impl = gtk_application;
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_LINUX_APPLICATION_GTK_HH
+#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
