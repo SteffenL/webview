@@ -9,6 +9,7 @@ int WINAPI WinMain(HINSTANCE /*hInst*/, HINSTANCE /*hPrevInst*/,
 int main() {
 #endif
   webview::application app;
+  webview::window window;
   app.run();
   return 0;
 }
