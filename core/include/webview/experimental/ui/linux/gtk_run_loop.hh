@@ -23,37 +23,46 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_APPLICATION_HH
-#define WEBVIEW_DETAIL_UI_APPLICATION_HH
+#if !defined(WEBVIEW_UI_LINUX_GTK_RUN_LOOP) &&                    \
+    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+#define WEBVIEW_UI_LINUX_GTK_RUN_LOOP
 
-#include "../../macros.h"
+#include "../../../types.hh"
 
-#if defined(WEBVIEW_PLATFORM_LINUX)
-#include "linux/gtk_application.hh"
-#include "linux/gtk_run_loop.hh"
-#endif
+#include <gtk/gtk.h>
 
 namespace webview {
+namespace detail {
 
-class application {
+class gtk_run_loop {
 public:
-    void run() {
-        m_run_loop.run();
+  void run() {
+    m_stop_run_loop = false;
+    while (!m_stop_run_loop) {
+      g_main_context_iteration(nullptr, TRUE);
     }
+  }
 
-    void terminate() {
-        m_run_loop.stop();
-    }
+  void stop() {
+    dispatch([&] { m_stop_run_loop = true; });
+  }
 
-    void dispatch(dispatch_fn_t f) {
-        m_run_loop.dispatch(f);
-    }
+  void dispatch(dispatch_fn_t f) {
+    g_idle_add_full(G_PRIORITY_HIGH_IDLE, (GSourceFunc)([](void *fn) -> int {
+                      (*static_cast<dispatch_fn_t *>(fn))();
+                      return G_SOURCE_REMOVE;
+                    }),
+                    new dispatch_fn_t(f),
+                    [](void *fn) { delete static_cast<dispatch_fn_t *>(fn); });
+  }
 
 private:
-    detail::run_loop_impl m_run_loop;
-    detail::application_impl m_impl;
+  bool m_stop_run_loop{};
 };
 
+using run_loop_impl = gtk_run_loop;
+
+} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_APPLICATION_HH
+#endif // WEBVIEW_UI_LINUX_GTK_RUN_LOOP

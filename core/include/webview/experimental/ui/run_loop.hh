@@ -30,7 +30,6 @@
 
 #if defined(WEBVIEW_PLATFORM_LINUX)
 #include "linux/gtk_application.hh"
-#include "linux/gtk_run_loop.hh"
 #endif
 
 namespace webview {
@@ -38,19 +37,18 @@ namespace webview {
 class application {
 public:
     void run() {
-        m_run_loop.run();
+        m_impl.run();
     }
 
     void terminate() {
-        m_run_loop.stop();
+        m_impl.terminate();
     }
 
     void dispatch(dispatch_fn_t f) {
-        m_run_loop.dispatch(f);
+        m_impl.dispatch(f);
     }
 
 private:
-    detail::run_loop_impl m_run_loop;
     detail::application_impl m_impl;
 };
 
