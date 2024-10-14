@@ -9,9 +9,8 @@ int WINAPI WinMain(HINSTANCE /*hInst*/, HINSTANCE /*hPrevInst*/,
 int main() {
 #endif
   webview::application app;
-  webview::window window;
-  window.set_title("Hello");
-  window.set_visible();
+  webview::window window{webview::window_options{}.set_title("Hello")};
+  window.set_visible(true);
   app.run();
   return 0;
 }

@@ -31,8 +31,8 @@ typedef struct ui_size {
   unsigned int height;
 
 #ifdef __cplusplus
-  ui_size(unsigned int w, unsigned int h) : width{w}, height{h} {}
-  ui_size() : width{}, height{} {}
+  constexpr ui_size(unsigned int w, unsigned int h) : width{w}, height{h} {}
+  constexpr ui_size() : width{}, height{} {}
 #endif
 } ui_size;
 

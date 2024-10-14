@@ -23,26 +23,47 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_WINDOW_H
-#define WEBVIEW_DETAIL_UI_WINDOW_H
+#ifndef WEBVIEW_DETAIL_UI_WINDOW_OPTIONS_HH
+#define WEBVIEW_DETAIL_UI_WINDOW_OPTIONS_HH
 
-#include "../../errors.h"
-#include "../../macros.h"
 #include "primitives.h"
 
-typedef struct webview_window_options {
-  unsigned int version;
-  const char *title;
-  //bool visible;
-  ui_size size;
-} webview_window_options;
+#include <string>
 
-#define WEBVIEW_WINDOW_OPTIONS_VERSION 1U
-#define WEBVIEW_WINDOW_OPTIONS_INIT                                            \
-  { WEBVIEW_WINDOW_OPTIONS_VERSION }
+namespace webview {
 
-struct webview_window;
+class window_options {
+public:
+  static ui_size get_default_ui_size() noexcept {
+    static constexpr const ui_size size{480, 320};
+    return size;
+  }
 
-//WEBVIEW_API webview_error_t webview_window_options_init(webview_window_options* options, unsigned int version);
+  const std::string &get_title() const noexcept { return m_title; }
 
-#endif // WEBVIEW_DETAIL_UI_WINDOW_H
+  window_options &set_title(const std::string &title) {
+    m_title = title;
+    return *this;
+  }
+
+  /*window_options &set_visible(bool visible = true) {
+      m_visible = visible;
+      return *this;
+    }*/
+
+  const ui_size &get_size() const noexcept { return m_size; }
+
+  window_options &set_size(const ui_size &size) {
+    m_size = size;
+    return *this;
+  }
+
+private:
+  std::string m_title;
+  //bool m_visible;
+  ui_size m_size{get_default_ui_size()};
+};
+
+} // namespace webview
+
+#endif // WEBVIEW_DETAIL_UI_WINDOW_OPTIONS_HH

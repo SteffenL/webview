@@ -26,10 +26,8 @@
 #ifndef WEBVIEW_DETAIL_UI_WINDOW_HH
 #define WEBVIEW_DETAIL_UI_WINDOW_HH
 
-#include "../../detail/optional.hh"
-#include "../../macros.h"
 #include "event_loop.hh"
-#include "primitives.h"
+#include "window_options.hh"
 
 #include <memory>
 
@@ -39,48 +37,22 @@
 
 namespace webview {
 
-typedef struct webview_window_options {
-  const char* title;
-  bool visible;
-  ui_size m_size;
-} webview_window_options;
-
 class window {
 public:
-  class options {
-  public:
-    options &set_title(const std::string &title) {
-      m_title = title;
-      return *this;
-    }
-
-    options &set_visible(bool visible = true) {
-      m_visible = visible;
-      return *this;
-    }
-
-    options &set_size(const ui_size &size) {
-      m_size = size;
-      return *this;
-    }
-
-  private:
-    std::string m_title;
-    bool m_visible;
-    ui_size m_size;
-  };
-
-  window(std::shared_ptr<event_loop> loop = event_loop::get_default())
+  window(const window_options &options = {},
+         std::shared_ptr<event_loop> loop = event_loop::get_default())
       : m_event_loop{loop} {
     m_impl = std::unique_ptr<detail::window_impl>{
         new detail::window_impl{m_event_loop}};
+    m_impl->set_initial_size(options.get_size());
+    set_title(options.get_title());
   }
 
   void set_title(const std::string &title) {
     m_event_loop->dispatch([=] { m_impl->set_title(title); });
   }
 
-  void set_visible(bool visible = true) {
+  void set_visible(bool visible) {
     m_event_loop->dispatch([=] { m_impl->set_visible(visible); });
   }
 

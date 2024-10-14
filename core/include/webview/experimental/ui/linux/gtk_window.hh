@@ -31,6 +31,7 @@
 #include "../../../detail/signal.hh"
 #include "../../../types.hh"
 #include "../event_loop.hh"
+#include "../primitives.h"
 #include "gtk_ref.hh"
 
 #include <gtk/gtk.h>
@@ -56,6 +57,12 @@ public:
   gtk_window(gtk_window &&) = delete;
   gtk_window &operator=(gtk_window &&) = delete;
   ~gtk_window() = default;
+
+  void set_initial_size(const ui_size &size) {
+    gtk_window_set_default_size(m_native_window.get(),
+                                static_cast<int>(size.width),
+                                static_cast<int>(size.height));
+  }
 
   void set_title(const std::string &title) {
     gtk_window_set_title(m_native_window.get(), title.c_str());
