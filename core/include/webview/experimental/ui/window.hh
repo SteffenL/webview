@@ -26,8 +26,10 @@
 #ifndef WEBVIEW_DETAIL_UI_WINDOW_HH
 #define WEBVIEW_DETAIL_UI_WINDOW_HH
 
+#include "../../detail/optional.hh"
 #include "../../macros.h"
-#include "run_loop.hh"
+#include "event_loop.hh"
+#include "primitives.h"
 
 #include <memory>
 
@@ -37,25 +39,56 @@
 
 namespace webview {
 
+typedef struct webview_window_options {
+  const char* title;
+  bool visible;
+  ui_size m_size;
+} webview_window_options;
+
 class window {
 public:
-  window() : m_run_loop{new run_loop{}} {
-    m_impl = std::unique_ptr<detail::window_impl>{
-        new detail::window_impl{m_run_loop}};
-    m_impl->events().ready.bind([&] { m_ready = true; });
-    while (!m_ready) {
-      m_run_loop->iterate(true);
+  class options {
+  public:
+    options &set_title(const std::string &title) {
+      m_title = title;
+      return *this;
     }
+
+    options &set_visible(bool visible = true) {
+      m_visible = visible;
+      return *this;
+    }
+
+    options &set_size(const ui_size &size) {
+      m_size = size;
+      return *this;
+    }
+
+  private:
+    std::string m_title;
+    bool m_visible;
+    ui_size m_size;
+  };
+
+  window(std::shared_ptr<event_loop> loop = event_loop::get_default())
+      : m_event_loop{loop} {
+    m_impl = std::unique_ptr<detail::window_impl>{
+        new detail::window_impl{m_event_loop}};
   }
 
-  void run() { m_run_loop->run(); }
-  void terminate() { m_run_loop->stop(); }
-  void dispatch(dispatch_fn_t f) { m_run_loop->dispatch(f); }
+  void set_title(const std::string &title) {
+    m_event_loop->dispatch([=] { m_impl->set_title(title); });
+  }
+
+  void set_visible(bool visible = true) {
+    m_event_loop->dispatch([=] { m_impl->set_visible(visible); });
+  }
+
+  void dispatch(dispatch_fn_t f) { m_event_loop->dispatch(f); }
 
 private:
-  std::shared_ptr<run_loop> m_run_loop;
+  std::shared_ptr<event_loop> m_event_loop;
   std::unique_ptr<detail::window_impl> m_impl;
-  bool m_ready{};
 };
 
 } // namespace webview

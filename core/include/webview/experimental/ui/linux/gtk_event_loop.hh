@@ -23,63 +23,36 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_DETAIL_UI_LINUX_GTK_WINDOW_HH) &&                         \
+#if !defined(WEBVIEW_UI_LINUX_GTK_RUN_LOOP) &&                                 \
     defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-#define WEBVIEW_DETAIL_UI_LINUX_GTK_WINDOW_HH
+#define WEBVIEW_UI_LINUX_GTK_RUN_LOOP
 
-#include "../../../detail/platform/linux/gtk/compat.hh"
-#include "../../../detail/signal.hh"
 #include "../../../types.hh"
-#include "../event_loop.hh"
-#include "gtk_ref.hh"
 
 #include <gtk/gtk.h>
 
 namespace webview {
 namespace detail {
 
-class gtk_window {
+class gtk_event_loop {
 public:
-  class events_t {
-  public:
-    signal<void()> ready;
-  };
-
-  gtk_window(std::shared_ptr<event_loop> loop)
-      : m_event_loop{loop},
-        m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
-    m_event_loop->dispatch([&] { m_events.ready.emit(); });
+  void iterate(bool block) {
+    g_main_context_iteration(nullptr, block ? TRUE : FALSE);
   }
 
-  gtk_window(const gtk_window &) = delete;
-  gtk_window &operator=(const gtk_window &) = delete;
-  gtk_window(gtk_window &&) = delete;
-  gtk_window &operator=(gtk_window &&) = delete;
-  ~gtk_window() = default;
-
-  void set_title(const std::string &title) {
-    gtk_window_set_title(m_native_window.get(), title.c_str());
+  void dispatch(dispatch_fn_t f) {
+    g_idle_add_full(G_PRIORITY_HIGH_IDLE, (GSourceFunc)([](void *fn) -> int {
+                      (*static_cast<dispatch_fn_t *>(fn))();
+                      return G_SOURCE_REMOVE;
+                    }),
+                    new dispatch_fn_t(f),
+                    [](void *fn) { delete static_cast<dispatch_fn_t *>(fn); });
   }
-
-  void set_visible(bool visible) {
-    gtk_compat::widget_set_visible(GTK_WIDGET(m_native_window.get()), visible);
-  }
-
-  //void close(bool force) {
-  //  gtk_window_close(m_native_window.get());
-  //}
-
-  events_t &events() { return m_events; }
-
-private:
-  events_t m_events;
-  std::shared_ptr<event_loop> m_event_loop;
-  gtk_ref<GtkWindow> m_native_window;
 };
 
-using window_impl = gtk_window;
+using event_loop_impl = gtk_event_loop;
 
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_WINDOW_HH
+#endif // WEBVIEW_UI_LINUX_GTK_RUN_LOOP

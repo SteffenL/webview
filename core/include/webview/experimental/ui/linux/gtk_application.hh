@@ -30,7 +30,7 @@
 #include "../../../detail/platform/linux/gtk/compat.hh"
 #include "../../../detail/signal.hh"
 #include "../../../types.hh"
-#include "../run_loop.hh"
+#include "../event_loop.hh"
 
 #include <gtk/gtk.h>
 
@@ -44,12 +44,12 @@ public:
     signal<void()> ready;
   };
 
-  gtk_application(std::shared_ptr<run_loop> run_loop) : m_run_loop{run_loop} {
+  gtk_application(std::shared_ptr<event_loop> loop) : m_event_loop{loop} {
     if (!gtk_compat::init_check()) {
       throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
     }
 
-    dispatch([&] { m_events.ready.emit(); });
+    m_event_loop->dispatch([=] { m_events.ready.emit(); });
   }
 
   gtk_application(const gtk_application &) = delete;
@@ -58,14 +58,11 @@ public:
   gtk_application &operator=(gtk_application &&) = delete;
   ~gtk_application() = default;
 
-  void run() { m_run_loop->run(); }
-  void terminate() { m_run_loop->stop(); }
-  void dispatch(dispatch_fn_t f) { m_run_loop->dispatch(f); }
   events_t &events() { return m_events; }
 
 private:
   events_t m_events;
-  std::shared_ptr<run_loop> m_run_loop;
+  std::shared_ptr<event_loop> m_event_loop;
 };
 
 using application_impl = gtk_application;

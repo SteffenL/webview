@@ -27,7 +27,7 @@
 #define WEBVIEW_DETAIL_UI_APPLICATION_HH
 
 #include "../../macros.h"
-#include "run_loop.hh"
+#include "event_loop.hh"
 
 #include <memory>
 
@@ -39,23 +39,19 @@ namespace webview {
 
 class application {
 public:
-  application() : m_run_loop{new run_loop{}} {
+  application(std::shared_ptr<event_loop> loop = event_loop::get_default())
+      : m_event_loop{loop} {
     m_impl = std::unique_ptr<detail::application_impl>{
-        new detail::application_impl{m_run_loop}};
-    m_impl->events().ready.bind([&] { m_ready = true; });
-    while (!m_ready) {
-      m_run_loop->iterate(true);
-    }
+        new detail::application_impl{m_event_loop}};
   }
 
-  void run() { m_run_loop->run(); }
-  void terminate() { m_run_loop->stop(); }
-  void dispatch(dispatch_fn_t f) { m_run_loop->dispatch(f); }
+  void run() { m_event_loop->run(); }
+  void terminate() { m_event_loop->stop(); }
+  void dispatch(dispatch_fn_t f) { m_event_loop->dispatch(f); }
 
 private:
-  std::shared_ptr<run_loop> m_run_loop;
+  std::shared_ptr<event_loop> m_event_loop;
   std::unique_ptr<detail::application_impl> m_impl;
-  bool m_ready{};
 };
 
 } // namespace webview

@@ -29,13 +29,23 @@
 #include "../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX)
-#include "linux/gtk_run_loop.hh"
+#include "linux/gtk_event_loop.hh"
 #endif
+
+#include <memory>
 
 namespace webview {
 
-class run_loop {
+class event_loop {
 public:
+  static std::shared_ptr<event_loop> get_default() {
+    static std::shared_ptr<event_loop> instance;
+    if (!instance) {
+      instance = std::shared_ptr<event_loop>{new event_loop{}};
+    }
+    return instance;
+  }
+
   void run() {
     m_stop_run_loop = false;
     while (!m_stop_run_loop) {
@@ -52,7 +62,7 @@ public:
   void dispatch(dispatch_fn_t f) { m_impl.dispatch(f); }
 
 private:
-  detail::run_loop_impl m_impl;
+  detail::event_loop_impl m_impl;
   bool m_stop_run_loop{};
 };
 

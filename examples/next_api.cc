@@ -10,6 +10,8 @@ int main() {
 #endif
   webview::application app;
   webview::window window;
+  window.set_title("Hello");
+  window.set_visible();
   app.run();
   return 0;
 }

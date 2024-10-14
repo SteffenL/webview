@@ -23,36 +23,17 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_UI_LINUX_GTK_RUN_LOOP) &&                                 \
-    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-#define WEBVIEW_UI_LINUX_GTK_RUN_LOOP
+#ifndef WEBVIEW_DETAIL_UI_PRIMITIVES_H
+#define WEBVIEW_DETAIL_UI_PRIMITIVES_H
 
-#include "../../../types.hh"
+typedef struct ui_size {
+  unsigned int width;
+  unsigned int height;
 
-#include <gtk/gtk.h>
+#ifdef __cplusplus
+  ui_size(unsigned int w, unsigned int h) : width{w}, height{h} {}
+  ui_size() : width{}, height{} {}
+#endif
+} ui_size;
 
-namespace webview {
-namespace detail {
-
-class gtk_run_loop {
-public:
-  void iterate(bool block) {
-    g_main_context_iteration(nullptr, block ? TRUE : FALSE);
-  }
-
-  void dispatch(dispatch_fn_t f) {
-    g_idle_add_full(G_PRIORITY_HIGH_IDLE, (GSourceFunc)([](void *fn) -> int {
-                      (*static_cast<dispatch_fn_t *>(fn))();
-                      return G_SOURCE_REMOVE;
-                    }),
-                    new dispatch_fn_t(f),
-                    [](void *fn) { delete static_cast<dispatch_fn_t *>(fn); });
-  }
-};
-
-using run_loop_impl = gtk_run_loop;
-
-} // namespace detail
-} // namespace webview
-
-#endif // WEBVIEW_UI_LINUX_GTK_RUN_LOOP
+#endif // WEBVIEW_DETAIL_UI_PRIMITIVES_H

@@ -23,15 +23,17 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_FWD_HH
-#define WEBVIEW_DETAIL_UI_FWD_HH
+#ifndef WEBVIEW_DETAIL_UI_WINDOW_H
+#define WEBVIEW_DETAIL_UI_WINDOW_H
 
-namespace webview {
+#include "primitives.h"
 
-class application;
-class event_loop;
-class window;
+typedef struct webview_window_options {
+  const char* title;
+  bool visible;
+  ui_size m_size;
+} webview_window_options;
 
-} // namespace webview
+struct webview_window;
 
-#endif // WEBVIEW_DETAIL_UI_FWD_HH
+#endif // WEBVIEW_DETAIL_UI_WINDOW_H
