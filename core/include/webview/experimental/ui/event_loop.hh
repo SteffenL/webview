@@ -29,7 +29,7 @@
 #include "../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX)
-#include "linux/gtk_event_loop.hh"
+#include "linux/gtk/event_loop.hh"
 #endif
 
 #include <memory>

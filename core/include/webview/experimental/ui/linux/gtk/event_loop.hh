@@ -27,7 +27,7 @@
     defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 #define WEBVIEW_UI_LINUX_GTK_RUN_LOOP
 
-#include "../../../types.hh"
+#include "../../../../types.hh"
 
 #include <gtk/gtk.h>
 

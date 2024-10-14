@@ -30,6 +30,7 @@ namespace webview {
 
 class application;
 class event_loop;
+class widget;
 class window;
 
 } // namespace webview

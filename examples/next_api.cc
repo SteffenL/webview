@@ -8,6 +8,9 @@ int main() {
 #endif
   webview::application app;
   webview::window window{webview::window_options{}.set_title("Hello")};
+
+  //window.get_browser().set_url();
+
   window.set_visible(true);
   app.run();
   return 0;

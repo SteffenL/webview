@@ -23,46 +23,53 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_WINDOW_HH
-#define WEBVIEW_DETAIL_UI_WINDOW_HH
+#if !defined(WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH) &&                    \
+    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+#define WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
 
-#include "event_loop.hh"
-#include "window_options.hh"
+#include "../../../../detail/platform/linux/gtk/compat.hh"
+#include "../../../../detail/signal.hh"
+#include "../../../../types.hh"
+#include "../../event_loop.hh"
+
+#include <gtk/gtk.h>
 
 #include <memory>
 
-#if defined(WEBVIEW_PLATFORM_LINUX)
-#include "linux/gtk/window.hh"
-#endif
-
 namespace webview {
+namespace detail {
 
-class window {
+class gtk_application {
 public:
-  window(const window_options &options = {},
-         std::shared_ptr<event_loop> loop = event_loop::get_default())
-      : m_event_loop{loop} {
-    m_impl = std::unique_ptr<detail::window_impl>{
-        new detail::window_impl{m_event_loop}};
-    m_impl->set_initial_size(options.get_size());
-    set_title(options.get_title());
+  class events_t {
+  public:
+    signal<void()> ready;
+  };
+
+  gtk_application(std::shared_ptr<event_loop> loop) : m_event_loop{loop} {
+    if (!gtk_compat::init_check()) {
+      throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
+    }
+
+    m_event_loop->dispatch([=] { m_events.ready.emit(); });
   }
 
-  void set_title(const std::string &title) {
-    m_event_loop->dispatch([=] { m_impl->set_title(title); });
-  }
+  gtk_application(const gtk_application &) = delete;
+  gtk_application &operator=(const gtk_application &) = delete;
+  gtk_application(gtk_application &&) = delete;
+  gtk_application &operator=(gtk_application &&) = delete;
+  ~gtk_application() = default;
 
-  void set_visible(bool visible) {
-    m_event_loop->dispatch([=] { m_impl->set_visible(visible); });
-  }
-
-  void dispatch(dispatch_fn_t f) { m_event_loop->dispatch(f); }
+  events_t &events() { return m_events; }
 
 private:
+  events_t m_events;
   std::shared_ptr<event_loop> m_event_loop;
-  std::unique_ptr<detail::window_impl> m_impl;
 };
 
+using application_impl = gtk_application;
+
+} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_WINDOW_HH
+#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH

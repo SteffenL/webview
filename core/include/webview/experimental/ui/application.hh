@@ -32,7 +32,7 @@
 #include <memory>
 
 #if defined(WEBVIEW_PLATFORM_LINUX)
-#include "linux/gtk_application.hh"
+#include "linux/gtk/application.hh"
 #endif
 
 namespace webview {

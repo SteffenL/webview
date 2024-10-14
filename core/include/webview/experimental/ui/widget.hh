@@ -23,51 +23,34 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH) &&                    \
-    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-#define WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
+#ifndef WEBVIEW_DETAIL_UI_WIDGET_HH
+#define WEBVIEW_DETAIL_UI_WIDGET_HH
 
-#include "../../../detail/platform/linux/gtk/compat.hh"
-#include "../../../detail/signal.hh"
-#include "../../../types.hh"
-#include "../event_loop.hh"
+#include "event_loop.hh"
 
-#include <gtk/gtk.h>
+#include <memory>
+
+#if defined(WEBVIEW_PLATFORM_LINUX)
+#include "linux/gtk/webkitgtk/widget.hh"
+#endif
 
 namespace webview {
-namespace detail {
 
-class gtk_application {
+class widget {
 public:
-  class events_t {
-  public:
-    signal<void()> ready;
-  };
-
-  gtk_application(std::shared_ptr<event_loop> loop) : m_event_loop{loop} {
-    if (!gtk_compat::init_check()) {
-      throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
-    }
-
-    m_event_loop->dispatch([=] { m_events.ready.emit(); });
+  widget(std::shared_ptr<event_loop> loop = event_loop::get_default())
+      : m_event_loop{loop} {
+    m_impl = std::unique_ptr<detail::widget_impl>{
+        new detail::widget_impl{m_event_loop}};
   }
 
-  gtk_application(const gtk_application &) = delete;
-  gtk_application &operator=(const gtk_application &) = delete;
-  gtk_application(gtk_application &&) = delete;
-  gtk_application &operator=(gtk_application &&) = delete;
-  ~gtk_application() = default;
-
-  events_t &events() { return m_events; }
+  void dispatch(dispatch_fn_t f) { m_event_loop->dispatch(f); }
 
 private:
-  events_t m_events;
   std::shared_ptr<event_loop> m_event_loop;
+  std::unique_ptr<detail::widget_impl> m_impl;
 };
 
-using application_impl = gtk_application;
-
-} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
+#endif // WEBVIEW_DETAIL_UI_WINDOW_HH
