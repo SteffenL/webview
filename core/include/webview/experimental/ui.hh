@@ -27,6 +27,7 @@
 #define WEBVIEW_DETAIL_UI_UI_HH
 
 #include "ui/application.hh"
+#include "ui/widget.hh"
 #include "ui/window.hh"
 
 #endif // WEBVIEW_DETAIL_UI_UI_HH

@@ -79,11 +79,24 @@ public:
   //}
 
   events_t &events() { return m_events; }
+  void *get_native_handle() const { return m_native_window.get(); }
+
+  widget &get_widget() { return *m_widget; }
+
+  void add_widget() {
+    m_widget = std::unique_ptr<widget>{new widget{m_event_loop}};
+    gtk_compat::window_set_child(
+        m_native_window.get(),
+        static_cast<GtkWidget *>(m_widget->get_native_handle()));
+    gtk_compat::widget_set_visible(
+        static_cast<GtkWidget *>(m_widget->get_native_handle()), true);
+  }
 
 private:
   events_t m_events;
   std::shared_ptr<event_loop> m_event_loop;
   gtk_ref<GtkWindow> m_native_window;
+  std::unique_ptr<widget> m_widget;
 };
 
 using window_impl = gtk_window;

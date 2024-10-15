@@ -40,10 +40,7 @@ namespace webview {
 class application {
 public:
   application(std::shared_ptr<event_loop> loop = event_loop::get_default())
-      : m_event_loop{loop} {
-    m_impl = std::unique_ptr<detail::application_impl>{
-        new detail::application_impl{m_event_loop}};
-  }
+      : m_event_loop{loop}, m_impl{m_event_loop} {}
 
   void run() { m_event_loop->run(); }
   void terminate() { m_event_loop->stop(); }
@@ -51,7 +48,7 @@ public:
 
 private:
   std::shared_ptr<event_loop> m_event_loop;
-  std::unique_ptr<detail::application_impl> m_impl;
+  detail::application_impl m_impl;
 };
 
 } // namespace webview

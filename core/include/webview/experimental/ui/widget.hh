@@ -39,16 +39,17 @@ namespace webview {
 class widget {
 public:
   widget(std::shared_ptr<event_loop> loop = event_loop::get_default())
-      : m_event_loop{loop} {
-    m_impl = std::unique_ptr<detail::widget_impl>{
-        new detail::widget_impl{m_event_loop}};
-  }
+      : m_event_loop{loop}, m_impl{m_event_loop} {}
 
   void dispatch(dispatch_fn_t f) { m_event_loop->dispatch(f); }
+  void *get_native_handle() const { return m_impl.get_native_handle(); }
+
+  void navigate(const std::string &url) { m_impl.navigate(url); }
+  void set_html(const std::string &html) { m_impl.set_html(html); }
 
 private:
   std::shared_ptr<event_loop> m_event_loop;
-  std::unique_ptr<detail::widget_impl> m_impl;
+  detail::widget_impl m_impl;
 };
 
 } // namespace webview

@@ -66,7 +66,7 @@ public:
   T *get() const noexcept { return m_ptr; }
 
 private:
-  void ref() { g_object_ref(m_ptr); }
+  void ref() { g_object_ref_sink(m_ptr); }
   void unref() { g_object_unref(m_ptr); }
 
   T *m_ptr{};
