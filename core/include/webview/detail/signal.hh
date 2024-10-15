@@ -35,9 +35,15 @@ namespace detail {
 
 template <typename T> class signal {
 public:
-  void bind(std::function<T> handler) { m_handlers.push_back(handler); }
+  template <typename R, typename... Args>
+  using handler_type = std::function<R(Args...)>;
 
-  void unbind(std::function<T> handler) {
+  void bind(std::function<T> handler) {
+    m_handlers.push_back(handler);
+  }
+
+  template <typename R, typename... Args>
+  void unbind(std::function<R(Args...)> handler) {
     auto found{std::find(m_handlers.begin(), m_handlers.end(), handler)};
     if (found != m_handlers.end()) {
       m_handlers.erase(found);

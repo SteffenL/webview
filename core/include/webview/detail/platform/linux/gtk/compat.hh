@@ -120,6 +120,59 @@ public:
     (void)height;
 #endif
   }
+
+  class connection {
+  public:
+    connection() = default;
+    explicit connection(std::function<void()> deleter) : m_deleter{deleter} {}
+    connection(const connection &) = delete;
+    connection &operator=(const connection &) = delete;
+    connection(connection &&other) noexcept { *this = std::move(other); }
+
+    connection &operator=(connection &&other) noexcept {
+      if (this != &other) {
+        m_deleter = other.m_deleter;
+        other.m_deleter = {};
+      }
+      return *this;
+    }
+
+    ~connection() {
+      if (m_deleter) {
+        m_deleter();
+      }
+    }
+
+  private:
+    std::function<void()> m_deleter;
+  };
+
+#if __cplusplus >= 201703L
+  [[nodiscard]]
+#endif
+  static connection
+  connect_window_close_request(GtkWindow *window,
+                               std::function<void()> handler) {
+    auto *handler_ptr{new decltype(handler){handler}};
+#if GTK_MAJOR_VERSION >= 4
+    g_signal_connect(
+        G_OBJECT(window), "close-request",
+        G_CALLBACK(+[](GtkWidget *, gpointer user_arg) -> gboolean {
+          (*static_cast<decltype(handler) *>(user_arg))();
+          return TRUE;
+        }),
+        handler_ptr);
+#else
+    g_signal_connect(
+        G_OBJECT(window), "delete-event",
+        G_CALLBACK(+[](GtkWidget *, GdkEvent *, gpointer user_arg) -> gboolean {
+          (*static_cast<decltype(handler) *>(user_arg))();
+          return TRUE;
+        }),
+        handler_ptr);
+#endif
+    return connection{[=] { delete handler_ptr; }};
+  }
 };
 
 } // namespace detail

@@ -46,12 +46,16 @@ public:
   class events_t {
   public:
     signal<void()> ready;
+    signal<void()> close_requested;
   };
 
   gtk_window(std::shared_ptr<event_loop> loop)
       : m_event_loop{loop},
         m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
-    m_event_loop->dispatch([&] { m_events.ready.emit(); });
+    m_close_request_conn = gtk_compat::connect_window_close_request(m_native_window.get(), [=] {
+      m_event_loop->dispatch([=] { m_events.close_requested.emit(); });
+    });
+    m_event_loop->dispatch([=] { m_events.ready.emit(); });
   }
 
   gtk_window(const gtk_window &) = delete;
@@ -74,9 +78,7 @@ public:
     gtk_compat::widget_set_visible(GTK_WIDGET(m_native_window.get()), visible);
   }
 
-  //void close(bool force) {
-  //  gtk_window_close(m_native_window.get());
-  //}
+  void close() { gtk_window_close(m_native_window.get()); }
 
   events_t &events() { return m_events; }
   void *get_native_handle() const { return m_native_window.get(); }
@@ -97,6 +99,7 @@ private:
   std::shared_ptr<event_loop> m_event_loop;
   gtk_ref<GtkWindow> m_native_window;
   std::unique_ptr<widget> m_widget;
+  gtk_compat::connection m_close_request_conn;
 };
 
 using window_impl = gtk_window;
