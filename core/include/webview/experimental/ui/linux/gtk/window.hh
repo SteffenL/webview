@@ -97,8 +97,8 @@ private:
   std::shared_ptr<event_loop> m_event_loop;
   gtk_ref<GtkWindow> m_native_window;
   std::unique_ptr<widget> m_widget;
-  gtk_compat::connection m_close_request_conn;
-  gtk_compat::connection m_destroy_conn;
+  gtk_compat::signal_connection m_close_request_conn;
+  gtk_compat::signal_connection m_destroy_conn;
 };
 
 using window_impl = gtk_window;

@@ -40,7 +40,7 @@ private:
   void cmd_fullscreen() {}
   void cmd_unfullscreen() {}
 
-  webview::window m_inner;
+  webview::window m_inner{};
   std::list<std::shared_ptr<sub_window>> m_sub_windows;
   std::unordered_map<sub_window *, typename decltype(m_sub_windows)::iterator>
       m_sub_window_map;
