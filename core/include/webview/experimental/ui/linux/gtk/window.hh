@@ -32,6 +32,7 @@
 #include "../../../../types.hh"
 #include "../../event_loop.hh"
 #include "../../primitives.h"
+#include "../../window_impl_base.hh"
 #include "ref.hh"
 
 #include <gtk/gtk.h>
@@ -41,21 +42,16 @@
 namespace webview {
 namespace detail {
 
-class gtk_window {
+class gtk_window : public window_impl_base {
 public:
-  class events_t {
-  public:
-    signal<void()> ready;
-    signal<void()> close_requested;
-  };
-
   gtk_window(std::shared_ptr<event_loop> loop)
       : m_event_loop{loop},
         m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
-    m_close_request_conn = gtk_compat::connect_window_close_request(m_native_window.get(), [=] {
-      m_event_loop->dispatch([=] { m_events.close_requested.emit(); });
-    });
-    m_event_loop->dispatch([=] { m_events.ready.emit(); });
+    m_close_request_conn = gtk_compat::connect_window_close_request(
+        m_native_window.get(), [=] { m_events.close_requested.emit(); });
+    m_destroy_conn = gtk_compat::connect_widget_destroy(
+        GTK_WIDGET(m_native_window.get()), [=] { m_events.destroy.emit(); });
+    m_events.ready.emit();
   }
 
   gtk_window(const gtk_window &) = delete;
@@ -64,28 +60,26 @@ public:
   gtk_window &operator=(gtk_window &&) = delete;
   ~gtk_window() = default;
 
-  void set_initial_size(const ui_size &size) {
+  void set_initial_size(const ui_size &size) override {
     gtk_window_set_default_size(m_native_window.get(),
                                 static_cast<int>(size.width),
                                 static_cast<int>(size.height));
   }
 
-  void set_title(const std::string &title) {
+  void set_title(const std::string &title) override {
     gtk_window_set_title(m_native_window.get(), title.c_str());
   }
 
-  void set_visible(bool visible) {
+  void set_visible(bool visible) override {
     gtk_compat::widget_set_visible(GTK_WIDGET(m_native_window.get()), visible);
   }
 
-  void close() { gtk_window_close(m_native_window.get()); }
+  void close() override { gtk_window_close(m_native_window.get()); }
+  void *get_native_handle() const override { return m_native_window.get(); }
 
-  events_t &events() { return m_events; }
-  void *get_native_handle() const { return m_native_window.get(); }
+  widget &get_widget() override { return *m_widget; }
 
-  widget &get_widget() { return *m_widget; }
-
-  void add_widget() {
+  void add_widget() override {
     m_widget = std::unique_ptr<widget>{new widget{m_event_loop}};
     gtk_compat::window_set_child(
         m_native_window.get(),
@@ -94,12 +88,17 @@ public:
         static_cast<GtkWidget *>(m_widget->get_native_handle()), true);
   }
 
+  void destroy() override { gtk_compat::window_destroy(m_native_window.get()); }
+
+  events_t &events() { return m_events; }
+
 private:
   events_t m_events;
   std::shared_ptr<event_loop> m_event_loop;
   gtk_ref<GtkWindow> m_native_window;
   std::unique_ptr<widget> m_widget;
   gtk_compat::connection m_close_request_conn;
+  gtk_compat::connection m_destroy_conn;
 };
 
 using window_impl = gtk_window;

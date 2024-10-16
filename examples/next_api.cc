@@ -20,8 +20,10 @@ private:
 class main_window {
 public:
   main_window() : m_inner{webview::window_options{}.set_title("Main Window")} {
-    m_inner.events().close_requested.bind(
-        [] { std::cout << "Close requested\n"; });
+    m_inner.events().close_requested.bind([=] {
+      std::cout << "Close requested\n";
+      m_inner.destroy();
+    });
     m_inner.get_widget().set_html(make_html(main_window_html));
     m_inner.set_visible(true);
   }
@@ -33,7 +35,7 @@ private:
     m_sub_window_map.emplace(ptr.get(), it);
   }
 
-  //void cmd_request_close() { m_inner.destroy(); }
+  void cmd_request_close() { m_inner.destroy(); }
   void cmd_close() { m_inner.close(); }
   void cmd_fullscreen() {}
   void cmd_unfullscreen() {}
@@ -44,14 +46,22 @@ private:
       m_sub_window_map;
 };
 
+class application {
+public:
+  void run() { m_app.run(); }
+
+private:
+  webview::application m_app;
+  main_window m_main_window;
+};
+
 #ifdef _WIN32
 int WINAPI WinMain(HINSTANCE /*hInst*/, HINSTANCE /*hPrevInst*/,
                    LPSTR /*lpCmdLine*/, int /*nCmdShow*/) {
 #else
 int main() {
 #endif
-  webview::application app;
-  main_window window;
+  application app;
   app.run();
   return 0;
 }

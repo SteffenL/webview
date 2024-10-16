@@ -30,21 +30,25 @@ constexpr auto* main_window_html{R"html(
 <main>
   <div>
     <h2>Window</h2>
-    <button data-#click="cmdNewWindow">New window</button>
-    <button data-#click="cmdRequestClose">Close?</button>
-    <button data-#click="cmdClose">Close!</button>
+    <button data-#bind="click:cmdNewWindow">New window</button>
+    <button data-#bind="click:cmdClose">Close</button>
+    <label>
+      <input type="checkbox" data-#bind="change:cmdChangePreventClosing" />
+      <span>Prevent closing</span>
+    </label>
   </div>
   <div>
     <h2>Fullscreen</h2>
-    <button data-#click="cmdFullscreen">Fullscreen</button>
-    <button data-#click="cmdUnfullscreen">Unfullscreen</button>
+    <button data-#bind="click:cmdFullscreen">Fullscreen</button>
+    <button data-#bind="click:cmdUnfullscreen">Unfullscreen</button>
   </div>
 </main>
 <script>
-  document.querySelectorAll("button[data-\\#click]").forEach(e => {
-    e.addEventListener("click", () => {
-      const cmd = e.dataset["#click"];
-      console.log(cmd);
+  window.addEventListener("contextmenu", e => e.preventDefault(), false);
+  document.querySelectorAll("*[data-\\#bind]").forEach(element => {
+    const [name, cmd] = e.dataset["#bind"].split(":");
+    element.addEventListener(name, () => {
+      console.log(name, cmd);
     });
   });
 </script>

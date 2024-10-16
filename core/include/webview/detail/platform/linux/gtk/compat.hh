@@ -51,6 +51,35 @@ namespace detail {
  */
 class gtk_compat {
 public:
+  class signal_connection {
+  public:
+    signal_connection() = default;
+    explicit signal_connection(std::function<void()> deleter)
+        : m_deleter{deleter} {}
+    signal_connection(const signal_connection &) = delete;
+    signal_connection &operator=(const signal_connection &) = delete;
+    signal_connection(signal_connection &&other) noexcept {
+      *this = std::move(other);
+    }
+
+    signal_connection &operator=(signal_connection &&other) noexcept {
+      if (this != &other) {
+        m_deleter = other.m_deleter;
+        other.m_deleter = {};
+      }
+      return *this;
+    }
+
+    ~signal_connection() {
+      if (m_deleter) {
+        m_deleter();
+      }
+    }
+
+  private:
+    std::function<void()> m_deleter;
+  };
+
   static gboolean init_check() {
 #if GTK_MAJOR_VERSION >= 4
     return gtk_init_check();
@@ -121,36 +150,18 @@ public:
 #endif
   }
 
-  class connection {
-  public:
-    connection() = default;
-    explicit connection(std::function<void()> deleter) : m_deleter{deleter} {}
-    connection(const connection &) = delete;
-    connection &operator=(const connection &) = delete;
-    connection(connection &&other) noexcept { *this = std::move(other); }
-
-    connection &operator=(connection &&other) noexcept {
-      if (this != &other) {
-        m_deleter = other.m_deleter;
-        other.m_deleter = {};
-      }
-      return *this;
-    }
-
-    ~connection() {
-      if (m_deleter) {
-        m_deleter();
-      }
-    }
-
-  private:
-    std::function<void()> m_deleter;
-  };
+  static void window_destroy(GtkWindow *window) {
+#if GTK_MAJOR_VERSION >= 4
+    gtk_window_destroy(window);
+#else
+    gtk_widget_destroy(GTK_WIDGET(window));
+#endif
+  }
 
 #if __cplusplus >= 201703L
   [[nodiscard]]
 #endif
-  static connection
+  static signal_connection
   connect_window_close_request(GtkWindow *window,
                                std::function<void()> handler) {
     auto *handler_ptr{new decltype(handler){handler}};
@@ -171,7 +182,29 @@ public:
         }),
         handler_ptr);
 #endif
-    return connection{[=] { delete handler_ptr; }};
+    return signal_connection{[=] {
+      g_signal_handlers_disconnect_by_data(G_OBJECT(window), handler_ptr);
+      delete handler_ptr;
+    }};
+  }
+
+#if __cplusplus >= 201703L
+  [[nodiscard]]
+#endif
+  static signal_connection
+  connect_widget_destroy(GtkWidget *widget, std::function<void()> handler) {
+    auto *handler_ptr{new decltype(handler){handler}};
+    g_signal_connect(
+        G_OBJECT(widget), "destroy",
+        G_CALLBACK(+[](GtkWidget *, gpointer user_arg) -> gboolean {
+          (*static_cast<decltype(handler) *>(user_arg))();
+          return TRUE;
+        }),
+        handler_ptr);
+    return signal_connection{[=] {
+      g_signal_handlers_disconnect_by_data(G_OBJECT(widget), handler_ptr);
+      delete handler_ptr;
+    }};
   }
 };
 
