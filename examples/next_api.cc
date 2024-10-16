@@ -56,8 +56,7 @@ private:
 };
 
 #ifdef _WIN32
-int WINAPI WinMain(HINSTANCE /*hInst*/, HINSTANCE /*hPrevInst*/,
-                   LPSTR /*lpCmdLine*/, int /*nCmdShow*/) {
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #else
 int main() {
 #endif
