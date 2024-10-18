@@ -34,12 +34,30 @@ namespace webview {
 namespace detail {
 
 template <typename T> class signal {
-public:
-  template <typename R, typename... Args>
-  using handler_type = std::function<R(Args...)>;
+  struct handler_t {
+    handler_t(std::function<T> fn) : m_fn{fn} {}
+    handler_t(signal<T> *sig) : m_sig{sig} {}
 
+    template <typename... Args> void call(Args &&...args) const {
+      if (m_fn) {
+        m_fn(std::forward<Args>(args)...);
+      } else if (m_sig) {
+        m_sig->emit(std::forward<Args>(args)...);
+      }
+    }
+
+  private:
+    std::function<T> m_fn{};
+    signal<T> *m_sig{};
+  };
+
+public:
   void bind(std::function<T> handler) {
-    m_handlers.push_back(handler);
+    m_handlers.push_back(handler_t{handler});
+  }
+
+  void bind(signal<T> &fwd_signal) {
+    m_handlers.push_back(handler_t{&fwd_signal});
   }
 
   template <typename R, typename... Args>
@@ -50,15 +68,15 @@ public:
     }
   }
 
-  template <typename... Args> void emit(Args &&...args) {
+  template <typename... Args> void emit(Args &&...args) const {
     const auto handlers{m_handlers};
     for (const auto &handler : handlers) {
-      handler(std::forward<Args>(args)...);
+      handler.call(std::forward<Args>(args)...);
     }
   }
 
 private:
-  std::vector<std::function<T>> m_handlers;
+  std::vector<handler_t> m_handlers;
 };
 
 } // namespace detail
