@@ -6,6 +6,7 @@
 #include <memory>
 #include <unordered_map>
 
+#if 0
 class sub_window {
 public:
   sub_window() {
@@ -54,13 +55,19 @@ private:
   webview::application m_app;
   main_window m_main_window;
 };
+#endif
 
 #ifdef _WIN32
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #else
 int main() {
 #endif
+  #if 0
   application app;
+  app.run();
+  #endif
+  webview::application app;
+  webview::window win;
   app.run();
   return 0;
 }

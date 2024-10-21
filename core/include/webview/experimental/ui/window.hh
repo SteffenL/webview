@@ -40,7 +40,7 @@
 
 namespace webview {
 
-class window : public window_base {
+class window {
 public:
   window(const window_options &options = {},
          std::shared_ptr<event_loop> loop = event_loop::get_default())
@@ -48,26 +48,26 @@ public:
     m_impl.set_initial_size(options.get_size());
     set_title(options.get_title());
     bind_impl_events();
-    m_impl.add_widget();
+    m_impl.set_widget(m_widget.get_native_handle());
   }
 
-  void set_title(const std::string &title) override {
+  void set_title(const std::string &title) {
     dispatch([=] { m_impl.set_title(title); });
   }
 
-  void set_visible(bool visible) override {
+  void set_visible(bool visible) {
     dispatch([=] { m_impl.set_visible(visible); });
   }
 
-  void close() override {
+  void close() {
     dispatch([=] { m_impl.close(); });
   }
 
-  void destroy() override {
+  void destroy() {
     dispatch([=] { m_impl.destroy(); });
   }
 
-  void dispatch(dispatch_fn_t f) override {
+  void dispatch(dispatch_fn_t f) {
     if (!is_valid()) {
       return;
     }
@@ -78,9 +78,9 @@ public:
     });
   }
 
-  window_events &events() override { return m_events; }
-  widget_ptr get_widget() override { return m_impl.get_widget(); }
-  void *get_native_handle() const override { return m_impl.get_native_handle(); }
+  window_events &events() { return m_events; }
+  widget& get_widget() { return m_widget; }
+  void *get_native_handle() const { return m_impl.get_native_handle(); }
 
 private:
   bool is_valid() const { return m_valid; }
@@ -100,6 +100,7 @@ private:
 
   window_events m_events;
   std::shared_ptr<event_loop> m_event_loop;
+  widget m_widget;
   detail::window_impl m_impl;
   bool m_valid{true};
 };

@@ -49,6 +49,7 @@ public:
   virtual void dispatch(dispatch_fn_t f) = 0;
   virtual void *get_native_handle() const = 0;
   virtual widget_ptr get_widget() = 0;
+  virtual void set_widget(widget_ptr widget) = 0;
 
   virtual void set_title(const std::string &title) = 0;
   virtual void set_visible(bool visible) = 0;

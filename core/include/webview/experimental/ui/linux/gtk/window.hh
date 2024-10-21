@@ -33,7 +33,6 @@
 #include "../../event_loop.hh"
 #include "../../primitives.h"
 #include "../../widget_base.hh"
-#include "widget.hh"
 #include "ref.hh"
 
 #include <gtk/gtk.h>
@@ -78,15 +77,12 @@ public:
   void close() { gtk_window_close(m_native_window.get()); }
   void *get_native_handle() const { return m_native_window.get(); }
 
-  widget_ptr get_widget() { return m_widget; }
-
-  void add_widget() {
-    m_widget.reset(new widget{m_event_loop});
+  void set_widget(void *widget) {
+    m_native_widget = static_cast<GtkWidget *>(widget);
     gtk_compat::window_set_child(
-        m_native_window.get(),
-        static_cast<GtkWidget *>(m_widget->get_native_handle()));
+        m_native_window.get(), static_cast<GtkWidget *>(m_native_widget.get()));
     gtk_compat::widget_set_visible(
-        static_cast<GtkWidget *>(m_widget->get_native_handle()), true);
+        static_cast<GtkWidget *>(m_native_widget.get()), true);
   }
 
   void destroy() { gtk_compat::window_destroy(m_native_window.get()); }
@@ -97,7 +93,7 @@ private:
   window_events m_events;
   std::shared_ptr<event_loop> m_event_loop;
   gtk_ref<GtkWindow> m_native_window;
-  widget_ptr m_widget;
+  gtk_ref<GtkWidget> m_native_widget;
   gtk_compat::signal_connection m_close_request_conn;
   gtk_compat::signal_connection m_destroy_conn;
 };
