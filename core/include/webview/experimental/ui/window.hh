@@ -30,6 +30,7 @@
 #include "event_loop.hh"
 #include "widget.hh"
 #include "window_options.hh"
+#include "window_base.hh"
 
 #include <memory>
 
@@ -39,15 +40,8 @@
 
 namespace webview {
 
-class window {
+class window : public window_base {
 public:
-  class events_t {
-  public:
-    detail::signal<void()> ready;
-    detail::signal<void()> close_requested;
-    detail::signal<void()> destroy;
-  };
-
   window(const window_options &options = {},
          std::shared_ptr<event_loop> loop = event_loop::get_default())
       : m_event_loop{loop}, m_impl{m_event_loop} {
@@ -57,23 +51,23 @@ public:
     m_impl.add_widget();
   }
 
-  void set_title(const std::string &title) {
+  void set_title(const std::string &title) override {
     dispatch([=] { m_impl.set_title(title); });
   }
 
-  void set_visible(bool visible) {
+  void set_visible(bool visible) override {
     dispatch([=] { m_impl.set_visible(visible); });
   }
 
-  void close() {
+  void close() override {
     dispatch([=] { m_impl.close(); });
   }
 
-  void destroy() {
+  void destroy() override {
     dispatch([=] { m_impl.destroy(); });
   }
 
-  void dispatch(dispatch_fn_t f) {
+  void dispatch(dispatch_fn_t f) override {
     if (!is_valid()) {
       return;
     }
@@ -84,12 +78,13 @@ public:
     });
   }
 
-  events_t &events() { return m_events; }
-  widget &get_widget() { return m_impl.get_widget(); }
-  void *get_native_handle() const { return m_impl.get_native_handle(); }
-  bool is_valid() const { return m_valid; }
+  window_events &events() override { return m_events; }
+  widget_ptr get_widget() override { return m_impl.get_widget(); }
+  void *get_native_handle() const override { return m_impl.get_native_handle(); }
 
 private:
+  bool is_valid() const { return m_valid; }
+
   void bind_impl_events() {
     m_impl.events().ready.bind(
         [=] { dispatch([=] { m_events.ready.emit(); }); });
@@ -103,7 +98,7 @@ private:
     });
   }
 
-  events_t m_events;
+  window_events m_events;
   std::shared_ptr<event_loop> m_event_loop;
   detail::window_impl m_impl;
   bool m_valid{true};

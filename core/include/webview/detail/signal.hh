@@ -38,20 +38,20 @@ template <typename T> class signal {
   using pointer_type = signal<T> *;
 
   struct handler_type {
-    handler_type(function_type fn) : m_fn{fn} {}
-    handler_type(pointer_type sig) : m_sig{sig} {}
+    handler_type(function_type fn) : m_function{fn} {}
+    handler_type(pointer_type sig) : m_signal{sig} {}
 
     template <typename... Args> void call(Args &&...args) const {
-      if (m_fn) {
-        m_fn(std::forward<Args>(args)...);
-      } else if (m_sig) {
-        m_sig->emit(std::forward<Args>(args)...);
+      if (m_function) {
+        m_function(std::forward<Args>(args)...);
+      } else if (m_signal) {
+        m_signal->emit(std::forward<Args>(args)...);
       }
     }
 
   private:
-    function_type m_fn{};
-    pointer_type m_sig{};
+    function_type m_function{};
+    pointer_type m_signal{};
   };
 
 public:

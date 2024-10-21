@@ -9,7 +9,7 @@
 class sub_window {
 public:
   sub_window() {
-    m_inner.get_widget().set_html(make_html(sub_window_html));
+    m_inner.get_widget()->set_html(make_html(sub_window_html));
     m_inner.set_visible(true);
   }
 
@@ -24,7 +24,7 @@ public:
       std::cout << "Close requested\n";
       m_inner.destroy();
     });
-    m_inner.get_widget().set_html(make_html(main_window_html));
+    m_inner.get_widget()->set_html(make_html(main_window_html));
     m_inner.set_visible(true);
   }
 
