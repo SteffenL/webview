@@ -23,26 +23,47 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_WINDOW_H
-#define WEBVIEW_UI_WINDOW_H
+#ifndef WEBVIEW_UI_DETAIL_APPLICATION_BASE_HH
+#define WEBVIEW_UI_DETAIL_APPLICATION_BASE_HH
 
-//#include "../../errors.h"
-//#include "../../macros.h"
-#include "primitives.h"
+#include "../../../detail/signal.hh"
+#include "event_loop_base.hh"
 
-typedef struct webview_window_options {
-  unsigned int version;
-  const char *title;
-  //bool visible;
-  ui_size size;
-} webview_window_options;
+#include <memory>
 
-#define WEBVIEW_WINDOW_OPTIONS_VERSION 1U
-#define WEBVIEW_WINDOW_OPTIONS_INIT                                            \
-  { WEBVIEW_WINDOW_OPTIONS_VERSION }
+namespace webview {
+namespace detail {
 
-struct webview_window;
+class application_events {
+public:
+  signal<void()> ready;
+};
 
-//WEBVIEW_API webview_error_t webview_window_options_init(webview_window_options* options, unsigned int version);
+class application_base {
+public:
+  explicit application_base(event_loop_ptr event_loop)
+      : m_event_loop{event_loop} {}
+  virtual ~application_base() = default;
 
-#endif // WEBVIEW_DETAIL_UI_WINDOW_H
+  void run() { run_impl(); }
+  void terminate() { terminate_impl(); }
+  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
+  application_events &events() { return events_impl(); }
+
+protected:
+  virtual void run_impl() { m_event_loop->run(); }
+  virtual void terminate_impl() { m_event_loop->stop(); }
+  virtual void dispatch_impl(dispatch_fn_t f) { m_event_loop->dispatch(f); }
+  virtual application_events &events_impl() = 0;
+
+private:
+  event_loop_ptr m_event_loop;
+};
+
+} // namespace detail
+
+using application_ptr = std::shared_ptr<detail::application_base>;
+
+} // namespace webview
+
+#endif // WEBVIEW_UI_DETAIL_APPLICATION_BASE_HH

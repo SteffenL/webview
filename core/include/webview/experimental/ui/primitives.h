@@ -23,8 +23,8 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_PRIMITIVES_H
-#define WEBVIEW_DETAIL_UI_PRIMITIVES_H
+#ifndef WEBVIEW_UI_PRIMITIVES_H
+#define WEBVIEW_UI_PRIMITIVES_H
 
 typedef struct ui_size {
   unsigned int width;
@@ -36,4 +36,4 @@ typedef struct ui_size {
 #endif
 } ui_size;
 
-#endif // WEBVIEW_DETAIL_UI_PRIMITIVES_H
+#endif // WEBVIEW_UI_PRIMITIVES_H

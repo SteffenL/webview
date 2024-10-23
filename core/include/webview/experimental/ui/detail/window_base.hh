@@ -23,65 +23,23 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_WINDOW_BASE_HH
-#define WEBVIEW_DETAIL_UI_WINDOW_BASE_HH
+#ifndef WEBVIEW_UI_DETAIL_WINDOW_BASE_HH
+#define WEBVIEW_UI_DETAIL_WINDOW_BASE_HH
 
-#include "../../detail/signal.hh"
-#include "primitives.h"
+#include "../../../detail/signal.hh"
 #include "widget_base.hh"
 
 #include <memory>
 #include <string>
 
 namespace webview {
-
-class window_options {
-public:
-  static ui_size get_default_ui_size() noexcept {
-    static constexpr const ui_size size{480, 320};
-    return size;
-  }
-
-  const std::string &get_title() const noexcept { return m_title; }
-
-  window_options &set_title(const std::string &title) {
-    m_title = title;
-    return *this;
-  }
-
-  /*window_options &set_visible(bool visible = true) {
-      m_visible = visible;
-      return *this;
-    }*/
-
-  const ui_size &get_size() const noexcept { return m_size; }
-
-  window_options &set_size(const ui_size &size) {
-    m_size = size;
-    return *this;
-  }
-
-  const widget_options &get_widget_options() const noexcept {
-    return m_widget_options;
-  }
-
-  window_options &set_widget_options(const widget_options &options) {
-    m_widget_options = options;
-    return *this;
-  }
-
-private:
-  std::string m_title;
-  //bool m_visible;
-  ui_size m_size{get_default_ui_size()};
-  widget_options m_widget_options;
-};
+namespace detail {
 
 class window_events {
 public:
-  detail::signal<void()> ready;
-  detail::signal<void()> close_requested;
-  detail::signal<void()> destroy;
+  signal<void()> ready;
+  signal<void()> close_requested;
+  signal<void()> destroy;
 };
 
 class window_base {
@@ -120,8 +78,10 @@ private:
   }
 };
 
-using window_ptr = std::shared_ptr<window_base>;
+} // namespace detail
+
+using window_ptr = std::shared_ptr<detail::window_base>;
 
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_WINDOW_BASE_HH
+#endif // WEBVIEW_UI_DETAIL_WINDOW_BASE_HH

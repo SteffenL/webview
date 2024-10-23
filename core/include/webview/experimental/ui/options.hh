@@ -23,44 +23,58 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_APPLICATION_BASE_HH
-#define WEBVIEW_DETAIL_UI_APPLICATION_BASE_HH
+#ifndef WEBVIEW_UI_OPTIONS_HH
+#define WEBVIEW_UI_OPTIONS_HH
 
-#include "../../detail/signal.hh"
-#include "event_loop_base.hh"
-
-#include <memory>
+#include "primitives.h"
+#include <string>
 
 namespace webview {
 
-class application_events {
+class widget_options {};
+
+class window_options {
 public:
-  detail::signal<void()> ready;
-};
+  static ui_size get_default_ui_size() noexcept {
+    static constexpr const ui_size size{480, 320};
+    return size;
+  }
 
-class application_base {
-public:
-  explicit application_base(event_loop_ptr event_loop)
-      : m_event_loop{event_loop} {}
-  virtual ~application_base() = default;
+  const std::string &get_title() const noexcept { return m_title; }
 
-  void run() { run_impl(); }
-  void terminate() { terminate_impl(); }
-  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
-  application_events &events() { return events_impl(); }
+  window_options &set_title(const std::string &title) {
+    m_title = title;
+    return *this;
+  }
 
-protected:
-  virtual void run_impl() { m_event_loop->run(); }
-  virtual void terminate_impl() { m_event_loop->stop(); }
-  virtual void dispatch_impl(dispatch_fn_t f) { m_event_loop->dispatch(f); }
-  virtual application_events &events_impl() = 0;
+  /*window_options &set_visible(bool visible = true) {
+      m_visible = visible;
+      return *this;
+    }*/
+
+  const ui_size &get_size() const noexcept { return m_size; }
+
+  window_options &set_size(const ui_size &size) {
+    m_size = size;
+    return *this;
+  }
+
+  const widget_options &get_widget_options() const noexcept {
+    return m_widget_options;
+  }
+
+  window_options &set_widget_options(const widget_options &options) {
+    m_widget_options = options;
+    return *this;
+  }
 
 private:
-  event_loop_ptr m_event_loop;
+  std::string m_title;
+  //bool m_visible;
+  ui_size m_size{get_default_ui_size()};
+  widget_options m_widget_options;
 };
-
-using application_ptr = std::shared_ptr<application_base>;
 
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_APPLICATION_BASE_HH
+#endif // WEBVIEW_UI_OPTIONS_HH

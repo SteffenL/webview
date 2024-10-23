@@ -26,14 +26,13 @@
 #ifndef WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WIDGET_HH
 #define WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WIDGET_HH
 
-#include "../../../../macros.h"
+#include "../../../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
-#include "../../../../detail/platform/linux/gtk/compat.hh"
-#include "../../../../detail/platform/linux/webkitgtk/dmabuf.hh"
-#include "../../../../detail/signal.hh"
-#include "../../../../types.hh"
+#include "../../../../../detail/platform/linux/webkitgtk/dmabuf.hh"
+#include "../../../../../detail/signal.hh"
+#include "../../../../../types.hh"
 #include "../../event_loop_base.hh"
 #include "../../widget_base.hh"
 #include "../gtk/gtk_ref.hh"

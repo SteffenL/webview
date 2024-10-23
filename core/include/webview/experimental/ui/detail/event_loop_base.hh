@@ -23,60 +23,47 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_LINUX_GTK_REF_HH
-#define WEBVIEW_DETAIL_UI_LINUX_GTK_REF_HH
+#ifndef WEBVIEW_UI_DETAIL_RUN_LOOP_BASE_HH
+#define WEBVIEW_UI_DETAIL_RUN_LOOP_BASE_HH
 
-#include "../../../../macros.h"
+#include "../../../types.hh"
 
-#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-
-#include <utility>
-
-#include <gtk/gtk.h>
+#include <memory>
 
 namespace webview {
 namespace detail {
 
-template <typename T> class gtk_ref {
+class event_loop_base {
 public:
-  gtk_ref() = default;
-  gtk_ref(T *ptr) : m_ptr{ptr} { ref(); }
+  virtual ~event_loop_base() = default;
 
-  gtk_ref(const gtk_ref &other) { *this = other; }
-
-  gtk_ref &operator=(const gtk_ref &other) {
-    if (this != &other) {
-      m_ptr = other.m_ptr;
-      ref();
-    }
-    return *this;
-  }
-
-  gtk_ref(gtk_ref &&other) noexcept { *this = std::move(other); }
-
-  gtk_ref &operator=(gtk_ref &&other) noexcept {
-    m_ptr = other.m_ptr;
-    other.m_ptr = nullptr;
-    return *this;
-  }
-
-  ~gtk_ref() {
-    if (m_ptr) {
-      unref();
+  void run() {
+    m_stop_run_loop = false;
+    while (!m_stop_run_loop) {
+      iterate(true);
     }
   }
 
-  T *get() const noexcept { return m_ptr; }
+  void iterate(bool block) { iterate_impl(block); }
+
+  void stop() {
+    dispatch([&] { m_stop_run_loop = true; });
+  }
+
+  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
+
+protected:
+  virtual void dispatch_impl(dispatch_fn_t f) = 0;
+  virtual void iterate_impl(bool block) = 0;
 
 private:
-  void ref() { g_object_ref_sink(m_ptr); }
-  void unref() { g_object_unref(m_ptr); }
-
-  T *m_ptr{};
+  bool m_stop_run_loop{};
 };
 
 } // namespace detail
+
+using event_loop_ptr = std::shared_ptr<detail::event_loop_base>;
+
 } // namespace webview
 
-#endif
-#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_REF_HH
+#endif // WEBVIEW_UI_DETAIL_RUN_LOOP_BASE_HH

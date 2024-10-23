@@ -26,15 +26,15 @@
 #ifndef WEBVIEW_DETAIL_UI_LINUX_GTK_WINDOW_HH
 #define WEBVIEW_DETAIL_UI_LINUX_GTK_WINDOW_HH
 
-#include "../../../../macros.h"
+#include "../../../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
-#include "../../../../detail/platform/linux/gtk/compat.hh"
-#include "../../../../detail/signal.hh"
-#include "../../../../types.hh"
+#include "../../../../../detail/platform/linux/gtk/compat.hh"
+#include "../../../../../detail/signal.hh"
+#include "../../../../../types.hh"
+#include "../../../primitives.h"
 #include "../../event_loop_base.hh"
-#include "../../primitives.h"
 #include "../../widget_base.hh"
 #include "../../window_base.hh"
 #include "gtk_ref.hh"

@@ -26,11 +26,11 @@
 #ifndef WEBVIEW_UI_LINUX_GTK_RUN_LOOP
 #define WEBVIEW_UI_LINUX_GTK_RUN_LOOP
 
-#include "../../../../macros.h"
+#include "../../../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
-#include "../../../../types.hh"
+#include "../../../../../types.hh"
 #include "../../event_loop_base.hh"
 
 #include <gtk/gtk.h>

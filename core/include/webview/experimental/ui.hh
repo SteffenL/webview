@@ -23,18 +23,19 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_UI_HH
-#define WEBVIEW_DETAIL_UI_UI_HH
+#ifndef WEBVIEW_UI_HH
+#define WEBVIEW_UI_HH
 
 #include "../macros.h"
+#include "ui/options.hh"
 
 #ifdef WEBVIEW_PLATFORM_LINUX
 #ifdef WEBVIEW_GTK
 
-#include "ui/linux/gtk/gtk_application.hh"
-#include "ui/linux/gtk/gtk_event_loop.hh"
-#include "ui/linux/gtk/gtk_window.hh"
-#include "ui/linux/webkitgtk/webkitgtk_widget.hh"
+#include "ui/detail/linux/gtk/gtk_application.hh"
+#include "ui/detail/linux/gtk/gtk_event_loop.hh"
+#include "ui/detail/linux/gtk/gtk_window.hh"
+#include "ui/detail/linux/webkitgtk/webkitgtk_widget.hh"
 
 namespace webview {
 namespace detail {
@@ -112,8 +113,4 @@ public:
 
 } // namespace webview
 
-//#include "ui/application.hh"
-//#include "ui/widget.hh"
-//#include "ui/window.hh"
-
-#endif // WEBVIEW_DETAIL_UI_UI_HH
+#endif // WEBVIEW_UI_HH
