@@ -28,9 +28,9 @@
 
 #include "../../../detail/signal.hh"
 #include "../../../types.hh"
+#include "browser_base.hh"
 
 #include <memory>
-#include <string>
 
 namespace webview {
 namespace detail {
@@ -47,17 +47,13 @@ public:
   widget_events &events() { return events_impl(); }
   void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
   void *get_native_handle() const { return get_native_handle_impl(); }
-
-  void navigate(const std::string &url) { navigate_impl(url); }
-  void set_html(const std::string &html) { set_html_impl(html); }
+  browser_ptr browser() { return browser_impl(); }
 
 protected:
   virtual widget_events &events_impl() = 0;
   virtual void dispatch_impl(dispatch_fn_t f) = 0;
   virtual void *get_native_handle_impl() const = 0;
-
-  virtual void navigate_impl(const std::string &url) = 0;
-  virtual void set_html_impl(const std::string &html) = 0;
+  virtual browser_ptr browser_impl() = 0;
 };
 
 } // namespace detail

@@ -41,8 +41,6 @@
 
 #include <gtk/gtk.h>
 
-#include <memory>
-
 namespace webview {
 namespace detail {
 
@@ -51,18 +49,31 @@ public:
   explicit gtk_window(event_loop_ptr loop)
       : m_event_loop{loop},
         m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
-    initialize();
-    m_close_request_conn = gtk_compat::connect_window_close_request(
-        m_native_window.get(), [=] { m_events.close_requested.emit(); });
-    m_destroy_conn = gtk_compat::connect_widget_destroy(
-        GTK_WIDGET(m_native_window.get()), [=] { m_events.destroy.emit(); });
+    set_default_event_handlers();
+    bind_events();
     m_events.ready.emit();
   }
 
   gtk_window(const gtk_window &) = delete;
   gtk_window &operator=(const gtk_window &) = delete;
-  gtk_window(gtk_window &&) = delete;
-  gtk_window &operator=(gtk_window &&) = delete;
+  gtk_window(gtk_window &&other) noexcept { *this = std::move(other); }
+
+  gtk_window &operator=(gtk_window &&other) noexcept {
+    if (this != &other) {
+      other.unbind_events();
+
+      m_events = std::move(other.m_events);
+      m_event_loop = std::move(other.m_event_loop);
+      m_native_window = std::move(other.m_native_window);
+      m_native_widget = std::move(other.m_native_widget);
+      m_widget = std::move(other.m_widget);
+
+      set_default_event_handlers();
+      bind_events();
+    }
+    return *this;
+  }
+
   virtual ~gtk_window() = default;
 
 protected:
@@ -78,6 +89,8 @@ protected:
     gtk_compat::window_set_child(m_native_window.get(), m_native_widget.get());
     gtk_compat::widget_set_visible(m_native_widget.get(), true);
   }
+
+  widget_ptr widget_impl() override { return m_widget; }
 
   //virtual widget_ptr create_widget_impl() = 0;
 
@@ -104,6 +117,18 @@ protected:
   }
 
 private:
+  void bind_events() {
+    m_close_request_conn = gtk_compat::connect_window_close_request(
+        m_native_window.get(), [=] { m_events.close_requested.emit(); });
+    m_destroy_conn = gtk_compat::connect_widget_destroy(
+        GTK_WIDGET(m_native_window.get()), [=] { m_events.destroy.emit(); });
+  }
+
+  void unbind_events() {
+    m_destroy_conn = {};
+    m_close_request_conn = {};
+  }
+
   window_events m_events;
   event_loop_ptr m_event_loop;
   gtk_ref<GtkWindow> m_native_window;

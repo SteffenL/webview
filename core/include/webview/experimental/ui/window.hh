@@ -39,7 +39,7 @@ public:
       : detail::window_impl{loop} {
     set_initial_size(options.get_size());
     set_title(options.get_title());
-    set_widget(widget_ptr{new widget{options.get_widget_options(), loop}});
+    set_widget(widget_ptr{new class widget{options.get_widget_options(), loop}});
   }
 
   static window_ptr get_default() {
@@ -49,6 +49,9 @@ public:
     }
     return instance;
   }
+
+protected:
+  browser_ptr browser_impl() override { return widget()->browser(); }
 };
 
 } // namespace webview

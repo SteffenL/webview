@@ -23,13 +23,45 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_HH
-#define WEBVIEW_UI_HH
+#ifndef WEBVIEW_UI_DETAIL_BROWSER_BASE_HH
+#define WEBVIEW_UI_DETAIL_BROWSER_BASE_HH
 
-#include "ui/application.hh"
-#include "ui/browser.hh"
-#include "ui/event_loop.hh"
-#include "ui/widget.hh"
-#include "ui/window.hh"
+#include "../../../detail/signal.hh"
+#include "../../../types.hh"
 
-#endif // WEBVIEW_UI_HH
+#include <memory>
+#include <string>
+
+namespace webview {
+namespace detail {
+
+class browser_events {
+public:
+  signal<void()> ready;
+};
+
+class browser_base {
+public:
+  virtual ~browser_base() = default;
+
+  browser_events &events() { return events_impl(); }
+  void *get_native_handle() const { return get_native_handle_impl(); }
+
+  void navigate(const std::string &url) { navigate_impl(url); }
+  void set_html(const std::string &html) { set_html_impl(html); }
+
+protected:
+  virtual browser_events &events_impl() = 0;
+  virtual void *get_native_handle_impl() const = 0;
+
+  virtual void navigate_impl(const std::string &url) = 0;
+  virtual void set_html_impl(const std::string &html) = 0;
+};
+
+} // namespace detail
+
+using browser_ptr = std::shared_ptr<detail::browser_base>;
+
+} // namespace webview
+
+#endif // WEBVIEW_UI_DETAIL_BROWSER_BASE_HH

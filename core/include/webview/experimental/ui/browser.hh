@@ -23,13 +23,30 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_HH
-#define WEBVIEW_UI_HH
+#ifndef WEBVIEW_UI_BROWSER_HH
+#define WEBVIEW_UI_BROWSER_HH
 
-#include "ui/application.hh"
-#include "ui/browser.hh"
-#include "ui/event_loop.hh"
-#include "ui/widget.hh"
-#include "ui/window.hh"
+#include "backends.hh"
+#include "event_loop.hh"
+#include "options.hh"
 
-#endif // WEBVIEW_UI_HH
+namespace webview {
+
+class browser : public detail::browser_impl {
+public:
+  browser(const browser_options & /*options*/ = {},
+          event_loop_ptr loop = event_loop::get_default())
+      : detail::browser_impl{loop} {}
+
+  static browser_ptr get_default() {
+    static browser_ptr instance;
+    if (!instance) {
+      instance = browser_ptr{new browser{}};
+    }
+    return instance;
+  }
+};
+
+} // namespace webview
+
+#endif // WEBVIEW_UI_BROWSER_HH

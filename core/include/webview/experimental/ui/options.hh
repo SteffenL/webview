@@ -31,6 +31,7 @@
 
 namespace webview {
 
+class browser_options {};
 class widget_options {};
 
 class window_options {
