@@ -23,12 +23,30 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_HH
-#define WEBVIEW_UI_HH
+#ifndef WEBVIEW_UI_WIDGET_HH
+#define WEBVIEW_UI_WIDGET_HH
 
-#include "ui/application.hh"
-#include "ui/event_loop.hh"
-#include "ui/widget.hh"
-#include "ui/window.hh"
+#include "backends.hh"
+#include "event_loop.hh"
+#include "options.hh"
 
-#endif // WEBVIEW_UI_HH
+namespace webview {
+
+class widget : public detail::widget_impl {
+public:
+  widget(const widget_options & /*options*/ = {},
+         event_loop_ptr loop = event_loop::get_default())
+      : detail::widget_impl{loop} {}
+
+  static widget_ptr get_default() {
+    static widget_ptr instance;
+    if (!instance) {
+      instance = widget_ptr{new widget{}};
+    }
+    return instance;
+  }
+};
+
+} // namespace webview
+
+#endif // WEBVIEW_UI_WIDGET_HH

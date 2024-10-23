@@ -23,12 +23,34 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_HH
-#define WEBVIEW_UI_HH
+#ifndef WEBVIEW_UI_WINDOW_HH
+#define WEBVIEW_UI_WINDOW_HH
 
-#include "ui/application.hh"
-#include "ui/event_loop.hh"
-#include "ui/widget.hh"
-#include "ui/window.hh"
+#include "backends.hh"
+#include "event_loop.hh"
+#include "options.hh"
 
-#endif // WEBVIEW_UI_HH
+namespace webview {
+
+class window : public detail::window_impl {
+public:
+  window(const window_options &options = {},
+         event_loop_ptr loop = event_loop::get_default())
+      : detail::window_impl{loop} {
+    set_initial_size(options.get_size());
+    set_title(options.get_title());
+    set_widget(widget_ptr{new widget{options.get_widget_options(), loop}});
+  }
+
+  static window_ptr get_default() {
+    static window_ptr instance;
+    if (!instance) {
+      instance = window_ptr{new window{}};
+    }
+    return instance;
+  }
+};
+
+} // namespace webview
+
+#endif // WEBVIEW_UI_WINDOW_HH

@@ -23,12 +23,29 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_HH
-#define WEBVIEW_UI_HH
+#ifndef WEBVIEW_UI_APPLICATION_HH
+#define WEBVIEW_UI_APPLICATION_HH
 
-#include "ui/application.hh"
-#include "ui/event_loop.hh"
-#include "ui/widget.hh"
-#include "ui/window.hh"
+#include "backends.hh"
+#include "event_loop.hh"
+#include "options.hh"
 
-#endif // WEBVIEW_UI_HH
+namespace webview {
+
+class application : public detail::application_impl {
+public:
+  application(event_loop_ptr loop = event_loop::get_default())
+      : detail::application_impl{loop} {}
+
+  static application_ptr get_default() {
+    static application_ptr instance;
+    if (!instance) {
+      instance = application_ptr{new application{}};
+    }
+    return instance;
+  }
+};
+
+} // namespace webview
+
+#endif // WEBVIEW_UI_APPLICATION_HH
