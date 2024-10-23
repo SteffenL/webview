@@ -27,8 +27,6 @@
 #define WEBVIEW_DETAIL_UI_UI_HH
 
 #include "../macros.h"
-#include "ui/widget_options.hh"
-#include "ui/window_options.hh"
 
 #ifdef WEBVIEW_PLATFORM_LINUX
 #ifdef WEBVIEW_GTK

@@ -34,6 +34,8 @@
 
 namespace webview {
 
+class widget_options {};
+
 class widget_events {
 public:
   detail::signal<void()> ready;

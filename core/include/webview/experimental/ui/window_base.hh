@@ -27,12 +27,55 @@
 #define WEBVIEW_DETAIL_UI_WINDOW_BASE_HH
 
 #include "../../detail/signal.hh"
+#include "primitives.h"
 #include "widget_base.hh"
 
 #include <memory>
 #include <string>
 
 namespace webview {
+
+class window_options {
+public:
+  static ui_size get_default_ui_size() noexcept {
+    static constexpr const ui_size size{480, 320};
+    return size;
+  }
+
+  const std::string &get_title() const noexcept { return m_title; }
+
+  window_options &set_title(const std::string &title) {
+    m_title = title;
+    return *this;
+  }
+
+  /*window_options &set_visible(bool visible = true) {
+      m_visible = visible;
+      return *this;
+    }*/
+
+  const ui_size &get_size() const noexcept { return m_size; }
+
+  window_options &set_size(const ui_size &size) {
+    m_size = size;
+    return *this;
+  }
+
+  const widget_options &get_widget_options() const noexcept {
+    return m_widget_options;
+  }
+
+  window_options &set_widget_options(const widget_options &options) {
+    m_widget_options = options;
+    return *this;
+  }
+
+private:
+  std::string m_title;
+  //bool m_visible;
+  ui_size m_size{get_default_ui_size()};
+  widget_options m_widget_options;
+};
 
 class window_events {
 public:
@@ -55,9 +98,7 @@ public:
   virtual void destroy() { destroy_impl(); }
 
 protected:
-  void initialize() {
-    set_default_event_handlers();
-  }
+  void initialize() { set_default_event_handlers(); }
 
   virtual void set_widget(widget_ptr widget) = 0;
 
