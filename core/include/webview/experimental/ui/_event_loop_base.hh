@@ -23,34 +23,26 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_APPLICATION_HH
-#define WEBVIEW_DETAIL_UI_APPLICATION_HH
+#ifndef WEBVIEW_DETAIL_UI_RUN_LOOP_BASE_HH
+#define WEBVIEW_DETAIL_UI_RUN_LOOP_BASE_HH
 
-#include "../../macros.h"
-#include "event_loop.hh"
+#include "../../types.hh"
 
 #include <memory>
 
-#if defined(WEBVIEW_PLATFORM_LINUX)
-#include "linux/gtk/application.hh"
-#endif
-
 namespace webview {
 
-class application {
+class event_loop_base {
 public:
-  application(std::shared_ptr<event_loop> loop = event_loop::get_default())
-      : m_event_loop{loop}, m_impl{m_event_loop} {}
-
-  void run() { m_event_loop->run(); }
-  void terminate() { m_event_loop->stop(); }
-  void dispatch(dispatch_fn_t f) { m_event_loop->dispatch(f); }
-
-private:
-  std::shared_ptr<event_loop> m_event_loop;
-  detail::application_impl m_impl;
+  virtual ~event_loop_base() = default;
+  virtual void run() = 0;
+  virtual void iterate(bool block) = 0;
+  virtual void stop() = 0;
+  virtual void dispatch(dispatch_fn_t f) = 0;
 };
+
+using event_loop_ptr = std::shared_ptr<event_loop_base>;
 
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_APPLICATION_HH
+#endif // WEBVIEW_DETAIL_UI_RUN_LOOP_BASE_HH

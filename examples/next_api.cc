@@ -62,12 +62,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #else
 int main() {
 #endif
-  #if 0
-  application app;
-  app.run();
-  #endif
   webview::application app;
-  webview::window win;
+
+  webview::window win{webview::window_options{}.set_size({800, 600}).set_title("Hello")};
+  win.set_visible(true);
+
   app.run();
   return 0;
 }

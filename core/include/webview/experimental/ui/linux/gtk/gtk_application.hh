@@ -23,44 +23,47 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_WIDGET_BASE_HH
-#define WEBVIEW_DETAIL_UI_WIDGET_BASE_HH
+#ifndef WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
+#define WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
 
-#include "../../detail/signal.hh"
-#include "../../types.hh"
+#include "../../../../macros.h"
 
-#include <memory>
-#include <string>
+#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+
+#include "../../../../detail/platform/linux/gtk/compat.hh"
+#include "../../../../detail/signal.hh"
+#include "../../../../types.hh"
+#include "../../application_base.hh"
+#include "../../event_loop_base.hh"
+
+#include <gtk/gtk.h>
 
 namespace webview {
+namespace detail {
 
-class widget_events {
+class gtk_application : public application_base {
 public:
-  detail::signal<void()> ready;
-};
+  explicit gtk_application(event_loop_ptr loop)
+      : application_base{loop}, m_event_loop{loop} {
+    if (!gtk_compat::init_check()) {
+      throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
+    }
 
-class widget_base {
-public:
-  virtual ~widget_base() = default;
+    m_event_loop->dispatch([=] { m_events.ready.emit(); });
+  }
 
-  widget_events &events() { return events_impl(); }
-  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
-  void *get_native_handle() const { return get_native_handle_impl(); }
-
-  void navigate(const std::string &url) { navigate_impl(url); }
-  void set_html(const std::string &html) { set_html_impl(html); }
+  virtual ~gtk_application() = default;
 
 protected:
-  virtual widget_events &events_impl() = 0;
-  virtual void dispatch_impl(dispatch_fn_t f) = 0;
-  virtual void *get_native_handle_impl() const = 0;
+  application_events &events_impl() override { return m_events; }
 
-  virtual void navigate_impl(const std::string &url) = 0;
-  virtual void set_html_impl(const std::string &html) = 0;
+private:
+  application_events m_events;
+  event_loop_ptr m_event_loop;
 };
 
-using widget_ptr = std::shared_ptr<widget_base>;
-
+} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_WIDGET_BASE_HH
+#endif
+#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH

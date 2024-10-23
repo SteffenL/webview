@@ -23,44 +23,44 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_WIDGET_BASE_HH
-#define WEBVIEW_DETAIL_UI_WIDGET_BASE_HH
+#ifndef WEBVIEW_DETAIL_UI_BASIC_RUN_LOOP_HH
+#define WEBVIEW_DETAIL_UI_BASIC_RUN_LOOP_HH
 
-#include "../../detail/signal.hh"
 #include "../../types.hh"
 
 #include <memory>
-#include <string>
 
 namespace webview {
 
-class widget_events {
+class event_loop_base {
 public:
-  detail::signal<void()> ready;
-};
+  virtual ~event_loop_base() = default;
 
-class widget_base {
-public:
-  virtual ~widget_base() = default;
+  void run() {
+    m_stop_run_loop = false;
+    while (!m_stop_run_loop) {
+      iterate(true);
+    }
+  }
 
-  widget_events &events() { return events_impl(); }
+  void iterate(bool block) { iterate_impl(block); }
+
+  void stop() {
+    dispatch([&] { m_stop_run_loop = true; });
+  }
+
   void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
-  void *get_native_handle() const { return get_native_handle_impl(); }
-
-  void navigate(const std::string &url) { navigate_impl(url); }
-  void set_html(const std::string &html) { set_html_impl(html); }
 
 protected:
-  virtual widget_events &events_impl() = 0;
   virtual void dispatch_impl(dispatch_fn_t f) = 0;
-  virtual void *get_native_handle_impl() const = 0;
+  virtual void iterate_impl(bool block) = 0;
 
-  virtual void navigate_impl(const std::string &url) = 0;
-  virtual void set_html_impl(const std::string &html) = 0;
+private:
+  bool m_stop_run_loop{};
 };
 
-using widget_ptr = std::shared_ptr<widget_base>;
+using event_loop_ptr = std::shared_ptr<event_loop_base>;
 
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_WIDGET_BASE_HH
+#endif // WEBVIEW_DETAIL_UI_BASIC_RUN_LOOP_HH

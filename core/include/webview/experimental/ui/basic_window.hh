@@ -23,11 +23,11 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_WINDOW_HH
-#define WEBVIEW_DETAIL_UI_WINDOW_HH
+#ifndef WEBVIEW_DETAIL_UI_BASIC_WINDOW_HH
+#define WEBVIEW_DETAIL_UI_BASIC_WINDOW_HH
 
 #include "../../detail/signal.hh"
-#include "event_loop.hh"
+#include "event_loop_base.hh"
 #include "widget.hh"
 #include "window_options.hh"
 #include "window_base.hh"
@@ -40,15 +40,15 @@
 
 namespace webview {
 
-class window {
+class basic_window {
 public:
-  window(const window_options &options = {},
-         std::shared_ptr<event_loop> loop = event_loop::get_default())
+  basic_window(const window_options &options = {},
+         event_loop_ptr loop)
       : m_event_loop{loop}, m_impl{m_event_loop} {
     m_impl.set_initial_size(options.get_size());
     set_title(options.get_title());
     bind_impl_events();
-    m_impl.set_widget(m_widget.get_native_handle());
+    m_widget = m_impl->create_widget();
   }
 
   void set_title(const std::string &title) {
@@ -107,4 +107,4 @@ private:
 
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_WINDOW_HH
+#endif // WEBVIEW_DETAIL_UI_BASIC_WINDOW_HH

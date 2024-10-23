@@ -5,6 +5,11 @@ if(MSVC)
 endif()
 
 add_executable(webview_core_tests)
-target_sources(webview_core_tests PRIVATE src/tests.cc)
+target_sources(webview_core_tests PRIVATE
+    src/ui/application_tests.cc
+    src/ui/event_loop_tests.cc
+    src/ui/window_tests.cc
+    #src/tests.cc
+)
 target_link_libraries(webview_core_tests PRIVATE webview::core webview_test_driver)
 webview_discover_tests(webview_core_tests)

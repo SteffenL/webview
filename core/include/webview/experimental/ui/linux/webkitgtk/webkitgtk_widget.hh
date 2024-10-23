@@ -23,16 +23,20 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WIDGET_HH) &&                   \
-    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+#ifndef WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WIDGET_HH
 #define WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WIDGET_HH
 
-#include "../../../../../detail/platform/linux/gtk/compat.hh"
-#include "../../../../../detail/platform/linux/webkitgtk/dmabuf.hh"
-#include "../../../../../detail/signal.hh"
-#include "../../../../../types.hh"
-#include "../../../event_loop.hh"
-#include "../ref.hh"
+#include "../../../../macros.h"
+
+#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+
+#include "../../../../detail/platform/linux/gtk/compat.hh"
+#include "../../../../detail/platform/linux/webkitgtk/dmabuf.hh"
+#include "../../../../detail/signal.hh"
+#include "../../../../types.hh"
+#include "../../event_loop_base.hh"
+#include "../../widget_base.hh"
+#include "../gtk/gtk_ref.hh"
 
 #include <gtk/gtk.h>
 
@@ -53,47 +57,43 @@
 namespace webview {
 namespace detail {
 
-class webkitgtk_widget {
+class webkitgtk_widget : public widget_base {
 public:
-  class events_t {
-  public:
-    signal<void()> ready;
-  };
-
-  webkitgtk_widget(std::shared_ptr<event_loop> loop) : m_event_loop{loop} {
+  explicit webkitgtk_widget(event_loop_ptr loop) : m_event_loop{loop} {
     webkit_dmabuf::apply_webkit_dmabuf_workaround();
     m_native_widget = webkit_web_view_new();
     m_event_loop->dispatch([&] { m_events.ready.emit(); });
   }
 
-  webkitgtk_widget(const webkitgtk_widget &) = delete;
-  webkitgtk_widget &operator=(const webkitgtk_widget &) = delete;
-  webkitgtk_widget(webkitgtk_widget &&) = delete;
-  webkitgtk_widget &operator=(webkitgtk_widget &&) = delete;
-  ~webkitgtk_widget() = default;
+  virtual ~webkitgtk_widget() = default;
 
-  events_t &events() { return m_events; }
-  void *get_native_handle() const { return m_native_widget.get(); }
+protected:
+  widget_events &events_impl() override { return m_events; }
 
-  void navigate(const std::string &url) {
+  void dispatch_impl(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
+
+  void *get_native_handle_impl() const override {
+    return m_native_widget.get();
+  }
+
+  void navigate_impl(const std::string &url) override {
     webkit_web_view_load_uri(WEBKIT_WEB_VIEW(m_native_widget.get()),
                              url.c_str());
   }
 
-  void set_html(const std::string &html) {
+  void set_html_impl(const std::string &html) override {
     webkit_web_view_load_html(WEBKIT_WEB_VIEW(m_native_widget.get()),
                               html.c_str(), nullptr);
   }
 
 private:
-  events_t m_events;
-  std::shared_ptr<event_loop> m_event_loop;
+  widget_events m_events;
+  event_loop_ptr m_event_loop;
   gtk_ref<GtkWidget> m_native_widget;
 };
-
-using widget_impl = webkitgtk_widget;
 
 } // namespace detail
 } // namespace webview
 
+#endif
 #endif // WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WIDGET_HH

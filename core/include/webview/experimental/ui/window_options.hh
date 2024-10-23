@@ -27,6 +27,7 @@
 #define WEBVIEW_DETAIL_UI_WINDOW_OPTIONS_HH
 
 #include "primitives.h"
+#include "widget_options.hh"
 
 #include <string>
 
@@ -58,10 +59,20 @@ public:
     return *this;
   }
 
+  const widget_options &get_widget_options() const noexcept {
+    return m_widget_options;
+  }
+
+  window_options &set_widget_options(const widget_options &options) {
+    m_widget_options = options;
+    return *this;
+  }
+
 private:
   std::string m_title;
   //bool m_visible;
   ui_size m_size{get_default_ui_size()};
+  widget_options m_widget_options;
 };
 
 } // namespace webview

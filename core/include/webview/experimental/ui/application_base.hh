@@ -23,36 +23,44 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_UI_LINUX_GTK_RUN_LOOP) &&                                 \
-    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-#define WEBVIEW_UI_LINUX_GTK_RUN_LOOP
+#ifndef WEBVIEW_DETAIL_UI_APPLICATION_BASE_HH
+#define WEBVIEW_DETAIL_UI_APPLICATION_BASE_HH
 
-#include "../../../../types.hh"
+#include "../../detail/signal.hh"
+#include "event_loop_base.hh"
 
-#include <gtk/gtk.h>
+#include <memory>
 
 namespace webview {
-namespace detail {
 
-class gtk_event_loop {
+class application_events {
 public:
-  void iterate(bool block) {
-    g_main_context_iteration(nullptr, block ? TRUE : FALSE);
-  }
-
-  void dispatch(dispatch_fn_t f) {
-    g_idle_add_full(G_PRIORITY_HIGH_IDLE, (GSourceFunc)([](void *fn) -> int {
-                      (*static_cast<dispatch_fn_t *>(fn))();
-                      return G_SOURCE_REMOVE;
-                    }),
-                    new dispatch_fn_t(f),
-                    [](void *fn) { delete static_cast<dispatch_fn_t *>(fn); });
-  }
+  detail::signal<void()> ready;
 };
 
-using event_loop_impl = gtk_event_loop;
+class application_base {
+public:
+  explicit application_base(event_loop_ptr event_loop)
+      : m_event_loop{event_loop} {}
+  virtual ~application_base() = default;
 
-} // namespace detail
+  void run() { run_impl(); }
+  void terminate() { terminate_impl(); }
+  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
+  application_events &events() { return events_impl(); }
+
+protected:
+  virtual void run_impl() { m_event_loop->run(); }
+  virtual void terminate_impl() { m_event_loop->stop(); }
+  virtual void dispatch_impl(dispatch_fn_t f) { m_event_loop->dispatch(f); }
+  virtual application_events &events_impl() = 0;
+
+private:
+  event_loop_ptr m_event_loop;
+};
+
+using application_ptr = std::shared_ptr<application_base>;
+
 } // namespace webview
 
-#endif // WEBVIEW_UI_LINUX_GTK_RUN_LOOP
+#endif // WEBVIEW_DETAIL_UI_APPLICATION_BASE_HH

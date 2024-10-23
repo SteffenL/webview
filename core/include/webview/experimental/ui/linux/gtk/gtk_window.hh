@@ -23,17 +23,21 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_DETAIL_UI_LINUX_GTK_WINDOW_HH) &&                         \
-    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+#ifndef WEBVIEW_DETAIL_UI_LINUX_GTK_WINDOW_HH
 #define WEBVIEW_DETAIL_UI_LINUX_GTK_WINDOW_HH
+
+#include "../../../../macros.h"
+
+#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
 #include "../../../../detail/platform/linux/gtk/compat.hh"
 #include "../../../../detail/signal.hh"
 #include "../../../../types.hh"
-#include "../../event_loop.hh"
+#include "../../event_loop_base.hh"
 #include "../../primitives.h"
 #include "../../widget_base.hh"
-#include "ref.hh"
+#include "../../window_base.hh"
+#include "gtk_ref.hh"
 
 #include <gtk/gtk.h>
 
@@ -42,11 +46,12 @@
 namespace webview {
 namespace detail {
 
-class gtk_window {
+class gtk_window : public window_base {
 public:
-  gtk_window(std::shared_ptr<event_loop> loop)
+  explicit gtk_window(event_loop_ptr loop)
       : m_event_loop{loop},
         m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
+    initialize();
     m_close_request_conn = gtk_compat::connect_window_close_request(
         m_native_window.get(), [=] { m_events.close_requested.emit(); });
     m_destroy_conn = gtk_compat::connect_widget_destroy(
@@ -58,49 +63,58 @@ public:
   gtk_window &operator=(const gtk_window &) = delete;
   gtk_window(gtk_window &&) = delete;
   gtk_window &operator=(gtk_window &&) = delete;
-  ~gtk_window() = default;
+  virtual ~gtk_window() = default;
 
+protected:
   void set_initial_size(const ui_size &size) {
     gtk_window_set_default_size(m_native_window.get(),
                                 static_cast<int>(size.width),
                                 static_cast<int>(size.height));
   }
 
-  void set_title(const std::string &title) {
+  void set_widget(widget_ptr widget) override {
+    m_widget = widget;
+    m_native_widget = static_cast<GtkWidget *>(m_widget->get_native_handle());
+    gtk_compat::window_set_child(m_native_window.get(), m_native_widget.get());
+    gtk_compat::widget_set_visible(m_native_widget.get(), true);
+  }
+
+  //virtual widget_ptr create_widget_impl() = 0;
+
+  window_events &events_impl() override { return m_events; }
+
+  void dispatch_impl(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
+
+  void *get_native_handle_impl() const override {
+    return m_native_window.get();
+  }
+
+  void set_title_impl(const std::string &title) override {
     gtk_window_set_title(m_native_window.get(), title.c_str());
   }
 
-  void set_visible(bool visible) {
+  void set_visible_impl(bool visible) override {
     gtk_compat::widget_set_visible(GTK_WIDGET(m_native_window.get()), visible);
   }
 
-  void close() { gtk_window_close(m_native_window.get()); }
-  void *get_native_handle() const { return m_native_window.get(); }
+  void close_impl() override { gtk_window_close(m_native_window.get()); }
 
-  void set_widget(void *widget) {
-    m_native_widget = static_cast<GtkWidget *>(widget);
-    gtk_compat::window_set_child(
-        m_native_window.get(), static_cast<GtkWidget *>(m_native_widget.get()));
-    gtk_compat::widget_set_visible(
-        static_cast<GtkWidget *>(m_native_widget.get()), true);
+  void destroy_impl() override {
+    { gtk_compat::window_destroy(m_native_window.get()); }
   }
-
-  void destroy() { gtk_compat::window_destroy(m_native_window.get()); }
-
-  window_events &events() { return m_events; }
 
 private:
   window_events m_events;
-  std::shared_ptr<event_loop> m_event_loop;
+  event_loop_ptr m_event_loop;
   gtk_ref<GtkWindow> m_native_window;
   gtk_ref<GtkWidget> m_native_widget;
+  widget_ptr m_widget;
   gtk_compat::signal_connection m_close_request_conn;
   gtk_compat::signal_connection m_destroy_conn;
 };
 
-using window_impl = gtk_window;
-
 } // namespace detail
 } // namespace webview
 
+#endif
 #endif // WEBVIEW_DETAIL_UI_LINUX_GTK_WINDOW_HH

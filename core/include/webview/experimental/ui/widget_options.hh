@@ -23,44 +23,17 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_WIDGET_BASE_HH
-#define WEBVIEW_DETAIL_UI_WIDGET_BASE_HH
+#ifndef WEBVIEW_DETAIL_UI_WIDGET_OPTIONS_HH
+#define WEBVIEW_DETAIL_UI_WIDGET_OPTIONS_HH
 
-#include "../../detail/signal.hh"
-#include "../../types.hh"
+#include "primitives.h"
 
-#include <memory>
 #include <string>
 
 namespace webview {
 
-class widget_events {
-public:
-  detail::signal<void()> ready;
-};
-
-class widget_base {
-public:
-  virtual ~widget_base() = default;
-
-  widget_events &events() { return events_impl(); }
-  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
-  void *get_native_handle() const { return get_native_handle_impl(); }
-
-  void navigate(const std::string &url) { navigate_impl(url); }
-  void set_html(const std::string &html) { set_html_impl(html); }
-
-protected:
-  virtual widget_events &events_impl() = 0;
-  virtual void dispatch_impl(dispatch_fn_t f) = 0;
-  virtual void *get_native_handle_impl() const = 0;
-
-  virtual void navigate_impl(const std::string &url) = 0;
-  virtual void set_html_impl(const std::string &html) = 0;
-};
-
-using widget_ptr = std::shared_ptr<widget_base>;
+class widget_options {};
 
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_WIDGET_BASE_HH
+#endif // WEBVIEW_DETAIL_UI_WIDGET_OPTIONS_HH

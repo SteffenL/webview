@@ -23,14 +23,22 @@
  * SOFTWARE.
  */
 
-#if !defined(WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH) &&                    \
-    defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-#define WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
+#ifndef WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WINDOW_HH
+#define WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WINDOW_HH
+
+#include "../../../../macros.h"
+
+#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
 #include "../../../../detail/platform/linux/gtk/compat.hh"
 #include "../../../../detail/signal.hh"
 #include "../../../../types.hh"
-#include "../../event_loop.hh"
+#include "../../event_loop_base.hh"
+#include "../../primitives.h"
+//#include "../../widget_base.hh"
+//#include "../../widget.hh"
+#include "../gtk/gtk_ref.hh"
+#include "../gtk/gtk_window.hh"
 
 #include <gtk/gtk.h>
 
@@ -39,37 +47,23 @@
 namespace webview {
 namespace detail {
 
-class gtk_application {
+class webkitgtk_window : public gtk_window {
 public:
-  class events_t {
-  public:
-    signal<void()> ready;
-  };
+  explicit webkitgtk_window(event_loop_ptr loop) : gtk_window{loop} {}
 
-  gtk_application(std::shared_ptr<event_loop> loop) : m_event_loop{loop} {
-    if (!gtk_compat::init_check()) {
-      throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
-    }
-
-    m_event_loop->dispatch([=] { m_events.ready.emit(); });
+protected:
+  void add_widget() override {
+    //  m_widget = create_widget_impl();
+    //  m_native_widget = static_cast<GtkWidget *>(m_widget->get_native_handle());
+    //  gtk_compat::window_set_child(
+    //      m_native_window.get(), static_cast<GtkWidget *>(m_native_widget.get()));
+    //  gtk_compat::widget_set_visible(
+    //      static_cast<GtkWidget *>(m_native_widget.get()), true);
   }
-
-  gtk_application(const gtk_application &) = delete;
-  gtk_application &operator=(const gtk_application &) = delete;
-  gtk_application(gtk_application &&) = delete;
-  gtk_application &operator=(gtk_application &&) = delete;
-  ~gtk_application() = default;
-
-  events_t &events() { return m_events; }
-
-private:
-  events_t m_events;
-  std::shared_ptr<event_loop> m_event_loop;
 };
-
-using application_impl = gtk_application;
 
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
+#endif
+#endif // WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WINDOW_HH

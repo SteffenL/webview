@@ -27,6 +27,7 @@
 #define WEBVIEW_DETAIL_SIGNAL_HH
 
 #include <algorithm>
+#include <atomic>
 #include <functional>
 #include <vector>
 
@@ -36,17 +37,31 @@ namespace detail {
 template <typename T> class signal {
   using function_type = std::function<T>;
   using pointer_type = signal<T> *;
+  using result_type = typename function_type::result_type;
 
   struct handler_type {
     handler_type(function_type fn) : m_function{fn} {}
     handler_type(pointer_type sig) : m_signal{sig} {}
 
-    template <typename... Args> void call(Args &&...args) const {
+    template <typename R = result_type, typename... Args>
+    typename std::enable_if<std::is_same<R, void>::value, void>::type
+    call(Args &&...args) const {
       if (m_function) {
         m_function(std::forward<Args>(args)...);
       } else if (m_signal) {
         m_signal->emit(std::forward<Args>(args)...);
       }
+    }
+
+    template <typename R = result_type, typename... Args>
+    typename std::enable_if<std::is_same<R, bool>::value, bool>::type
+    call(Args &&...args) const {
+      if (m_function) {
+        return m_function(std::forward<Args>(args)...);
+      } else if (m_signal) {
+        return m_signal->emit(std::forward<Args>(args)...);
+      }
+      return false;
     }
 
   private:
@@ -71,10 +86,23 @@ public:
     }
   }
 
-  template <typename... Args> void emit(Args &&...args) const {
+  template <typename R = result_type, typename... Args>
+  typename std::enable_if<std::is_same<R, void>::value, void>::type
+  emit(Args &&...args) const {
     const auto handlers{m_handlers};
     for (const auto &handler : handlers) {
       handler.call(std::forward<Args>(args)...);
+    }
+  }
+
+  template <typename R = result_type, typename... Args>
+  typename std::enable_if<std::is_same<R, bool>::value, bool>::type
+  emit(Args &&...args) const {
+    const auto handlers{m_handlers};
+    for (const auto &handler : handlers) {
+      if (handler.call(std::forward<Args>(args)...)) {
+        break;
+      }
     }
   }
 

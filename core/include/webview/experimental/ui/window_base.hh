@@ -45,16 +45,38 @@ class window_base {
 public:
   virtual ~window_base() = default;
 
-  virtual window_events &events() = 0;
-  virtual void dispatch(dispatch_fn_t f) = 0;
-  virtual void *get_native_handle() const = 0;
-  virtual widget_ptr get_widget() = 0;
+  window_events &events() { return events_impl(); }
+  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
+  void *get_native_handle() const { return get_native_handle_impl(); }
+
+  virtual void set_title(const std::string &title) { set_title_impl(title); }
+  virtual void set_visible(bool visible) { set_visible_impl(visible); }
+  virtual void close() { close_impl(); }
+  virtual void destroy() { destroy_impl(); }
+
+protected:
+  void initialize() {
+    set_default_event_handlers();
+  }
+
   virtual void set_widget(widget_ptr widget) = 0;
 
-  virtual void set_title(const std::string &title) = 0;
-  virtual void set_visible(bool visible) = 0;
-  virtual void close() = 0;
-  virtual void destroy() = 0;
+  virtual window_events &events_impl() = 0;
+  virtual void dispatch_impl(dispatch_fn_t f) = 0;
+  virtual void *get_native_handle_impl() const = 0;
+
+  virtual void set_title_impl(const std::string &title) = 0;
+  virtual void set_visible_impl(bool visible) = 0;
+  virtual void close_impl() = 0;
+  virtual void destroy_impl() = 0;
+
+private:
+  void set_default_event_handlers() {
+    events().close_requested.bind([=] {
+      destroy();
+      return true;
+    });
+  }
 };
 
 using window_ptr = std::shared_ptr<window_base>;
