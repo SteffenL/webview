@@ -64,8 +64,9 @@ int main() {
 #endif
   webview::application app;
 
-  webview::window win{webview::window_options{}.set_size({800, 600}).set_title("Hello")};
-  win.set_visible(true);
+  webview::window window{
+      webview::window_options{}.set_size({480, 320}).set_title("Hello")};
+  window.set_visible(true);
 
   app.run();
   return 0;

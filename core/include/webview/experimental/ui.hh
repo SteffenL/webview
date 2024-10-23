@@ -26,29 +26,8 @@
 #ifndef WEBVIEW_UI_HH
 #define WEBVIEW_UI_HH
 
-#include "../macros.h"
+#include "ui/backends.hh"
 #include "ui/options.hh"
-
-#ifdef WEBVIEW_PLATFORM_LINUX
-#ifdef WEBVIEW_GTK
-
-#include "ui/detail/linux/gtk/gtk_application.hh"
-#include "ui/detail/linux/gtk/gtk_event_loop.hh"
-#include "ui/detail/linux/gtk/gtk_window.hh"
-#include "ui/detail/linux/webkitgtk/webkitgtk_widget.hh"
-
-namespace webview {
-namespace detail {
-
-using application_impl = gtk_application;
-using event_loop_impl = gtk_event_loop;
-using window_impl = gtk_window;
-using widget_impl = webkitgtk_widget;
-
-} // namespace detail
-} // namespace webview
-#endif
-#endif
 
 namespace webview {
 
