@@ -38,16 +38,7 @@ public:
          event_loop_ptr loop = event_loop::get_default())
       : detail::widget_impl{loop}, m_event_loop{loop} {}
 
-  static widget_ptr get_default() {
-    static widget_ptr instance;
-    if (!instance) {
-      instance = widget_ptr{new widget{}};
-    }
-    return instance;
-  }
-
   widget_events &events() override { return m_events; }
-
   void dispatch(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
 
 private:

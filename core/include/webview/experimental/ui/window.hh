@@ -45,16 +45,7 @@ public:
     bind_native_events();
   }
 
-  static window_ptr get_default() {
-    static window_ptr instance;
-    if (!instance) {
-      instance = window_ptr{new window{}};
-    }
-    return instance;
-  }
-
   void dispatch(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
-
   widget_ptr widget() override { return m_widget; }
   browser_ptr browser() override { return m_widget->browser(); }
   window_events &events() override { return m_events; }

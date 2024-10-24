@@ -37,14 +37,6 @@ public:
   browser(const browser_options & /*options*/ = {},
           event_loop_ptr loop = event_loop::get_default())
       : detail::browser_impl{loop} {}
-
-  static browser_ptr get_default() {
-    static browser_ptr instance;
-    if (!instance) {
-      instance = browser_ptr{new browser{}};
-    }
-    return instance;
-  }
 };
 
 } // namespace webview
