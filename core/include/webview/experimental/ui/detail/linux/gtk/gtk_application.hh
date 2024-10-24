@@ -41,24 +41,19 @@
 namespace webview {
 namespace detail {
 
-class gtk_application : public application_base {
+template <typename Self> class gtk_application : public application_base<Self> {
 public:
-  explicit gtk_application(event_loop_ptr loop)
-      : application_base{loop}, m_event_loop{loop} {
+  explicit gtk_application(event_loop_ptr loop) : m_event_loop{loop} {
     if (!gtk_compat::init_check()) {
       throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
     }
 
-    m_event_loop->dispatch([=] { m_events.ready.emit(); });
+    //m_event_loop->dispatch([=] { m_events.ready.emit(); });
   }
 
   virtual ~gtk_application() = default;
 
-protected:
-  application_events &events_impl() override { return m_events; }
-
 private:
-  application_events m_events;
   event_loop_ptr m_event_loop;
 };
 

@@ -32,10 +32,14 @@
 
 namespace webview {
 
-class application : public detail::application_impl {
+class application;
+
+using application_ptr = std::shared_ptr<application>;
+
+class application : public detail::application_impl<application> {
 public:
   application(event_loop_ptr loop = event_loop::get_default())
-      : detail::application_impl{loop} {}
+      : detail::application_impl<application>{loop}, m_event_loop{loop} {}
 
   static application_ptr get_default() {
     static application_ptr instance;
@@ -44,6 +48,17 @@ public:
     }
     return instance;
   }
+
+  void run() override { m_event_loop->run(); }
+  void terminate() override { m_event_loop->stop(); }
+  void dispatch(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
+  detail::application_events<application> &events() override {
+    return m_events;
+  }
+
+private:
+  detail::application_events<application> m_events;
+  event_loop_ptr m_event_loop;
 };
 
 } // namespace webview
