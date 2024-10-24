@@ -49,6 +49,7 @@ public:
   virtual void dispatch(dispatch_fn_t f) = 0;
   virtual void *get_native_handle() const = 0;
   virtual browser_ptr browser() = 0;
+  virtual void embed(void *native_embeddable) = 0;
 };
 
 using widget_ptr = std::shared_ptr<iwidget>;

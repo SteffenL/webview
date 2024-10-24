@@ -34,6 +34,7 @@
 #include "../../../../../types.hh"
 #include "../../browser_base.hh"
 #include "../../event_loop_base.hh"
+#include "../../widget_base.hh"
 #include "../gtk/gtk_ref.hh"
 
 #include <gtk/gtk.h>
@@ -64,8 +65,8 @@ public:
   virtual ~webkitgtk_browser() = default;
 
   browser_events &events() override { return m_events; }
-
   void *get_native_handle() const override { return m_native_browser.get(); }
+  void *get_native_embeddable() override { return m_native_browser.get(); }
 
   void navigate(const std::string &url) override {
     webkit_web_view_load_uri(WEBKIT_WEB_VIEW(m_native_browser.get()),

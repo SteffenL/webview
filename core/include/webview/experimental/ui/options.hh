@@ -32,7 +32,21 @@
 namespace webview {
 
 class browser_options {};
-class widget_options {};
+
+class widget_options {
+public:
+  const browser_options &get_browser_options() const noexcept {
+    return m_browser_options;
+  }
+
+  widget_options &set_browser_options(const browser_options &options) {
+    m_browser_options = options;
+    return *this;
+  }
+
+private:
+  browser_options m_browser_options;
+};
 
 class window_options {
 public:

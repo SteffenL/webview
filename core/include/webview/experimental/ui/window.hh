@@ -40,7 +40,7 @@ public:
         m_widget{new class widget{options.get_widget_options(), loop}} {
     set_initial_size(options.get_size());
     set_title(options.get_title());
-    set_widget(m_widget);
+    embed(m_widget->get_native_handle());
     bind_default_event_handlers();
     bind_native_events();
   }

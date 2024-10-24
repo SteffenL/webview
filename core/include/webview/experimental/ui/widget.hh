@@ -27,6 +27,7 @@
 #define WEBVIEW_UI_WIDGET_HH
 
 #include "backends.hh"
+#include "browser.hh"
 #include "event_loop.hh"
 #include "options.hh"
 
@@ -34,16 +35,21 @@ namespace webview {
 
 class widget : public detail::widget_impl {
 public:
-  widget(const widget_options & /*options*/ = {},
+  widget(const widget_options &options = {},
          event_loop_ptr loop = event_loop::get_default())
-      : detail::widget_impl{loop}, m_event_loop{loop} {}
+      : m_event_loop{loop},
+        m_browser{new class browser{options.get_browser_options(), loop}} {
+    embed(m_browser->get_native_embeddable());
+  }
 
   widget_events &events() override { return m_events; }
   void dispatch(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
+  browser_ptr browser() override { return m_browser; }
 
 private:
   widget_events m_events;
   event_loop_ptr m_event_loop;
+  browser_ptr m_browser;
 };
 
 } // namespace webview

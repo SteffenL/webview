@@ -45,6 +45,7 @@ public:
 
   virtual browser_events &events() = 0;
   virtual void *get_native_handle() const = 0;
+  virtual void *get_native_embeddable() = 0;
 
   virtual void navigate(const std::string &url) = 0;
   virtual void set_html(const std::string &html) = 0;

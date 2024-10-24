@@ -32,12 +32,14 @@
 
 #include "gtk_application.hh"
 #include "gtk_event_loop.hh"
+#include "gtk_widget.hh"
 #include "gtk_window.hh"
 
 namespace webview {
 namespace detail {
 using application_impl = gtk_application;
 using event_loop_impl = gtk_event_loop;
+using widget_impl = gtk_widget;
 using window_impl = gtk_window;
 } // namespace detail
 } // namespace webview

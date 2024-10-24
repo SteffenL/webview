@@ -52,6 +52,7 @@ public:
   virtual void *get_native_handle() const = 0;
   virtual browser_ptr browser() = 0;
   virtual widget_ptr widget() = 0;
+  virtual void embed(void *native_embeddable) = 0;
 
   virtual void set_title(const std::string &title) = 0;
   virtual void set_visible(bool visible) = 0;
@@ -66,9 +67,6 @@ namespace detail {
 class window_base : public iwindow {
 public:
   virtual ~window_base() = default;
-
-protected:
-  virtual void set_widget(widget_ptr widget) = 0;
 };
 
 } // namespace detail

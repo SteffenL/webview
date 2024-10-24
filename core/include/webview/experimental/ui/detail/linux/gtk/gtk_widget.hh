@@ -23,44 +23,49 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WIDGET_HH
-#define WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WIDGET_HH
+#ifndef WEBVIEW_DETAIL_UI_LINUX_GTK_WIDGET_HH
+#define WEBVIEW_DETAIL_UI_LINUX_GTK_WIDGET_HH
 
 #include "../../../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
-#include "../../../../../types.hh"
-#include "../../event_loop_base.hh"
+#include "../../../../../detail/platform/linux/gtk/compat.hh"
 #include "../../widget_base.hh"
 #include "../gtk/gtk_ref.hh"
-#include "webkitgtk_browser.hh"
 
 #include <gtk/gtk.h>
 
 namespace webview {
 namespace detail {
 
-class webkitgtk_widget : public widget_base {
-public:
-  explicit webkitgtk_widget(event_loop_ptr loop) {
-    m_browser = browser_ptr{new webkitgtk_browser{loop}};
-    m_native_widget = static_cast<GtkWidget *>(m_browser->get_native_handle());
-    //m_event_loop->dispatch([&] { m_events.ready.emit(); });
-  }
+class gtk_widget : public widget_base {
+  //struct self_state_t {
+  //  iwidget *self;
+  //};
 
-  virtual ~webkitgtk_widget() = default;
+public:
+  explicit gtk_widget()
+      : m_native_widget{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)} {}
+
+  virtual ~gtk_widget() = default;
 
   void *get_native_handle() const override { return m_native_widget.get(); }
-  browser_ptr browser() override { return m_browser; }
+
+  void embed(void *native_embeddable) override {
+    m_native_child = static_cast<GtkWidget *>(native_embeddable);
+    gtk_box_pack_start(GTK_BOX(m_native_widget.get()), m_native_child.get(),
+                       TRUE, TRUE, 0);
+    gtk_compat::widget_set_visible(m_native_child.get(), true);
+  }
 
 private:
   gtk_ref<GtkWidget> m_native_widget;
-  browser_ptr m_browser;
+  gtk_ref<GtkWidget> m_native_child;
 };
 
 } // namespace detail
 } // namespace webview
 
 #endif
-#endif // WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_WIDGET_HH
+#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_WIDGET_HH

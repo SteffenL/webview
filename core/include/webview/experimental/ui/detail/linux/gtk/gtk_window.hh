@@ -32,7 +32,6 @@
 
 #include "../../../../../detail/platform/linux/gtk/compat.hh"
 #include "../../../../../detail/signal.hh"
-#include "../../../../../types.hh"
 #include "../../../primitives.h"
 #include "../../widget_base.hh"
 #include "../../window_base.hh"
@@ -93,8 +92,8 @@ protected:
                                 static_cast<int>(size.height));
   }
 
-  void set_widget(widget_ptr widget) override {
-    m_native_widget = static_cast<GtkWidget *>(widget->get_native_handle());
+  void embed(void *native_embeddable) override {
+    m_native_widget = static_cast<GtkWidget *>(native_embeddable);
     gtk_compat::window_set_child(m_native_window.get(), m_native_widget.get());
     gtk_compat::widget_set_visible(m_native_widget.get(), true);
   }
