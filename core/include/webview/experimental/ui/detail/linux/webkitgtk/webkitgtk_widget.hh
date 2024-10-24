@@ -38,8 +38,6 @@
 
 #include <gtk/gtk.h>
 
-#include <memory>
-
 namespace webview {
 namespace detail {
 

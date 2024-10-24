@@ -50,8 +50,6 @@
 
 #endif
 
-#include <memory>
-
 namespace webview {
 namespace detail {
 
