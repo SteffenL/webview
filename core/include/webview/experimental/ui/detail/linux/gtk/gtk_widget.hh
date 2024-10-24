@@ -40,10 +40,6 @@ namespace webview {
 namespace detail {
 
 class gtk_widget : public widget_base {
-  //struct self_state_t {
-  //  iwidget *self;
-  //};
-
 public:
   explicit gtk_widget()
       : m_native_widget{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)} {}
