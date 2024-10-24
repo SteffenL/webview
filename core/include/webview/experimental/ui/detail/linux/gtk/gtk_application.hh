@@ -31,10 +31,7 @@
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
 #include "../../../../../detail/platform/linux/gtk/compat.hh"
-#include "../../../../../detail/signal.hh"
-#include "../../../../../types.hh"
 #include "../../application_base.hh"
-#include "../../event_loop_base.hh"
 
 #include <gtk/gtk.h>
 
@@ -43,7 +40,7 @@ namespace detail {
 
 class gtk_application : public application_base {
 public:
-  explicit gtk_application(event_loop_ptr loop) : m_event_loop{loop} {
+  explicit gtk_application() {
     if (!gtk_compat::init_check()) {
       throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
     }
@@ -52,9 +49,6 @@ public:
   }
 
   virtual ~gtk_application() = default;
-
-private:
-  event_loop_ptr m_event_loop;
 };
 
 } // namespace detail

@@ -36,7 +36,8 @@ class window : public detail::window_impl {
 public:
   window(const window_options &options = {},
          event_loop_ptr loop = event_loop::get_default())
-      : m_widget{new class widget{options.get_widget_options(), loop}} {
+      : m_event_loop{loop},
+        m_widget{new class widget{options.get_widget_options(), loop}} {
     set_initial_size(options.get_size());
     set_title(options.get_title());
     set_widget(m_widget);
