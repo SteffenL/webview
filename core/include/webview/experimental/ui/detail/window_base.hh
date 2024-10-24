@@ -65,13 +65,6 @@ public:
   browser_ptr browser() override { return browser_impl(); }
   widget_ptr widget() override { return widget_impl(); }
 
-  virtual void set_title(const std::string &title) override {
-    set_title_impl(title);
-  }
-  virtual void set_visible(bool visible) override { set_visible_impl(visible); }
-  virtual void close() override { close_impl(); }
-  virtual void destroy() override { destroy_impl(); }
-
 protected:
   virtual void dispatch(dispatch_fn_t f) = 0;
 
@@ -81,11 +74,6 @@ protected:
   virtual window_events<Self> &events_impl() = 0;
   virtual void *get_native_handle_impl() const = 0;
   virtual browser_ptr browser_impl() = 0;
-
-  virtual void set_title_impl(const std::string &title) = 0;
-  virtual void set_visible_impl(bool visible) = 0;
-  virtual void close_impl() = 0;
-  virtual void destroy_impl() = 0;
 
   void bind_default_event_handlers() noexcept {
     events().close_requested.bind([](Self *sender) {

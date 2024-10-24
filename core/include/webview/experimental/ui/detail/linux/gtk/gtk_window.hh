@@ -76,6 +76,18 @@ public:
 
   virtual ~gtk_window() = default;
 
+  void set_title(const std::string &title) override {
+    gtk_window_set_title(m_native_window.get(), title.c_str());
+  }
+
+  void set_visible(bool visible) override {
+    gtk_compat::widget_set_visible(GTK_WIDGET(m_native_window.get()), visible);
+  }
+
+  void close() override { gtk_window_close(m_native_window.get()); }
+
+  void destroy() override { gtk_compat::window_destroy(m_native_window.get()); }
+
 protected:
   void set_initial_size(const ui_size &size) {
     gtk_window_set_default_size(m_native_window.get(),
@@ -98,20 +110,6 @@ protected:
 
   void *get_native_handle_impl() const override {
     return m_native_window.get();
-  }
-
-  void set_title_impl(const std::string &title) override {
-    gtk_window_set_title(m_native_window.get(), title.c_str());
-  }
-
-  void set_visible_impl(bool visible) override {
-    gtk_compat::widget_set_visible(GTK_WIDGET(m_native_window.get()), visible);
-  }
-
-  void close_impl() override { gtk_window_close(m_native_window.get()); }
-
-  void destroy_impl() override {
-    { gtk_compat::window_destroy(m_native_window.get()); }
   }
 
 private:
