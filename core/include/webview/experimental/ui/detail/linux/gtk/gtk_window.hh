@@ -87,9 +87,7 @@ public:
 
   void destroy() override { gtk_compat::window_destroy(m_native_window.get()); }
 
-  void *get_native_handle() const override {
-    return m_native_window.get();
-  }
+  void *get_native_handle() const override { return m_native_window.get(); }
 
 protected:
   void set_initial_size(const ui_size &size) {
