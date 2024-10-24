@@ -54,7 +54,7 @@ public:
         m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
     this->bind_default_event_handlers();
     bind_events();
-    m_events.ready.emit(static_cast<Self *>(this));
+    //m_events.ready.emit(static_cast<Self *>(this));
   }
 
   gtk_window(const gtk_window &) = delete;
@@ -66,10 +66,9 @@ public:
       m_self_state = std::move(other.m_self_state);
       m_self_state->self = static_cast<Self *>(this);
 
-      m_events = std::move(other.m_events);
+      //m_events = std::move(other.m_events);
       m_native_window = std::move(other.m_native_window);
       m_native_widget = std::move(other.m_native_widget);
-      m_widget = std::move(other.m_widget);
     }
     return *this;
   }
@@ -88,6 +87,10 @@ public:
 
   void destroy() override { gtk_compat::window_destroy(m_native_window.get()); }
 
+  void *get_native_handle() const override {
+    return m_native_window.get();
+  }
+
 protected:
   void set_initial_size(const ui_size &size) {
     gtk_window_set_default_size(m_native_window.get(),
@@ -96,20 +99,9 @@ protected:
   }
 
   void set_widget(widget_ptr widget) override {
-    m_widget = widget;
-    m_native_widget = static_cast<GtkWidget *>(m_widget->get_native_handle());
+    m_native_widget = static_cast<GtkWidget *>(widget->get_native_handle());
     gtk_compat::window_set_child(m_native_window.get(), m_native_widget.get());
     gtk_compat::widget_set_visible(m_native_widget.get(), true);
-  }
-
-  widget_ptr widget_impl() override { return m_widget; }
-
-  //virtual widget_ptr create_widget_impl() = 0;
-
-  window_events<Self> &events_impl() override { return m_events; }
-
-  void *get_native_handle_impl() const override {
-    return m_native_window.get();
   }
 
 private:
@@ -117,17 +109,15 @@ private:
     auto *state{m_self_state.get()};
     m_close_request_conn = gtk_compat::connect_window_close_request(
         m_native_window.get(),
-        [state] { state->self->m_events.close_requested.emit(state->self); });
+        [state] { state->self->events().close_requested.emit(state->self); });
     m_destroy_conn = gtk_compat::connect_widget_destroy(
         GTK_WIDGET(m_native_window.get()),
-        [state] { state->self->m_events.destroy.emit(state->self); });
+        [state] { state->self->events().destroy.emit(state->self); });
   }
 
   std::unique_ptr<self_state_t> m_self_state;
-  window_events<Self> m_events;
   gtk_ref<GtkWindow> m_native_window;
   gtk_ref<GtkWidget> m_native_widget;
-  widget_ptr m_widget;
   gtk_compat::signal_connection m_close_request_conn;
   gtk_compat::signal_connection m_destroy_conn;
 };

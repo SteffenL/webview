@@ -60,20 +60,15 @@ template <typename Self> class window_base : public window_interface {
 public:
   virtual ~window_base() = default;
 
-  window_events<Self> &events() { return events_impl(); }
-  void *get_native_handle() const override { return get_native_handle_impl(); }
-  browser_ptr browser() override { return browser_impl(); }
-  widget_ptr widget() override { return widget_impl(); }
+  virtual window_events<Self> &events() = 0;
+  virtual void *get_native_handle() const override = 0;
+  virtual browser_ptr browser() override = 0;
+  virtual widget_ptr widget() override = 0;
 
 protected:
   virtual void dispatch(dispatch_fn_t f) = 0;
 
   virtual void set_widget(widget_ptr widget) = 0;
-  virtual widget_ptr widget_impl() = 0;
-
-  virtual window_events<Self> &events_impl() = 0;
-  virtual void *get_native_handle_impl() const = 0;
-  virtual browser_ptr browser_impl() = 0;
 
   void bind_default_event_handlers() noexcept {
     events().close_requested.bind([](Self *sender) {
