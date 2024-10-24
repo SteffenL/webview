@@ -68,7 +68,7 @@ int main() {
 
   window main_window{
       window_options{}.set_size({480, 320}).set_title("Example")};
-  main_window.events().close_requested.bind([&](window *sender) {
+  main_window.events().close_requested.bind([&](iwindow *sender) {
     sender->destroy();
     app.terminate();
     return true;

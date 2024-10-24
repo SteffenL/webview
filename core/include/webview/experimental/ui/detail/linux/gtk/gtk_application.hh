@@ -41,7 +41,7 @@
 namespace webview {
 namespace detail {
 
-template <typename Self> class gtk_application : public application_base<Self> {
+class gtk_application : public application_base {
 public:
   explicit gtk_application(event_loop_ptr loop) : m_event_loop{loop} {
     if (!gtk_compat::init_check()) {

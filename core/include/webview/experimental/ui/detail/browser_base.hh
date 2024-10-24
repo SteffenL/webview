@@ -33,35 +33,33 @@
 #include <string>
 
 namespace webview {
-namespace detail {
 
 class browser_events {
 public:
-  signal<void()> ready;
+  detail::signal<void()> ready;
 };
 
-class browser_base {
+class ibrowser {
+public:
+  virtual ~ibrowser() = default;
+
+  virtual browser_events &events() = 0;
+  virtual void *get_native_handle() const = 0;
+
+  virtual void navigate(const std::string &url) = 0;
+  virtual void set_html(const std::string &html) = 0;
+};
+
+using browser_ptr = std::shared_ptr<ibrowser>;
+
+namespace detail {
+
+class browser_base : public ibrowser {
 public:
   virtual ~browser_base() = default;
-
-  browser_events &events() { return events_impl(); }
-  void *get_native_handle() const { return get_native_handle_impl(); }
-
-  void navigate(const std::string &url) { navigate_impl(url); }
-  void set_html(const std::string &html) { set_html_impl(html); }
-
-protected:
-  virtual browser_events &events_impl() = 0;
-  virtual void *get_native_handle_impl() const = 0;
-
-  virtual void navigate_impl(const std::string &url) = 0;
-  virtual void set_html_impl(const std::string &html) = 0;
 };
 
 } // namespace detail
-
-using browser_ptr = std::shared_ptr<detail::browser_base>;
-
 } // namespace webview
 
 #endif // WEBVIEW_UI_DETAIL_BROWSER_BASE_HH

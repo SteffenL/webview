@@ -32,7 +32,7 @@
 
 namespace webview {
 
-class window : public detail::window_impl<window> {
+class window : public detail::window_impl {
 public:
   window(const window_options &options = {},
          event_loop_ptr loop = event_loop::get_default())
@@ -56,12 +56,19 @@ public:
 
   widget_ptr widget() override { return m_widget; }
   browser_ptr browser() override { return m_widget->browser(); }
-  detail::window_events<window> &events() override { return m_events; }
+  window_events &events() override { return m_events; }
 
 private:
+  void bind_default_event_handlers() noexcept {
+    events().close_requested.bind([](iwindow *sender) {
+      sender->destroy();
+      return true;
+    });
+  }
+
   event_loop_ptr m_event_loop;
   widget_ptr m_widget;
-  detail::window_events<window> m_events;
+  window_events m_events;
 };
 
 } // namespace webview

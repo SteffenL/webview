@@ -33,19 +33,22 @@
 #include <string>
 
 namespace webview {
-namespace detail {
 
-template <typename Sender> class window_events {
+class iwindow;
+
+class window_events {
 public:
-  signal<void(Sender *sender)> ready;
-  signal<void(Sender *sender)> close_requested;
-  signal<void(Sender *sender)> destroy;
+  detail::signal<void(iwindow *sender)> ready;
+  detail::signal<void(iwindow *sender)> close_requested;
+  detail::signal<void(iwindow *sender)> destroy;
 };
 
-class window_interface {
+class iwindow {
 public:
-  virtual ~window_interface() = default;
+  virtual ~iwindow() = default;
 
+  virtual window_events &events() = 0;
+  virtual void dispatch(dispatch_fn_t f) = 0;
   virtual void *get_native_handle() const = 0;
   virtual browser_ptr browser() = 0;
   virtual widget_ptr widget() = 0;
@@ -56,32 +59,19 @@ public:
   virtual void destroy() = 0;
 };
 
-template <typename Self> class window_base : public window_interface {
+using window_ptr = std::shared_ptr<iwindow>;
+
+namespace detail {
+
+class window_base : public iwindow {
 public:
   virtual ~window_base() = default;
 
-  virtual window_events<Self> &events() = 0;
-  virtual void *get_native_handle() const override = 0;
-  virtual browser_ptr browser() override = 0;
-  virtual widget_ptr widget() override = 0;
-
 protected:
-  virtual void dispatch(dispatch_fn_t f) = 0;
-
   virtual void set_widget(widget_ptr widget) = 0;
-
-  void bind_default_event_handlers() noexcept {
-    events().close_requested.bind([](Self *sender) {
-      sender->destroy();
-      return true;
-    });
-  }
 };
 
 } // namespace detail
-
-using window_ptr = std::shared_ptr<detail::window_interface>;
-
 } // namespace webview
 
 #endif // WEBVIEW_UI_DETAIL_WINDOW_BASE_HH

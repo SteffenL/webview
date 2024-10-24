@@ -65,19 +65,16 @@ public:
 
   virtual ~webkitgtk_browser() = default;
 
-protected:
-  browser_events &events_impl() override { return m_events; }
+  browser_events &events() override { return m_events; }
 
-  void *get_native_handle_impl() const override {
-    return m_native_browser.get();
-  }
+  void *get_native_handle() const override { return m_native_browser.get(); }
 
-  void navigate_impl(const std::string &url) override {
+  void navigate(const std::string &url) override {
     webkit_web_view_load_uri(WEBKIT_WEB_VIEW(m_native_browser.get()),
                              url.c_str());
   }
 
-  void set_html_impl(const std::string &html) override {
+  void set_html(const std::string &html) override {
     webkit_web_view_load_html(WEBKIT_WEB_VIEW(m_native_browser.get()),
                               html.c_str(), nullptr);
   }

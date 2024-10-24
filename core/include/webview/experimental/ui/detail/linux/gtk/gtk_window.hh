@@ -43,14 +43,14 @@
 namespace webview {
 namespace detail {
 
-template <typename Self> class gtk_window : public window_base<Self> {
+class gtk_window : public window_base {
   struct self_state_t {
-    Self *self;
+    iwindow *self;
   };
 
 public:
   explicit gtk_window()
-      : m_self_state{new self_state_t{static_cast<Self *>(this)}},
+      : m_self_state{new self_state_t{this}},
         m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
     //m_events.ready.emit(static_cast<Self *>(this));
   }
@@ -62,7 +62,7 @@ public:
   gtk_window &operator=(gtk_window &&other) noexcept {
     if (this != &other) {
       m_self_state = std::move(other.m_self_state);
-      m_self_state->self = static_cast<Self *>(this);
+      m_self_state->self = this;
 
       m_native_window = std::move(other.m_native_window);
       m_native_widget = std::move(other.m_native_widget);

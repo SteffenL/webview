@@ -31,35 +31,41 @@
 #include <memory>
 
 namespace webview {
+
+class ievent_loop {
+public:
+  virtual ~ievent_loop() = default;
+
+  virtual void run() = 0;
+  virtual void iterate(bool block) = 0;
+  virtual void stop() = 0;
+  virtual void dispatch(dispatch_fn_t f) = 0;
+};
+
+using event_loop_ptr = std::shared_ptr<ievent_loop>;
+
 namespace detail {
 
-class event_loop_base {
+class event_loop_base : public ievent_loop {
 public:
   virtual ~event_loop_base() = default;
 
-  void run() {
+  void run() override {
     m_stop_run_loop = false;
     while (!m_stop_run_loop) {
       iterate(true);
     }
   }
 
-  virtual void iterate(bool block) = 0;
-
-  void stop() {
+  void stop() override {
     dispatch([&] { m_stop_run_loop = true; });
   }
-
-  virtual void dispatch(dispatch_fn_t f) = 0;
 
 private:
   bool m_stop_run_loop{};
 };
 
 } // namespace detail
-
-using event_loop_ptr = std::shared_ptr<detail::event_loop_base>;
-
 } // namespace webview
 
 #endif // WEBVIEW_UI_DETAIL_RUN_LOOP_BASE_HH

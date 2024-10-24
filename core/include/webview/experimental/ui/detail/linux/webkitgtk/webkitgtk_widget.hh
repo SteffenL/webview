@@ -45,28 +45,18 @@ namespace detail {
 
 class webkitgtk_widget : public widget_base {
 public:
-  explicit webkitgtk_widget(event_loop_ptr loop) : m_event_loop{loop} {
+  explicit webkitgtk_widget(event_loop_ptr loop) {
     m_browser = browser_ptr{new webkitgtk_browser{loop}};
     m_native_widget = static_cast<GtkWidget *>(m_browser->get_native_handle());
-    m_event_loop->dispatch([&] { m_events.ready.emit(); });
+    //m_event_loop->dispatch([&] { m_events.ready.emit(); });
   }
 
   virtual ~webkitgtk_widget() = default;
 
-protected:
-  widget_events &events_impl() override { return m_events; }
-
-  void dispatch_impl(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
-
-  void *get_native_handle_impl() const override {
-    return m_native_widget.get();
-  }
-
-  browser_ptr browser_impl() override { return m_browser; }
+  void *get_native_handle() const override { return m_native_widget.get(); }
+  browser_ptr browser() override { return m_browser; }
 
 private:
-  widget_events m_events;
-  event_loop_ptr m_event_loop;
   gtk_ref<GtkWidget> m_native_widget;
   browser_ptr m_browser;
 };

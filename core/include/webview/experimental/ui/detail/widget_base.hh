@@ -33,33 +33,34 @@
 #include <memory>
 
 namespace webview {
-namespace detail {
+
+class iwidget;
 
 class widget_events {
 public:
-  signal<void()> ready;
+  detail::signal<void(iwidget *sender)> ready;
 };
 
-class widget_base {
+class iwidget {
+public:
+  virtual ~iwidget() = default;
+
+  virtual widget_events &events() = 0;
+  virtual void dispatch(dispatch_fn_t f) = 0;
+  virtual void *get_native_handle() const = 0;
+  virtual browser_ptr browser() = 0;
+};
+
+using widget_ptr = std::shared_ptr<iwidget>;
+
+namespace detail {
+
+class widget_base : public iwidget {
 public:
   virtual ~widget_base() = default;
-
-  widget_events &events() { return events_impl(); }
-  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
-  void *get_native_handle() const { return get_native_handle_impl(); }
-  browser_ptr browser() { return browser_impl(); }
-
-protected:
-  virtual widget_events &events_impl() = 0;
-  virtual void dispatch_impl(dispatch_fn_t f) = 0;
-  virtual void *get_native_handle_impl() const = 0;
-  virtual browser_ptr browser_impl() = 0;
 };
 
 } // namespace detail
-
-using widget_ptr = std::shared_ptr<detail::widget_base>;
-
 } // namespace webview
 
 #endif // WEBVIEW_UI_DETAIL_WIDGET_BASE_HH

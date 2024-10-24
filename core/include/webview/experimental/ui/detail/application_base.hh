@@ -29,22 +29,34 @@
 #include "../../../detail/signal.hh"
 #include "../../../types.hh"
 
-namespace webview {
-namespace detail {
+#include <memory>
 
-template <typename Sender> class application_events {
+namespace webview {
+
+class iapplication;
+
+class application_events {
 public:
-  signal<void(Sender *sender)> ready;
+  detail::signal<void(iapplication *sender)> ready;
 };
 
-template <typename Self> class application_base {
+class iapplication {
 public:
-  virtual ~application_base() = default;
+  virtual ~iapplication() = default;
 
   virtual void run() = 0;
   virtual void terminate() = 0;
   virtual void dispatch(dispatch_fn_t f) = 0;
-  virtual application_events<Self> &events() = 0;
+  virtual application_events &events() = 0;
+};
+
+using application_ptr = std::shared_ptr<iapplication>;
+
+namespace detail {
+
+class application_base : public iapplication {
+public:
+  virtual ~application_base() = default;
 };
 
 } // namespace detail
