@@ -35,8 +35,7 @@ namespace webview {
 class window : public detail::window_impl<window> {
 public:
   window(const window_options &options = {},
-         event_loop_ptr loop = event_loop::get_default())
-      : detail::window_impl<window>{loop} {
+         event_loop_ptr loop = event_loop::get_default()) {
     set_initial_size(options.get_size());
     set_title(options.get_title());
     set_widget(widget_ptr{new class widget{options.get_widget_options(), loop}});
@@ -50,8 +49,13 @@ public:
     return instance;
   }
 
+  void dispatch(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
+
 protected:
   browser_ptr browser_impl() override { return widget()->browser(); }
+
+private:
+  event_loop_ptr m_event_loop;
 };
 
 } // namespace webview

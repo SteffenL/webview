@@ -34,7 +34,6 @@
 #include "../../../../../detail/signal.hh"
 #include "../../../../../types.hh"
 #include "../../../primitives.h"
-#include "../../event_loop_base.hh"
 #include "../../widget_base.hh"
 #include "../../window_base.hh"
 #include "gtk_ref.hh"
@@ -50,9 +49,8 @@ template <typename Self> class gtk_window : public window_base<Self> {
   };
 
 public:
-  explicit gtk_window(event_loop_ptr loop)
+  explicit gtk_window()
       : m_self_state{new self_state_t{static_cast<Self *>(this)}},
-        m_event_loop{loop},
         m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
     this->bind_default_event_handlers();
     bind_events();
@@ -69,7 +67,6 @@ public:
       m_self_state->self = static_cast<Self *>(this);
 
       m_events = std::move(other.m_events);
-      m_event_loop = std::move(other.m_event_loop);
       m_native_window = std::move(other.m_native_window);
       m_native_widget = std::move(other.m_native_widget);
       m_widget = std::move(other.m_widget);
@@ -98,8 +95,6 @@ protected:
   //virtual widget_ptr create_widget_impl() = 0;
 
   window_events<Self> &events_impl() override { return m_events; }
-
-  void dispatch_impl(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
 
   void *get_native_handle_impl() const override {
     return m_native_window.get();
@@ -132,7 +127,6 @@ private:
 
   std::unique_ptr<self_state_t> m_self_state;
   window_events<Self> m_events;
-  event_loop_ptr m_event_loop;
   gtk_ref<GtkWindow> m_native_window;
   gtk_ref<GtkWidget> m_native_widget;
   widget_ptr m_widget;
