@@ -23,46 +23,45 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_WINDOW_HH
-#define WEBVIEW_UI_WINDOW_HH
+#ifndef WEBVIEW_DETAIL_LINUX_GTK_WIDGET_HH
+#define WEBVIEW_DETAIL_LINUX_GTK_WIDGET_HH
 
-#include "backends.hh"
-#include "event_loop.hh"
-#include "options.hh"
+#include "../../../../macros.h"
+
+#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+
+#include "../../../../detail/platform/linux/gtk/compat.hh"
+#include "../../widget_base.hh"
+#include "../gtk/gtk_ref.hh"
+
+#include <gtk/gtk.h>
 
 namespace webview {
+namespace detail {
 
-class window : public detail::window_impl {
+class gtk_widget : public widget_base {
 public:
-  window(const window_options &options = {},
-         event_loop_ptr loop = event_loop::get_default())
-      : m_event_loop{loop},
-        m_widget{new class widget{options.get_widget_options(), loop}} {
-    set_initial_size(options.get_size());
-    set_title(options.get_title());
-    embed(m_widget->get_native_handle());
-    bind_default_event_handlers();
-    bind_native_events();
-  }
+  explicit gtk_widget()
+      : m_native_widget{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)} {}
 
-  void dispatch(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
-  widget_ptr widget() override { return m_widget; }
-  browser_ptr browser() override { return m_widget->browser(); }
-  window_events &events() override { return m_events; }
+  virtual ~gtk_widget() = default;
+
+  void *get_native_handle() const override { return m_native_widget.get(); }
+
+  void embed(void *native_embeddable) override {
+    m_native_child = static_cast<GtkWidget *>(native_embeddable);
+    gtk_box_pack_start(GTK_BOX(m_native_widget.get()), m_native_child.get(),
+                       TRUE, TRUE, 0);
+    gtk_compat::widget_set_visible(m_native_child.get(), true);
+  }
 
 private:
-  void bind_default_event_handlers() noexcept {
-    events().close_requested.bind([](iwindow *sender) {
-      sender->destroy();
-      return true;
-    });
-  }
-
-  event_loop_ptr m_event_loop;
-  widget_ptr m_widget;
-  window_events m_events;
+  gtk_ref<GtkWidget> m_native_widget;
+  gtk_ref<GtkWidget> m_native_child;
 };
 
+} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_UI_WINDOW_HH
+#endif
+#endif // WEBVIEW_DETAIL_LINUX_GTK_WIDGET_HH

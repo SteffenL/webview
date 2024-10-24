@@ -23,21 +23,38 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_DETAIL_LINUX_WEBKITGTK_BACKEND_HH
-#define WEBVIEW_UI_DETAIL_LINUX_WEBKITGTK_BACKEND_HH
+#ifndef WEBVIEW_APPLICATION_HH
+#define WEBVIEW_APPLICATION_HH
 
-#include "../../../../../macros.h"
-#include "../gtk/backend.hh"
-
-#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-
-#include "webkitgtk_browser.hh"
+#include "backends.hh"
+#include "event_loop.hh"
+#include "options.hh"
 
 namespace webview {
-namespace detail {
-using browser_impl = webkitgtk_browser;
-} // namespace detail
+
+class application : public detail::application_impl {
+public:
+  application(event_loop_ptr loop = event_loop::get_default())
+      : m_event_loop{loop} {}
+
+  static application_ptr get_default() {
+    static application_ptr instance;
+    if (!instance) {
+      instance = application_ptr{new application{}};
+    }
+    return instance;
+  }
+
+  void run() override { m_event_loop->run(); }
+  void terminate() override { m_event_loop->stop(); }
+  void dispatch(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
+  application_events &events() override { return m_events; }
+
+private:
+  application_events m_events;
+  event_loop_ptr m_event_loop;
+};
+
 } // namespace webview
 
-#endif
-#endif // WEBVIEW_UI_DETAIL_LINUX_WEBKITGTK_BACKEND_HH
+#endif // WEBVIEW_APPLICATION_HH

@@ -23,45 +23,25 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_DETAIL_WIDGET_BASE_HH
-#define WEBVIEW_UI_DETAIL_WIDGET_BASE_HH
+#ifndef WEBVIEW_EVENT_LOOP_HH
+#define WEBVIEW_EVENT_LOOP_HH
 
-#include "../../../detail/signal.hh"
-#include "../../../types.hh"
-#include "browser_base.hh"
-
-#include <memory>
+#include "backends.hh"
+#include "options.hh"
 
 namespace webview {
 
-class iwidget;
-
-class widget_events {
+class event_loop : public detail::event_loop_impl {
 public:
-  detail::signal<void(iwidget *sender)> ready;
+  static event_loop_ptr get_default() {
+    static event_loop_ptr instance;
+    if (!instance) {
+      instance = event_loop_ptr{new event_loop{}};
+    }
+    return instance;
+  }
 };
 
-class iwidget {
-public:
-  virtual ~iwidget() = default;
-
-  virtual widget_events &events() = 0;
-  virtual void dispatch(dispatch_fn_t f) = 0;
-  virtual void *get_native_handle() const = 0;
-  virtual browser_ptr browser() = 0;
-  virtual void embed(void *native_embeddable) = 0;
-};
-
-using widget_ptr = std::shared_ptr<iwidget>;
-
-namespace detail {
-
-class widget_base : public iwidget {
-public:
-  virtual ~widget_base() = default;
-};
-
-} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_UI_DETAIL_WIDGET_BASE_HH
+#endif // WEBVIEW_UI_EVENT_LOOP_HH

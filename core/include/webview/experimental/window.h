@@ -23,17 +23,26 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_PRIMITIVES_H
-#define WEBVIEW_UI_PRIMITIVES_H
+#ifndef WEBVIEW_WINDOW_H
+#define WEBVIEW_WINDOW_H
 
-typedef struct ui_size {
-  unsigned int width;
-  unsigned int height;
+//#include "../../errors.h"
+//#include "../../macros.h"
+#include "primitives.h"
 
-#ifdef __cplusplus
-  constexpr ui_size(unsigned int w, unsigned int h) : width{w}, height{h} {}
-  constexpr ui_size() : width{}, height{} {}
-#endif
-} ui_size;
+typedef struct webview_window_options {
+  unsigned int version;
+  const char *title;
+  //bool visible;
+  ui_size size;
+} webview_window_options;
 
-#endif // WEBVIEW_UI_PRIMITIVES_H
+#define WEBVIEW_WINDOW_OPTIONS_VERSION 1U
+#define WEBVIEW_WINDOW_OPTIONS_INIT                                            \
+  { WEBVIEW_WINDOW_OPTIONS_VERSION }
+
+struct webview_window;
+
+//WEBVIEW_API webview_error_t webview_window_options_init(webview_window_options* options, unsigned int version);
+
+#endif // WEBVIEW_WINDOW_H

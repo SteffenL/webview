@@ -23,10 +23,10 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_DETAIL_RUN_LOOP_BASE_HH
-#define WEBVIEW_UI_DETAIL_RUN_LOOP_BASE_HH
+#ifndef WEBVIEW_DETAIL_RUN_LOOP_BASE_HH
+#define WEBVIEW_DETAIL_RUN_LOOP_BASE_HH
 
-#include "../../../types.hh"
+#include "../../types.hh"
 
 #include <memory>
 
@@ -68,4 +68,4 @@ private:
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_UI_DETAIL_RUN_LOOP_BASE_HH
+#endif // WEBVIEW_DETAIL_RUN_LOOP_BASE_HH

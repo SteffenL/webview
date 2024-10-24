@@ -23,25 +23,26 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_EVENT_LOOP_HH
-#define WEBVIEW_UI_EVENT_LOOP_HH
+#ifndef WEBVIEW_DETAIL_LINUX_GTK_BACKEND_HH
+#define WEBVIEW_DETAIL_LINUX_GTK_BACKEND_HH
 
-#include "backends.hh"
-#include "options.hh"
+#include "../../../../macros.h"
+
+#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+
+#include "gtk_application.hh"
+#include "gtk_event_loop.hh"
+#include "gtk_widget.hh"
+#include "gtk_window.hh"
 
 namespace webview {
-
-class event_loop : public detail::event_loop_impl {
-public:
-  static event_loop_ptr get_default() {
-    static event_loop_ptr instance;
-    if (!instance) {
-      instance = event_loop_ptr{new event_loop{}};
-    }
-    return instance;
-  }
-};
-
+namespace detail {
+using application_impl = gtk_application;
+using event_loop_impl = gtk_event_loop;
+using widget_impl = gtk_widget;
+using window_impl = gtk_window;
+} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_UI_EVENT_LOOP_HH
+#endif
+#endif // WEBVIEW_DETAIL_LINUX_GTK_BACKEND_HH

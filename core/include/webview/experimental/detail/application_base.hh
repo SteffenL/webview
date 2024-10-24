@@ -23,11 +23,11 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_DETAIL_APPLICATION_BASE_HH
-#define WEBVIEW_UI_DETAIL_APPLICATION_BASE_HH
+#ifndef WEBVIEW_DETAIL_APPLICATION_BASE_HH
+#define WEBVIEW_DETAIL_APPLICATION_BASE_HH
 
-#include "../../../detail/signal.hh"
-#include "../../../types.hh"
+#include "../../detail/signal.hh"
+#include "../../types.hh"
 
 #include <memory>
 
@@ -62,4 +62,4 @@ public:
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_UI_DETAIL_APPLICATION_BASE_HH
+#endif // WEBVIEW_DETAIL_APPLICATION_BASE_HH

@@ -23,18 +23,17 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_BROWSER_HH
-#define WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_BROWSER_HH
+#ifndef WEBVIEW_DETAIL_LINUX_WEBKITGTK_BROWSER_HH
+#define WEBVIEW_DETAIL_LINUX_WEBKITGTK_BROWSER_HH
 
-#include "../../../../../macros.h"
+#include "../../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
-#include "../../../../../detail/platform/linux/webkitgtk/dmabuf.hh"
-#include "../../../../../types.hh"
+#include "../../../../detail/platform/linux/webkitgtk/dmabuf.hh"
+#include "../../../../types.hh"
 #include "../../browser_base.hh"
 #include "../../event_loop_base.hh"
-#include "../../widget_base.hh"
 #include "../gtk/gtk_ref.hh"
 
 #include <gtk/gtk.h>
@@ -88,4 +87,4 @@ private:
 } // namespace webview
 
 #endif
-#endif // WEBVIEW_DETAIL_UI_LINUX_WEBKITGTK_BROWSER_HH
+#endif // WEBVIEW_DETAIL_LINUX_WEBKITGTK_BROWSER_HH

@@ -23,13 +23,13 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_HH
-#define WEBVIEW_UI_HH
+#ifndef WEBVIEW_HH
+#define WEBVIEW_HH
 
-#include "ui/application.hh"
-#include "ui/browser.hh"
-#include "ui/event_loop.hh"
-#include "ui/widget.hh"
-#include "ui/window.hh"
+#include "application.hh"
+#include "browser.hh"
+#include "event_loop.hh"
+#include "widget.hh"
+#include "window.hh"
 
-#endif // WEBVIEW_UI_HH
+#endif // WEBVIEW_HH

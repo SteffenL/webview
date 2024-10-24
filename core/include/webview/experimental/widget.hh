@@ -23,26 +23,35 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_WINDOW_H
-#define WEBVIEW_UI_WINDOW_H
+#ifndef WEBVIEW_WIDGET_HH
+#define WEBVIEW_WIDGET_HH
 
-//#include "../../errors.h"
-//#include "../../macros.h"
-#include "primitives.h"
+#include "backends.hh"
+#include "browser.hh"
+#include "event_loop.hh"
+#include "options.hh"
 
-typedef struct webview_window_options {
-  unsigned int version;
-  const char *title;
-  //bool visible;
-  ui_size size;
-} webview_window_options;
+namespace webview {
 
-#define WEBVIEW_WINDOW_OPTIONS_VERSION 1U
-#define WEBVIEW_WINDOW_OPTIONS_INIT                                            \
-  { WEBVIEW_WINDOW_OPTIONS_VERSION }
+class widget : public detail::widget_impl {
+public:
+  widget(const widget_options &options = {},
+         event_loop_ptr loop = event_loop::get_default())
+      : m_event_loop{loop},
+        m_browser{new class browser{options.get_browser_options(), loop}} {
+    embed(m_browser->get_native_embeddable());
+  }
 
-struct webview_window;
+  widget_events &events() override { return m_events; }
+  void dispatch(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
+  browser_ptr browser() override { return m_browser; }
 
-//WEBVIEW_API webview_error_t webview_window_options_init(webview_window_options* options, unsigned int version);
+private:
+  widget_events m_events;
+  event_loop_ptr m_event_loop;
+  browser_ptr m_browser;
+};
 
-#endif // WEBVIEW_DETAIL_UI_WINDOW_H
+} // namespace webview
+
+#endif // WEBVIEW_WIDGET_HH

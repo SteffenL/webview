@@ -23,36 +23,15 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
-#define WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
+#ifndef WEBVIEW_BACKENDS_HH
+#define WEBVIEW_BACKENDS_HH
 
-#include "../../../../../macros.h"
+#include "../macros.h"
 
-#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-
-#include "../../../../../detail/platform/linux/gtk/compat.hh"
-#include "../../application_base.hh"
-
-#include <gtk/gtk.h>
-
-namespace webview {
-namespace detail {
-
-class gtk_application : public application_base {
-public:
-  explicit gtk_application() {
-    if (!gtk_compat::init_check()) {
-      throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
-    }
-
-    //m_event_loop->dispatch([=] { m_events.ready.emit(); });
-  }
-
-  virtual ~gtk_application() = default;
-};
-
-} // namespace detail
-} // namespace webview
-
+#ifdef WEBVIEW_PLATFORM_LINUX
+#ifdef WEBVIEW_GTK
+#include "detail/linux/webkitgtk/backend.hh"
 #endif
-#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_APPLICATION_HH
+#endif
+
+#endif // WEBVIEW_BACKENDS_HH

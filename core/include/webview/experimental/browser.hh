@@ -23,60 +23,22 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_LINUX_GTK_REF_HH
-#define WEBVIEW_DETAIL_UI_LINUX_GTK_REF_HH
+#ifndef WEBVIEW_BROWSER_HH
+#define WEBVIEW_BROWSER_HH
 
-#include "../../../../../macros.h"
-
-#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-
-#include <utility>
-
-#include <gtk/gtk.h>
+#include "backends.hh"
+#include "event_loop.hh"
+#include "options.hh"
 
 namespace webview {
-namespace detail {
 
-template <typename T> class gtk_ref {
+class browser : public detail::browser_impl {
 public:
-  gtk_ref() = default;
-  gtk_ref(T *ptr) : m_ptr{ptr} { ref(); }
-
-  gtk_ref(const gtk_ref &other) { *this = other; }
-
-  gtk_ref &operator=(const gtk_ref &other) {
-    if (this != &other) {
-      m_ptr = other.m_ptr;
-      ref();
-    }
-    return *this;
-  }
-
-  gtk_ref(gtk_ref &&other) noexcept { *this = std::move(other); }
-
-  gtk_ref &operator=(gtk_ref &&other) noexcept {
-    m_ptr = other.m_ptr;
-    other.m_ptr = nullptr;
-    return *this;
-  }
-
-  ~gtk_ref() {
-    if (m_ptr) {
-      unref();
-    }
-  }
-
-  T *get() const noexcept { return m_ptr; }
-
-private:
-  void ref() { g_object_ref_sink(m_ptr); }
-  void unref() { g_object_unref(m_ptr); }
-
-  T *m_ptr{};
+  browser(const browser_options & /*options*/ = {},
+          event_loop_ptr loop = event_loop::get_default())
+      : detail::browser_impl{loop} {}
 };
 
-} // namespace detail
 } // namespace webview
 
-#endif
-#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_REF_HH
+#endif // WEBVIEW_BROWSER_HH

@@ -23,53 +23,45 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_DETAIL_WINDOW_BASE_HH
-#define WEBVIEW_UI_DETAIL_WINDOW_BASE_HH
+#ifndef WEBVIEW_DETAIL_WIDGET_BASE_HH
+#define WEBVIEW_DETAIL_WIDGET_BASE_HH
 
-#include "../../../detail/signal.hh"
-#include "widget_base.hh"
+#include "../../detail/signal.hh"
+#include "../../types.hh"
+#include "browser_base.hh"
 
 #include <memory>
-#include <string>
 
 namespace webview {
 
-class iwindow;
+class iwidget;
 
-class window_events {
+class widget_events {
 public:
-  detail::signal<void(iwindow *sender)> ready;
-  detail::signal<void(iwindow *sender)> close_requested;
-  detail::signal<void(iwindow *sender)> destroy;
+  detail::signal<void(iwidget *sender)> ready;
 };
 
-class iwindow {
+class iwidget {
 public:
-  virtual ~iwindow() = default;
+  virtual ~iwidget() = default;
 
-  virtual window_events &events() = 0;
+  virtual widget_events &events() = 0;
   virtual void dispatch(dispatch_fn_t f) = 0;
   virtual void *get_native_handle() const = 0;
   virtual browser_ptr browser() = 0;
-  virtual widget_ptr widget() = 0;
   virtual void embed(void *native_embeddable) = 0;
-
-  virtual void set_title(const std::string &title) = 0;
-  virtual void set_visible(bool visible) = 0;
-  virtual void close() = 0;
-  virtual void destroy() = 0;
 };
 
-using window_ptr = std::shared_ptr<iwindow>;
+using widget_ptr = std::shared_ptr<iwidget>;
 
 namespace detail {
 
-class window_base : public iwindow {
+class widget_base : public iwidget {
 public:
-  virtual ~window_base() = default;
+  virtual ~widget_base() = default;
 };
 
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_UI_DETAIL_WINDOW_BASE_HH
+#endif // WEBVIEW_DETAIL_WIDGET_BASE_HH

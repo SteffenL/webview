@@ -23,44 +23,46 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_DETAIL_BROWSER_BASE_HH
-#define WEBVIEW_UI_DETAIL_BROWSER_BASE_HH
+#ifndef WEBVIEW_WINDOW_HH
+#define WEBVIEW_WINDOW_HH
 
-#include "../../../detail/signal.hh"
-#include "../../../types.hh"
-
-#include <memory>
-#include <string>
+#include "backends.hh"
+#include "event_loop.hh"
+#include "options.hh"
 
 namespace webview {
 
-class browser_events {
+class window : public detail::window_impl {
 public:
-  detail::signal<void()> ready;
+  window(const window_options &options = {},
+         event_loop_ptr loop = event_loop::get_default())
+      : m_event_loop{loop},
+        m_widget{new class widget{options.get_widget_options(), loop}} {
+    set_initial_size(options.get_size());
+    set_title(options.get_title());
+    embed(m_widget->get_native_handle());
+    bind_default_event_handlers();
+    bind_native_events();
+  }
+
+  void dispatch(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
+  widget_ptr widget() override { return m_widget; }
+  browser_ptr browser() override { return m_widget->browser(); }
+  window_events &events() override { return m_events; }
+
+private:
+  void bind_default_event_handlers() noexcept {
+    events().close_requested.bind([](iwindow *sender) {
+      sender->destroy();
+      return true;
+    });
+  }
+
+  event_loop_ptr m_event_loop;
+  widget_ptr m_widget;
+  window_events m_events;
 };
 
-class ibrowser {
-public:
-  virtual ~ibrowser() = default;
-
-  virtual browser_events &events() = 0;
-  virtual void *get_native_handle() const = 0;
-  virtual void *get_native_embeddable() = 0;
-
-  virtual void navigate(const std::string &url) = 0;
-  virtual void set_html(const std::string &html) = 0;
-};
-
-using browser_ptr = std::shared_ptr<ibrowser>;
-
-namespace detail {
-
-class browser_base : public ibrowser {
-public:
-  virtual ~browser_base() = default;
-};
-
-} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_UI_DETAIL_BROWSER_BASE_HH
+#endif // WEBVIEW_WINDOW_HH

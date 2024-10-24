@@ -23,22 +23,53 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_BROWSER_HH
-#define WEBVIEW_UI_BROWSER_HH
+#ifndef WEBVIEW_DETAIL_WINDOW_BASE_HH
+#define WEBVIEW_DETAIL_WINDOW_BASE_HH
 
-#include "backends.hh"
-#include "event_loop.hh"
-#include "options.hh"
+#include "../../detail/signal.hh"
+#include "widget_base.hh"
+
+#include <memory>
+#include <string>
 
 namespace webview {
 
-class browser : public detail::browser_impl {
+class iwindow;
+
+class window_events {
 public:
-  browser(const browser_options & /*options*/ = {},
-          event_loop_ptr loop = event_loop::get_default())
-      : detail::browser_impl{loop} {}
+  detail::signal<void(iwindow *sender)> ready;
+  detail::signal<void(iwindow *sender)> close_requested;
+  detail::signal<void(iwindow *sender)> destroy;
 };
 
+class iwindow {
+public:
+  virtual ~iwindow() = default;
+
+  virtual window_events &events() = 0;
+  virtual void dispatch(dispatch_fn_t f) = 0;
+  virtual void *get_native_handle() const = 0;
+  virtual browser_ptr browser() = 0;
+  virtual widget_ptr widget() = 0;
+  virtual void embed(void *native_embeddable) = 0;
+
+  virtual void set_title(const std::string &title) = 0;
+  virtual void set_visible(bool visible) = 0;
+  virtual void close() = 0;
+  virtual void destroy() = 0;
+};
+
+using window_ptr = std::shared_ptr<iwindow>;
+
+namespace detail {
+
+class window_base : public iwindow {
+public:
+  virtual ~window_base() = default;
+};
+
+} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_UI_BROWSER_HH
+#endif // WEBVIEW_DETAIL_WINDOW_BASE_HH

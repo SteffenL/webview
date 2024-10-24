@@ -23,15 +23,60 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_BACKENDS_HH
-#define WEBVIEW_UI_BACKENDS_HH
+#ifndef WEBVIEW_DETAIL_LINUX_GTK_REF_HH
+#define WEBVIEW_DETAIL_LINUX_GTK_REF_HH
 
-#include "../../macros.h"
+#include "../../../../macros.h"
 
-#ifdef WEBVIEW_PLATFORM_LINUX
-#ifdef WEBVIEW_GTK
-#include "detail/linux/webkitgtk/backend.hh"
+#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+
+#include <utility>
+
+#include <gtk/gtk.h>
+
+namespace webview {
+namespace detail {
+
+template <typename T> class gtk_ref {
+public:
+  gtk_ref() = default;
+  gtk_ref(T *ptr) : m_ptr{ptr} { ref(); }
+
+  gtk_ref(const gtk_ref &other) { *this = other; }
+
+  gtk_ref &operator=(const gtk_ref &other) {
+    if (this != &other) {
+      m_ptr = other.m_ptr;
+      ref();
+    }
+    return *this;
+  }
+
+  gtk_ref(gtk_ref &&other) noexcept { *this = std::move(other); }
+
+  gtk_ref &operator=(gtk_ref &&other) noexcept {
+    m_ptr = other.m_ptr;
+    other.m_ptr = nullptr;
+    return *this;
+  }
+
+  ~gtk_ref() {
+    if (m_ptr) {
+      unref();
+    }
+  }
+
+  T *get() const noexcept { return m_ptr; }
+
+private:
+  void ref() { g_object_ref_sink(m_ptr); }
+  void unref() { g_object_unref(m_ptr); }
+
+  T *m_ptr{};
+};
+
+} // namespace detail
+} // namespace webview
+
 #endif
-#endif
-
-#endif // WEBVIEW_UI_BACKENDS_HH
+#endif // WEBVIEW_DETAIL_LINUX_GTK_REF_HH

@@ -23,26 +23,44 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_DETAIL_LINUX_GTK_BACKEND_HH
-#define WEBVIEW_UI_DETAIL_LINUX_GTK_BACKEND_HH
+#ifndef WEBVIEW_DETAIL_BROWSER_BASE_HH
+#define WEBVIEW_DETAIL_BROWSER_BASE_HH
 
-#include "../../../../../macros.h"
+#include "../../detail/signal.hh"
+#include "../../types.hh"
 
-#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
-
-#include "gtk_application.hh"
-#include "gtk_event_loop.hh"
-#include "gtk_widget.hh"
-#include "gtk_window.hh"
+#include <memory>
+#include <string>
 
 namespace webview {
+
+class browser_events {
+public:
+  detail::signal<void()> ready;
+};
+
+class ibrowser {
+public:
+  virtual ~ibrowser() = default;
+
+  virtual browser_events &events() = 0;
+  virtual void *get_native_handle() const = 0;
+  virtual void *get_native_embeddable() = 0;
+
+  virtual void navigate(const std::string &url) = 0;
+  virtual void set_html(const std::string &html) = 0;
+};
+
+using browser_ptr = std::shared_ptr<ibrowser>;
+
 namespace detail {
-using application_impl = gtk_application;
-using event_loop_impl = gtk_event_loop;
-using widget_impl = gtk_widget;
-using window_impl = gtk_window;
+
+class browser_base : public ibrowser {
+public:
+  virtual ~browser_base() = default;
+};
+
 } // namespace detail
 } // namespace webview
 
-#endif
-#endif // WEBVIEW_UI_DETAIL_LINUX_GTK_BACKEND_HH
+#endif // WEBVIEW_DETAIL_BROWSER_BASE_HH

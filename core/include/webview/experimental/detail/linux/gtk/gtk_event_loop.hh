@@ -23,45 +23,39 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_UI_LINUX_GTK_WIDGET_HH
-#define WEBVIEW_DETAIL_UI_LINUX_GTK_WIDGET_HH
+#ifndef WEBVIEW_DETAIL_LINUX_GTK_RUN_LOOP
+#define WEBVIEW_DETAIL_LINUX_GTK_RUN_LOOP
 
-#include "../../../../../macros.h"
+#include "../../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
-#include "../../../../../detail/platform/linux/gtk/compat.hh"
-#include "../../widget_base.hh"
-#include "../gtk/gtk_ref.hh"
+#include "../../../../types.hh"
+#include "../../event_loop_base.hh"
 
 #include <gtk/gtk.h>
 
 namespace webview {
 namespace detail {
 
-class gtk_widget : public widget_base {
+class gtk_event_loop : public event_loop_base {
 public:
-  explicit gtk_widget()
-      : m_native_widget{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)} {}
-
-  virtual ~gtk_widget() = default;
-
-  void *get_native_handle() const override { return m_native_widget.get(); }
-
-  void embed(void *native_embeddable) override {
-    m_native_child = static_cast<GtkWidget *>(native_embeddable);
-    gtk_box_pack_start(GTK_BOX(m_native_widget.get()), m_native_child.get(),
-                       TRUE, TRUE, 0);
-    gtk_compat::widget_set_visible(m_native_child.get(), true);
+  void iterate(bool block) override {
+    g_main_context_iteration(nullptr, block ? TRUE : FALSE);
   }
 
-private:
-  gtk_ref<GtkWidget> m_native_widget;
-  gtk_ref<GtkWidget> m_native_child;
+  void dispatch(dispatch_fn_t f) override {
+    g_idle_add_full(G_PRIORITY_HIGH_IDLE, (GSourceFunc)([](void *fn) -> int {
+                      (*static_cast<dispatch_fn_t *>(fn))();
+                      return G_SOURCE_REMOVE;
+                    }),
+                    new dispatch_fn_t(f),
+                    [](void *fn) { delete static_cast<dispatch_fn_t *>(fn); });
+  }
 };
 
 } // namespace detail
 } // namespace webview
 
 #endif
-#endif // WEBVIEW_DETAIL_UI_LINUX_GTK_WIDGET_HH
+#endif // WEBVIEW_DETAIL_LINUX_GTK_RUN_LOOP

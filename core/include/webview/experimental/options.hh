@@ -23,8 +23,8 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_OPTIONS_HH
-#define WEBVIEW_UI_OPTIONS_HH
+#ifndef WEBVIEW_OPTIONS_HH
+#define WEBVIEW_OPTIONS_HH
 
 #include "primitives.h"
 #include <string>
@@ -92,4 +92,4 @@ private:
 
 } // namespace webview
 
-#endif // WEBVIEW_UI_OPTIONS_HH
+#endif // WEBVIEW_OPTIONS_HH
