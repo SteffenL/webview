@@ -38,7 +38,9 @@ namespace webview {
 namespace detail {
 using application_impl = gtk_application;
 using event_loop_impl = gtk_event_loop;
-using window_impl = gtk_window;
+
+template<typename Self>
+using window_impl = gtk_window<Self>;
 } // namespace detail
 } // namespace webview
 

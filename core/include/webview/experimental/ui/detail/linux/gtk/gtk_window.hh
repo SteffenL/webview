@@ -44,14 +44,19 @@
 namespace webview {
 namespace detail {
 
-class gtk_window : public window_base {
+template <typename Self> class gtk_window : public window_base<Self> {
+  struct self_state_t {
+    Self *self;
+  };
+
 public:
   explicit gtk_window(event_loop_ptr loop)
-      : m_event_loop{loop},
+      : m_self_state{new self_state_t{static_cast<Self *>(this)}},
+        m_event_loop{loop},
         m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
-    set_default_event_handlers();
+    this->bind_default_event_handlers();
     bind_events();
-    m_events.ready.emit();
+    m_events.ready.emit(static_cast<Self *>(this));
   }
 
   gtk_window(const gtk_window &) = delete;
@@ -60,16 +65,14 @@ public:
 
   gtk_window &operator=(gtk_window &&other) noexcept {
     if (this != &other) {
-      other.unbind_events();
+      m_self_state = std::move(other.m_self_state);
+      m_self_state->self = static_cast<Self *>(this);
 
       m_events = std::move(other.m_events);
       m_event_loop = std::move(other.m_event_loop);
       m_native_window = std::move(other.m_native_window);
       m_native_widget = std::move(other.m_native_widget);
       m_widget = std::move(other.m_widget);
-
-      set_default_event_handlers();
-      bind_events();
     }
     return *this;
   }
@@ -94,7 +97,7 @@ protected:
 
   //virtual widget_ptr create_widget_impl() = 0;
 
-  window_events &events_impl() override { return m_events; }
+  window_events<Self> &events_impl() override { return m_events; }
 
   void dispatch_impl(dispatch_fn_t f) override { m_event_loop->dispatch(f); }
 
@@ -117,19 +120,18 @@ protected:
   }
 
 private:
-  void bind_events() {
+  void bind_events() noexcept {
+    auto *state{m_self_state.get()};
     m_close_request_conn = gtk_compat::connect_window_close_request(
-        m_native_window.get(), [=] { m_events.close_requested.emit(); });
+        m_native_window.get(),
+        [state] { state->self->m_events.close_requested.emit(state->self); });
     m_destroy_conn = gtk_compat::connect_widget_destroy(
-        GTK_WIDGET(m_native_window.get()), [=] { m_events.destroy.emit(); });
+        GTK_WIDGET(m_native_window.get()),
+        [state] { state->self->m_events.destroy.emit(state->self); });
   }
 
-  void unbind_events() {
-    m_destroy_conn = {};
-    m_close_request_conn = {};
-  }
-
-  window_events m_events;
+  std::unique_ptr<self_state_t> m_self_state;
+  window_events<Self> m_events;
   event_loop_ptr m_event_loop;
   gtk_ref<GtkWindow> m_native_window;
   gtk_ref<GtkWidget> m_native_widget;

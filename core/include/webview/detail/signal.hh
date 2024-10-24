@@ -29,7 +29,7 @@
 #include <algorithm>
 #include <atomic>
 #include <functional>
-#include <vector>
+#include <list>
 
 namespace webview {
 namespace detail {
@@ -71,11 +71,11 @@ template <typename T> class signal {
 
 public:
   void bind(function_type handler) {
-    m_handlers.push_back(handler_type{handler});
+    m_handlers.push_front(handler_type{handler});
   }
 
   void bind(signal<T> &fwd_signal) {
-    m_handlers.push_back(handler_type{&fwd_signal});
+    m_handlers.push_front(handler_type{&fwd_signal});
   }
 
   template <typename R, typename... Args>
@@ -89,8 +89,7 @@ public:
   template <typename R = result_type, typename... Args>
   typename std::enable_if<std::is_same<R, void>::value, void>::type
   emit(Args &&...args) const {
-    const auto handlers{m_handlers};
-    for (const auto &handler : handlers) {
+    for (auto& handler: m_handlers) {
       handler.call(std::forward<Args>(args)...);
     }
   }
@@ -98,8 +97,7 @@ public:
   template <typename R = result_type, typename... Args>
   typename std::enable_if<std::is_same<R, bool>::value, bool>::type
   emit(Args &&...args) const {
-    const auto handlers{m_handlers};
-    for (const auto &handler : handlers) {
+    for (auto& handler: m_handlers) {
       if (handler.call(std::forward<Args>(args)...)) {
         break;
       }
@@ -107,7 +105,7 @@ public:
   }
 
 private:
-  std::vector<handler_type> m_handlers;
+  std::list<handler_type> m_handlers;
 };
 
 } // namespace detail

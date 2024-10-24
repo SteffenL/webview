@@ -23,37 +23,17 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_UI_WINDOW_HH
-#define WEBVIEW_UI_WINDOW_HH
-
-#include "backends.hh"
-#include "event_loop.hh"
-#include "options.hh"
+#ifndef WEBVIEW_UI_FWD_HH
+#define WEBVIEW_UI_FWD_HH
 
 namespace webview {
 
-class window : public detail::window_impl<window> {
-public:
-  window(const window_options &options = {},
-         event_loop_ptr loop = event_loop::get_default())
-      : detail::window_impl<window>{loop} {
-    set_initial_size(options.get_size());
-    set_title(options.get_title());
-    set_widget(widget_ptr{new class widget{options.get_widget_options(), loop}});
-  }
-
-  static window_ptr get_default() {
-    static window_ptr instance;
-    if (!instance) {
-      instance = window_ptr{new window{}};
-    }
-    return instance;
-  }
-
-protected:
-  browser_ptr browser_impl() override { return widget()->browser(); }
-};
+class application;
+class browser;
+class event_loop;
+class widget;
+class window;
 
 } // namespace webview
 
-#endif // WEBVIEW_UI_WINDOW_HH
+#endif // WEBVIEW_UI_FWD_HH

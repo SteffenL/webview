@@ -66,9 +66,11 @@ int main() {
 
   application app;
 
-  window win{window_options{}.set_size({480, 320}).set_title("Example")};
-  win.browser()->set_html("Hello");
-  win.set_visible(true);
+  class window window =
+      window_options{}.set_size({480, 320}).set_title("Example");
+  window.browser()->set_html("Hello");
+  auto w2 = std::move(window);
+  w2.set_visible(true);
 
   app.run();
   return 0;

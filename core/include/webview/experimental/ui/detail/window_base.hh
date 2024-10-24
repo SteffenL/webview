@@ -35,33 +35,50 @@
 namespace webview {
 namespace detail {
 
-class window_events {
+template <typename Sender> class window_events {
 public:
-  signal<void()> ready;
-  signal<void()> close_requested;
-  signal<void()> destroy;
+  signal<void(Sender *sender)> ready;
+  signal<void(Sender *sender)> close_requested;
+  signal<void(Sender *sender)> destroy;
 };
 
-class window_base {
+class window_interface {
+public:
+  virtual ~window_interface() = default;
+
+  virtual void dispatch(dispatch_fn_t f) = 0;
+  virtual void *get_native_handle() const = 0;
+  virtual browser_ptr browser() = 0;
+  virtual widget_ptr widget() = 0;
+
+  virtual void set_title(const std::string &title) = 0;
+  virtual void set_visible(bool visible) = 0;
+  virtual void close() = 0;
+  virtual void destroy() = 0;
+};
+
+template <typename Self> class window_base : public window_interface {
 public:
   virtual ~window_base() = default;
 
-  window_events &events() { return events_impl(); }
-  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
-  void *get_native_handle() const { return get_native_handle_impl(); }
-  browser_ptr browser() { return browser_impl(); }
-  widget_ptr widget() { return widget_impl(); }
+  window_events<Self> &events() { return events_impl(); }
+  void dispatch(dispatch_fn_t f) override { dispatch_impl(f); }
+  void *get_native_handle() const override { return get_native_handle_impl(); }
+  browser_ptr browser() override { return browser_impl(); }
+  widget_ptr widget() override { return widget_impl(); }
 
-  virtual void set_title(const std::string &title) { set_title_impl(title); }
-  virtual void set_visible(bool visible) { set_visible_impl(visible); }
-  virtual void close() { close_impl(); }
-  virtual void destroy() { destroy_impl(); }
+  virtual void set_title(const std::string &title) override {
+    set_title_impl(title);
+  }
+  virtual void set_visible(bool visible) override { set_visible_impl(visible); }
+  virtual void close() override { close_impl(); }
+  virtual void destroy() override { destroy_impl(); }
 
 protected:
   virtual void set_widget(widget_ptr widget) = 0;
   virtual widget_ptr widget_impl() = 0;
 
-  virtual window_events &events_impl() = 0;
+  virtual window_events<Self> &events_impl() = 0;
   virtual void dispatch_impl(dispatch_fn_t f) = 0;
   virtual void *get_native_handle_impl() const = 0;
   virtual browser_ptr browser_impl() = 0;
@@ -71,9 +88,9 @@ protected:
   virtual void close_impl() = 0;
   virtual void destroy_impl() = 0;
 
-  void set_default_event_handlers() {
-    events().close_requested.bind([=] {
-      destroy();
+  void bind_default_event_handlers() noexcept {
+    events().close_requested.bind([](Self *sender) {
+      sender->destroy();
       return true;
     });
   }
@@ -81,7 +98,7 @@ protected:
 
 } // namespace detail
 
-using window_ptr = std::shared_ptr<detail::window_base>;
+using window_ptr = std::shared_ptr<detail::window_interface>;
 
 } // namespace webview
 
