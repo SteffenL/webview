@@ -44,17 +44,13 @@ public:
     }
   }
 
-  void iterate(bool block) { iterate_impl(block); }
+  virtual void iterate(bool block) = 0;
 
   void stop() {
     dispatch([&] { m_stop_run_loop = true; });
   }
 
-  void dispatch(dispatch_fn_t f) { dispatch_impl(f); }
-
-protected:
-  virtual void dispatch_impl(dispatch_fn_t f) = 0;
-  virtual void iterate_impl(bool block) = 0;
+  virtual void dispatch(dispatch_fn_t f) = 0;
 
 private:
   bool m_stop_run_loop{};

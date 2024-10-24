@@ -39,12 +39,12 @@ namespace webview {
 namespace detail {
 
 class gtk_event_loop : public event_loop_base {
-protected:
-  void iterate_impl(bool block) override {
+public:
+  void iterate(bool block) override {
     g_main_context_iteration(nullptr, block ? TRUE : FALSE);
   }
 
-  void dispatch_impl(dispatch_fn_t f) override {
+  void dispatch(dispatch_fn_t f) override {
     g_idle_add_full(G_PRIORITY_HIGH_IDLE, (GSourceFunc)([](void *fn) -> int {
                       (*static_cast<dispatch_fn_t *>(fn))();
                       return G_SOURCE_REMOVE;
