@@ -27,7 +27,6 @@
 #define WEBVIEW_DETAIL_SIGNAL_HH
 
 #include <algorithm>
-#include <atomic>
 #include <functional>
 #include <list>
 
