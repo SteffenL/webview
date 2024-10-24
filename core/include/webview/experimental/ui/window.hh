@@ -40,6 +40,8 @@ public:
     set_initial_size(options.get_size());
     set_title(options.get_title());
     set_widget(m_widget);
+    bind_default_event_handlers();
+    bind_native_events();
   }
 
   static window_ptr get_default() {

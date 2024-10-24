@@ -52,8 +52,6 @@ public:
   explicit gtk_window()
       : m_self_state{new self_state_t{static_cast<Self *>(this)}},
         m_native_window{GTK_WINDOW(gtk_compat::window_new())} {
-    this->bind_default_event_handlers();
-    bind_events();
     //m_events.ready.emit(static_cast<Self *>(this));
   }
 
@@ -66,9 +64,10 @@ public:
       m_self_state = std::move(other.m_self_state);
       m_self_state->self = static_cast<Self *>(this);
 
-      //m_events = std::move(other.m_events);
       m_native_window = std::move(other.m_native_window);
       m_native_widget = std::move(other.m_native_widget);
+      m_close_request_conn = std::move(other.m_close_request_conn);
+      m_destroy_conn = std::move(other.m_destroy_conn);
     }
     return *this;
   }
@@ -84,9 +83,7 @@ public:
   }
 
   void close() override { gtk_window_close(m_native_window.get()); }
-
   void destroy() override { gtk_compat::window_destroy(m_native_window.get()); }
-
   void *get_native_handle() const override { return m_native_window.get(); }
 
 protected:
@@ -102,8 +99,7 @@ protected:
     gtk_compat::widget_set_visible(m_native_widget.get(), true);
   }
 
-private:
-  void bind_events() noexcept {
+  void bind_native_events() noexcept {
     auto *state{m_self_state.get()};
     m_close_request_conn = gtk_compat::connect_window_close_request(
         m_native_window.get(),
@@ -113,6 +109,7 @@ private:
         [state] { state->self->events().destroy.emit(state->self); });
   }
 
+private:
   std::unique_ptr<self_state_t> m_self_state;
   gtk_ref<GtkWindow> m_native_window;
   gtk_ref<GtkWidget> m_native_widget;
