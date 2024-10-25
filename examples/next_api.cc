@@ -20,12 +20,10 @@ private:
 
 class main_window {
 public:
-  std::function<void()> on_destroy;
-
   main_window() {
     m_inner.events().close_requested.bind([&](webview::iwindow *sender) {
       sender->destroy();
-      on_destroy();
+      webview::current_application().terminate();
       return true;
     });
     m_inner.browser()->set_html(make_html(main_window_html));
@@ -58,7 +56,6 @@ int main() {
 #endif
   webview::application app;
   main_window main_window;
-  main_window.on_destroy = [&] { app.terminate(); };
 
   //  main_window.browser()->user_content()->add_script(
   //      "document.write('1')", user_content_injection_time::start);

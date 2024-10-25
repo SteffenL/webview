@@ -59,7 +59,21 @@ public:
   virtual ~application_base() = default;
 };
 
+inline iapplication *&current_application() {
+  static iapplication *instance{};
+  return instance;
+}
+
+inline void set_current_application(iapplication *instance) {
+  current_application() = instance;
+}
+
 } // namespace detail
+
+inline iapplication &current_application() {
+  return *detail::current_application();
+}
+
 } // namespace webview
 
 #endif // WEBVIEW_DETAIL_APPLICATION_BASE_HH

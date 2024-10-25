@@ -35,7 +35,9 @@ namespace webview {
 class application : public detail::application_impl {
 public:
   application(event_loop_ptr loop = event_loop::get_default())
-      : m_event_loop{loop} {}
+      : m_event_loop{loop} {
+    detail::set_current_application(this);
+  }
 
   static application_ptr get_default() {
     static application_ptr instance;
