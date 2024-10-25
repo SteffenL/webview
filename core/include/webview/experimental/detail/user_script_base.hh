@@ -23,47 +23,40 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_BROWSER_BASE_HH
-#define WEBVIEW_DETAIL_BROWSER_BASE_HH
-
-#include "../../detail/signal.hh"
-#include "../../types.hh"
-#include "user_content_manager_base.hh"
+#ifndef WEBVIEW_DETAIL_USER_SCRIPT_BASE_HH
+#define WEBVIEW_DETAIL_USER_SCRIPT_BASE_HH
 
 #include <memory>
 #include <string>
 
 namespace webview {
 
-class browser_events {
-public:
-  detail::signal<void()> ready;
-};
+class iuser_script;
 
-class ibrowser {
-public:
-  virtual ~ibrowser() = default;
+using user_script_ptr = std::shared_ptr<iuser_script>;
 
-  virtual browser_events &events() = 0;
+class iuser_script {
+public:
+  virtual ~iuser_script() = default;
   virtual void *get_native_handle() const = 0;
-  virtual void *get_native_embeddable() = 0;
-
-  virtual void navigate(const std::string &url) = 0;
-  virtual void set_html(const std::string &html) = 0;
-  virtual void eval(const std::string& js) = 0;
-  virtual user_content_manager_ptr user_content() = 0;
+  virtual const std::string &get_code() const = 0;
+  virtual bool equals(user_script_ptr script) const = 0;
 };
 
-using browser_ptr = std::shared_ptr<ibrowser>;
+using user_script_ptr = std::shared_ptr<iuser_script>;
 
 namespace detail {
 
-class browser_base : public ibrowser {
+class user_script_base : public iuser_script {
 public:
-  virtual ~browser_base() = default;
+  virtual ~user_script_base() = default;
+
+  bool equals(user_script_ptr script) const override {
+    return get_native_handle() == script->get_native_handle();
+  }
 };
 
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_BROWSER_BASE_HH
+#endif // WEBVIEW_DETAIL_USER_SCRIPT_BASE_HH

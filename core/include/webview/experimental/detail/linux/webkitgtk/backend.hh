@@ -32,10 +32,12 @@
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
 #include "webkitgtk_browser.hh"
+#include "webkitgtk_user_script.hh"
 
 namespace webview {
 namespace detail {
 using browser_impl = webkitgtk_browser;
+using user_script_impl = webkitgtk_user_script;
 } // namespace detail
 } // namespace webview
 

@@ -23,47 +23,40 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_BROWSER_BASE_HH
-#define WEBVIEW_DETAIL_BROWSER_BASE_HH
+#ifndef WEBVIEW_DETAIL_USER_CONTENT_MANAGER_BASE_HH
+#define WEBVIEW_DETAIL_USER_CONTENT_MANAGER_BASE_HH
 
-#include "../../detail/signal.hh"
-#include "../../types.hh"
-#include "user_content_manager_base.hh"
+#include "user_script_base.hh"
 
 #include <memory>
 #include <string>
 
 namespace webview {
 
-class browser_events {
+enum class user_content_injection_time { start, end };
+
+class iuser_content_manager {
 public:
-  detail::signal<void()> ready;
+  virtual ~iuser_content_manager() = default;
+
+  virtual user_script_ptr add_script(const std::string &code,
+                                     user_content_injection_time where) = 0;
+  virtual void replace_script(user_script_ptr old_script,
+                              const std::string &new_code) = 0;
+  virtual void remove_script(user_script_ptr script) = 0;
+  virtual void remove_all_scripts() = 0;
 };
 
-class ibrowser {
-public:
-  virtual ~ibrowser() = default;
-
-  virtual browser_events &events() = 0;
-  virtual void *get_native_handle() const = 0;
-  virtual void *get_native_embeddable() = 0;
-
-  virtual void navigate(const std::string &url) = 0;
-  virtual void set_html(const std::string &html) = 0;
-  virtual void eval(const std::string& js) = 0;
-  virtual user_content_manager_ptr user_content() = 0;
-};
-
-using browser_ptr = std::shared_ptr<ibrowser>;
+using user_content_manager_ptr = std::shared_ptr<iuser_content_manager>;
 
 namespace detail {
 
-class browser_base : public ibrowser {
+class user_content_manager_base : public iuser_content_manager {
 public:
-  virtual ~browser_base() = default;
+  virtual ~user_content_manager_base() = default;
 };
 
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_BROWSER_BASE_HH
+#endif // WEBVIEW_DETAIL_USER_CONTENT_MANAGER_BASE_HH
