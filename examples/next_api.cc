@@ -22,6 +22,9 @@ public:
   main_window() {
     m_inner.events().close_requested.bind([&](webview::iwindow *sender) {
       sender->destroy();
+      return true;
+    });
+    m_inner.events().destroy.bind([&](webview::iwindow * /*sender*/) {
       webview::current_application().terminate();
       return true;
     });
