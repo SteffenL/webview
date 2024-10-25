@@ -1,7 +1,6 @@
 #include "resources/next_api/html.hh"
 #include "webview/experimental/webview.hh"
 
-#include <functional>
 #include <list>
 #include <memory>
 #include <unordered_map>
