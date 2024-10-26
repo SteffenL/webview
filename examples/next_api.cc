@@ -35,32 +35,18 @@ public:
 
 private:
   void add_bindings() {
-    m_inner.browser()->bridge()->bind("cmdNewWindow",
-                                      [=] { cmd_new_window(); });
-    m_inner.browser()->bridge()->bind("cmdCloseWindow",
-                                      [=] { cmd_close_window(); });
-    m_inner.browser()->bridge()->bind("cmdFullscreen",
-                                      [=] { cmd_fullscreen(); });
-    m_inner.browser()->bridge()->bind("cmdUnfullscreen",
-                                      [=] { cmd_unfullscreen(); });
-    m_inner.browser()->bridge()->bind("cmdPromise",
-                                      [=](webview::binding_promise promise) {
-                                        cmd_promise(std::move(promise));
-                                      });
-  }
-
-  void cmd_new_window() {
-    std::shared_ptr<sub_window> ptr{new sub_window{}};
-    auto it{m_sub_windows.insert(m_sub_windows.end(), ptr)};
-    m_sub_window_map.emplace(ptr.get(), it);
-  }
-
-  void cmd_close_window() { m_inner.close(); }
-  void cmd_fullscreen() { m_inner.set_fullscreen(true); }
-  void cmd_unfullscreen() { m_inner.set_fullscreen(false); }
-
-  void cmd_promise(webview::binding_promise promise) {
-    promise.resolve("\"hello\"");
+    auto bridge{m_inner.browser()->bridge()};
+    bridge->bind("cmdNewWindow", [=] {
+      std::shared_ptr<sub_window> ptr{new sub_window{}};
+      auto it{m_sub_windows.insert(m_sub_windows.end(), ptr)};
+      m_sub_window_map.emplace(ptr.get(), it);
+    });
+    bridge->bind("cmdCloseWindow", [=] { m_inner.close(); });
+    bridge->bind("cmdFullscreen", [=] { m_inner.set_fullscreen(true); });
+    bridge->bind("cmdUnfullscreen", [=] { m_inner.set_fullscreen(false); });
+    bridge->bind("cmdPromise", [=](webview::binding_promise promise) {
+      promise.resolve("\"hello\"");
+    });
   }
 
   webview::window m_inner{
