@@ -68,9 +68,6 @@ class ibridge {
 public:
   virtual ~ibridge() = default;
 
-  //virtual void bind(const std::string &name, binding_handler handler) = 0;
-  //virtual void bind(const std::string &name, binding_handler handler,
-  //                  void *user_data) = 0;
   virtual void bind(const std::string &name, binding0_fn handler) = 0;
   virtual void bind(const std::string &name, binding1_ud_fn handler,
                     void *user_data) = 0;
