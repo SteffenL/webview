@@ -39,6 +39,10 @@ private:
                                       [=] { cmd_new_window(); });
     m_inner.browser()->bridge()->bind("cmdCloseWindow",
                                       [=] { cmd_close_window(); });
+    m_inner.browser()->bridge()->bind("cmdFullscreen",
+                                      [=] { cmd_fullscreen(); });
+    m_inner.browser()->bridge()->bind("cmdUnfullscreen",
+                                      [=] { cmd_unfullscreen(); });
   }
 
   void cmd_new_window() {
@@ -48,8 +52,8 @@ private:
   }
 
   void cmd_close_window() { m_inner.close(); }
-  void cmd_fullscreen() {}
-  void cmd_unfullscreen() {}
+  void cmd_fullscreen() { m_inner.set_fullscreen(true); }
+  void cmd_unfullscreen() { m_inner.set_fullscreen(false); }
 
   webview::window m_inner{
       webview::window_options{}.set_size({480, 320}).set_title("Main Window")};

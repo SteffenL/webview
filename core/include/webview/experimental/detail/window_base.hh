@@ -56,6 +56,7 @@ public:
 
   virtual void set_title(const std::string &title) = 0;
   virtual void set_visible(bool visible) = 0;
+  virtual void set_fullscreen(bool enable) = 0;
   virtual void close() = 0;
   virtual void destroy() = 0;
 };

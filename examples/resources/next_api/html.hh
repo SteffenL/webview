@@ -1,6 +1,6 @@
 #include <string>
 
-constexpr auto* html_start{R"html(
+constexpr auto *html_start{R"html(
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -26,12 +26,12 @@ constexpr auto* html_start{R"html(
   <body>
 )html"};
 
-constexpr auto* html_end{R"html(
+constexpr auto *html_end{R"html(
   </body>
 </html>
 )html"};
 
-constexpr auto* main_window_html{R"html(
+constexpr auto *main_window_html{R"html(
 <main class="vstack">
   <div class="vstack">
     <div>
@@ -40,8 +40,8 @@ constexpr auto* main_window_html{R"html(
         <button data-#bind="click:cmdNewWindow">New window</button>
         <button data-#bind="click:cmdCloseWindow">Close window</button>
         <label>
-          <input type="checkbox" data-#bind="change:cmdChangePreventClosing" />
-          <span>Prevent closing</span>
+          <input type="checkbox" data-#bind="change:cmdAskCloseWindow" />
+          <span>Ask before closing</span>
         </label>
       </div>
     </div>
@@ -71,6 +71,6 @@ constexpr auto *sub_window_html{R"html(
 </main>
 )html"};
 
-inline std::string make_html(const std::string& html) {
+inline std::string make_html(const std::string &html) {
   return html_start + html + html_end;
 }
