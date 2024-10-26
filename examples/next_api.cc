@@ -43,6 +43,10 @@ private:
                                       [=] { cmd_fullscreen(); });
     m_inner.browser()->bridge()->bind("cmdUnfullscreen",
                                       [=] { cmd_unfullscreen(); });
+    m_inner.browser()->bridge()->bind("cmdPromise",
+                                      [=](webview::binding_promise promise) {
+                                        cmd_promise(std::move(promise));
+                                      });
   }
 
   void cmd_new_window() {
@@ -54,6 +58,10 @@ private:
   void cmd_close_window() { m_inner.close(); }
   void cmd_fullscreen() { m_inner.set_fullscreen(true); }
   void cmd_unfullscreen() { m_inner.set_fullscreen(false); }
+
+  void cmd_promise(webview::binding_promise promise) {
+    promise.resolve("\"hello\"");
+  }
 
   webview::window m_inner{
       webview::window_options{}.set_size({480, 320}).set_title("Main Window")};

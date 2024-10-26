@@ -39,10 +39,6 @@ constexpr auto *main_window_html{R"html(
       <div class="hstack">
         <button data-#bind="click:cmdNewWindow">New window</button>
         <button data-#bind="click:cmdCloseWindow">Close window</button>
-        <label>
-          <input type="checkbox" data-#bind="change:cmdAskCloseWindow" />
-          <span>Ask before closing</span>
-        </label>
       </div>
     </div>
   </div>
@@ -53,14 +49,30 @@ constexpr auto *main_window_html{R"html(
       <button data-#bind="click:cmdUnfullscreen">Unfullscreen</button>
     </div>
   </div>
+  <div class="vstack">
+    <h2>Promise</h2>
+    <div class="hstack">
+      <button data-#on="click:cmdPromise">Run</button>
+      <span id="promiseReplyValue"></span>
+    </div>
+  </div>
 </main>
 <script type="module">
+  const funcs = {
+    async cmdPromise() {
+      promiseReplyValue.textContent = "(pending)";
+      const res = await __webview__.call("cmdPromise");
+      promiseReplyValue.textContent = res;
+    }
+  };
   window.addEventListener("contextmenu", e => e.preventDefault(), false);
   document.querySelectorAll("*[data-\\#bind]").forEach(element => {
-    const [event, cmd] = element.dataset["#bind"].split(":");
-    element.addEventListener(event, () => {
-      __webview__.call(cmd);
-    });
+    const [event, name] = element.dataset["#bind"].split(":");
+    element.addEventListener(event, () => __webview__.call(name));
+  });
+  document.querySelectorAll("*[data-\\#on]").forEach(element => {
+    const [event, name] = element.dataset["#on"].split(":");
+    element.addEventListener(event, () => funcs[name]());
   });
 </script>
 )html"};

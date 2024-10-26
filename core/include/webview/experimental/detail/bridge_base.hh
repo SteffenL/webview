@@ -140,7 +140,6 @@ public:
         name,
         [=](binding_promise promise, void * /*user_data*/) {
           handler(std::move(promise));
-          promise.resolve();
         },
         nullptr);
   }
