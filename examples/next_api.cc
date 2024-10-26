@@ -63,12 +63,6 @@ int main() {
 #endif
   webview::application app;
   main_window main_window;
-
-  //  main_window.browser()->user_content()->add_script(
-  //      "document.write('1')", user_content_injection_time::start);
-  //  main_window.browser()->user_content()->add_script(
-  //      "document.write('2')", user_content_injection_time::end);
-
   app.run();
   return 0;
 }
