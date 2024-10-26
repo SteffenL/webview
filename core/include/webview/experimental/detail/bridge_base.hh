@@ -60,29 +60,36 @@ private:
 
 class binding_handler {
 public:
+  template<typename T>
+  using binding0_member_fn = std::function<void(T::*)()>;
+
   using binding0_fn = std::function<void()>;
   using binding1_fn = std::function<void(binding_promise promise)>;
   using binding2_fn =
       std::function<void(binding_promise promise, void *user_data)>;
 
-  template <typename Handler> binding_handler(Handler handler) {
-    init(handler);
+  template<typename T>
+  binding_handler(T handler) {
+    //init(std::move(handler));
   }
 
   void call(binding_promise promise, void *user_data) {
-    if (m_handler0) {
-      m_handler0();
-    } else if (m_handler1) {
-      m_handler1(std::move(promise));
-    } else if (m_handler2) {
-      m_handler2(std::move(promise), user_data);
-    }
+    //if (m_handler0) {
+    //  m_handler0();
+    //} else if (m_handler1) {
+    //  m_handler1(std::move(promise));
+    //} else if (m_handler2) {
+    //  m_handler2(std::move(promise), user_data);
+    //}
   }
 
 private:
-  void init(binding0_fn handler) { m_handler0 = handler; }
-  void init(binding1_fn handler) { m_handler1 = handler; }
-  void init(binding2_fn handler) { m_handler2 = handler; }
+  template<typename T>
+  void init(binding0_member_fn<T> handler) { m_handler0 = std::move(handler); }
+
+  //void init(binding0_fn handler) { m_handler0 = std::move(handler); }
+  //void init(binding1_fn handler) { m_handler1 = std::move(handler); }
+  //void init(binding2_fn handler) { m_handler2 = std::move(handler); }
 
   binding0_fn m_handler0;
   binding1_fn m_handler1;
@@ -91,11 +98,20 @@ private:
 
 class ibridge {
 public:
+  using binding0_fn = std::function<void()>;
+  using binding1_ud_fn = std::function<void(void *user_data)>;
+  using binding1_p_fn = std::function<void(binding_promise promise)>;
+  using binding2_p_ud_fn = std::function<void(binding_promise promise, void *user_data)>;
+
   virtual ~ibridge() = default;
 
-  virtual void bind(const std::string &name, binding_handler handler) = 0;
-  virtual void bind(const std::string &name, binding_handler handler,
-                    void *user_data) = 0;
+  //virtual void bind(const std::string &name, binding_handler handler) = 0;
+  //virtual void bind(const std::string &name, binding_handler handler,
+  //                  void *user_data) = 0;
+  virtual void bind(const std::string &name, binding0_fn handler) = 0;
+  virtual void bind(const std::string &name, binding1_ud_fn handler, void *user_data) = 0;
+  virtual void bind(const std::string &name, binding1_p_fn handler) = 0;
+  virtual void bind(const std::string &name, binding2_p_ud_fn handler, void *user_data) = 0;
   virtual void unbind(const std::string &name) = 0;
   virtual void unbind(const std::string &name,
                       std::function<void(void *user_data)> deleter) = 0;
@@ -141,7 +157,7 @@ class bridge_base : public ibridge {
   class mapping {
   public:
     explicit mapping(binding_handler handler, void *user_data)
-        : m_handler{handler}, m_user_data{user_data} {}
+        : m_handler{std::move(handler)}, m_user_data{user_data} {}
 
     void call(binding_promise promise) {
       m_handler.call(std::move(promise), m_user_data);
@@ -167,7 +183,7 @@ public:
   virtual ~bridge_base() = default;
 
   void bind(const std::string &name, binding_handler handler) override {
-    bind(name, handler, nullptr);
+    bind(name, std::move(handler), nullptr);
   }
 
   void bind(const std::string &name, binding_handler handler,
@@ -177,7 +193,7 @@ public:
       //return error_info{WEBVIEW_ERROR_DUPLICATE};
       return;
     }
-    m_mappings.emplace(name, mapping{handler, user_data});
+    m_mappings.emplace(name, mapping{std::move(handler), user_data});
     replace_bind_script();
     // Notify that a binding was created if the init script has already
     // set things up.

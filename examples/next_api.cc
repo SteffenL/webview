@@ -35,14 +35,14 @@ public:
 
 private:
   void add_bindings() {
-    m_inner.browser()->bridge()->bind("cmdNewWindow",
-                                      [=] { cmd_new_window(); });
-    m_inner.browser()->bridge()->bind("cmdCloseWindow",
-                                      [=] { cmd_close_window(); });
-    m_inner.browser()->bridge()->bind("cmdFullscreen",
-                                      [=] { cmd_fullscreen(); });
-    m_inner.browser()->bridge()->bind("cmdUnfullscreen",
-                                      [=] { cmd_unfullscreen(); });
+    m_inner.browser()->bridge()->bind(
+        "cmdNewWindow", std::bind(&main_window::cmd_new_window, this));
+    //m_inner.browser()->bridge()->bind("cmdCloseWindow",
+    //                                  [=] { cmd_close_window(); });
+    //m_inner.browser()->bridge()->bind("cmdFullscreen",
+    //                                  [=] { cmd_fullscreen(); });
+    //m_inner.browser()->bridge()->bind("cmdUnfullscreen",
+    //                                  [=] { cmd_unfullscreen(); });
   }
 
   void cmd_new_window() {
