@@ -38,7 +38,7 @@ constexpr auto* main_window_html{R"html(
       <h2>Window</h2>
       <div class="hstack">
         <button data-#bind="click:cmdNewWindow">New window</button>
-        <button data-#bind="click:cmdClose">Close</button>
+        <button data-#bind="click:cmdCloseWindow">Close window</button>
         <label>
           <input type="checkbox" data-#bind="change:cmdChangePreventClosing" />
           <span>Prevent closing</span>
@@ -57,9 +57,9 @@ constexpr auto* main_window_html{R"html(
 <script type="module">
   window.addEventListener("contextmenu", e => e.preventDefault(), false);
   document.querySelectorAll("*[data-\\#bind]").forEach(element => {
-    const [name, cmd] = element.dataset["#bind"].split(":");
-    element.addEventListener(name, () => {
-      console.log(name, cmd);
+    const [event, cmd] = element.dataset["#bind"].split(":");
+    element.addEventListener(event, () => {
+      __webview__.call(cmd);
     });
   });
 </script>

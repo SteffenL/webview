@@ -47,9 +47,12 @@ namespace detail {
 
 class webkitgtk_user_script : public user_script_base {
 public:
-  explicit webkitgtk_user_script(const std::string &code,
-                                 WebKitUserScript *native_script)
-      : m_code{code}, m_native_script{webkit_user_script_ref(native_script)} {}
+  template <typename Code>
+  explicit webkitgtk_user_script(Code &&code, WebKitUserScript *native_script,
+                                 user_script_injection_time injection_time)
+      : m_code{std::forward<Code>(code)},
+        m_injection_time{injection_time},
+        m_native_script{webkit_user_script_ref(native_script)} {}
 
   webkitgtk_user_script(const webkitgtk_user_script &) = delete;
   webkitgtk_user_script &operator=(const webkitgtk_user_script &) = delete;
@@ -61,6 +64,7 @@ public:
   webkitgtk_user_script &operator=(webkitgtk_user_script &&other) noexcept {
     if (this != &other) {
       m_code = std::move(other.m_code);
+      m_injection_time = other.m_injection_time;
 
       m_native_script = other.m_native_script;
       other.m_native_script = nullptr;
@@ -77,8 +81,13 @@ public:
   void *get_native_handle() const override { return m_native_script; }
   const std::string &get_code() const override { return m_code; }
 
+  user_script_injection_time get_injection_time() const override {
+    return m_injection_time;
+  }
+
 private:
   std::string m_code;
+  user_script_injection_time m_injection_time;
   WebKitUserScript *m_native_script{};
 };
 

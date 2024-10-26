@@ -23,50 +23,55 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_BROWSER_BASE_HH
-#define WEBVIEW_DETAIL_BROWSER_BASE_HH
+#ifndef WEBVIEW_DETAIL_LINUX_WEBKITGTK_BRIDGE_HH
+#define WEBVIEW_DETAIL_LINUX_WEBKITGTK_BRIDGE_HH
 
-#include "../../detail/signal.hh"
-#include "../../types.hh"
-#include "bridge_base.hh"
-#include "iscript_evaluator.hh"
-#include "user_content_manager_base.hh"
+#include "../../../../macros.h"
 
-#include <memory>
+#if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+
+#include "../../../../detail/json.hh"
+#include "../../../../detail/platform/linux/webkitgtk/dmabuf.hh"
+#include "../../../../types.hh"
+#include "../../bridge_base.hh"
+#include "../../event_loop_base.hh"
+#include "../../user_content_manager_base.hh"
+#include "../gtk/gtk_ref.hh"
+
+#include <gtk/gtk.h>
+
 #include <string>
 
+#if GTK_MAJOR_VERSION >= 4
+
+#include <jsc/jsc.h>
+#include <webkit/webkit.h>
+
+#elif GTK_MAJOR_VERSION >= 3
+
+#include <JavaScriptCore/JavaScript.h>
+#include <webkit2/webkit2.h>
+
+#endif
+
 namespace webview {
-
-class browser_events {
-public:
-  detail::signal<void()> ready;
-};
-
-class ibrowser : public iscript_evaluator {
-public:
-  virtual ~ibrowser() = default;
-
-  virtual browser_events &events() = 0;
-  virtual void *get_native_handle() const = 0;
-  virtual void *get_native_embeddable() = 0;
-
-  virtual void navigate(const std::string &url) = 0;
-  virtual void set_html(const std::string &html) = 0;
-  //virtual void eval(const std::string& js) = 0;
-  virtual user_content_manager_ptr user_content() = 0;
-  virtual bridge_ptr bridge() = 0;
-};
-
-using browser_ptr = std::shared_ptr<ibrowser>;
-
 namespace detail {
 
-class browser_base : public ibrowser {
+class webkitgtk_bridge : public bridge_base {
 public:
-  virtual ~browser_base() = default;
+  explicit webkitgtk_bridge(user_content_manager_ptr user_content,
+                            iscript_evaluator *script_evaluator)
+      : bridge_base{user_content, script_evaluator} {
+    add_init_script("function(message) {\n\
+  return window.webkit.messageHandlers.__webview__.postMessage(message);\n\
+}");
+  }
+
+  virtual ~webkitgtk_bridge() = default;
 };
 
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_BROWSER_BASE_HH
+#endif
+#endif // WEBVIEW_DETAIL_LINUX_WEBKITGTK_BRIDGE_HH

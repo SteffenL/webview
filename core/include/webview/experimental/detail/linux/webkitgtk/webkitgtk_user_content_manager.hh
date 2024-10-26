@@ -30,6 +30,7 @@
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
+#include "../../../../detail/platform/linux/webkitgtk/compat.hh"
 #include "../../user_content_manager_base.hh"
 #include "webkitgtk_user_script.hh"
 
@@ -57,9 +58,36 @@ public:
   explicit webkitgtk_user_content_manager(WebKitUserContentManager *native_ucm)
       : m_native_ucm{native_ucm} {
     g_object_ref_sink(m_native_ucm);
+    webkitgtk_compat::connect_script_message_received(
+        m_native_ucm, "__webview__",
+        [=](WebKitUserContentManager *, const std::string &payload) {
+          events().message_received.emit(this, payload);
+        });
+    webkitgtk_compat::user_content_manager_register_script_message_handler(
+        m_native_ucm, "__webview__");
   }
 
-  // TODO: copy/move
+  webkitgtk_user_content_manager(const webkitgtk_user_content_manager &) =
+      delete;
+
+  webkitgtk_user_content_manager &
+  operator=(const webkitgtk_user_content_manager &) = delete;
+
+  webkitgtk_user_content_manager(
+      webkitgtk_user_content_manager &&other) noexcept {
+    *this = std::move(other);
+  }
+
+  webkitgtk_user_content_manager &
+  operator=(webkitgtk_user_content_manager &&other) noexcept {
+    if (this != &other) {
+      m_native_ucm = other.m_native_ucm;
+      other.m_native_ucm = nullptr;
+
+      m_scripts = std::move(other.m_scripts);
+    }
+    return *this;
+  }
 
   virtual ~webkitgtk_user_content_manager() {
     if (m_native_ucm) {
@@ -67,39 +95,74 @@ public:
     }
   }
 
+  user_content_manager_events &events() override { return m_events; }
+
   user_script_ptr add_script(const std::string &code,
-                             user_content_injection_time where) override {
+                             user_script_injection_time where) override {
+    return add_script_impl(code, where);
+  }
+
+  user_script_ptr add_script(std::string &&code,
+                             user_script_injection_time where) override {
+    return add_script_impl(std::move(code), where);
+  }
+
+  user_script_ptr replace_script(user_script_ptr old_script,
+                                 const std::string &new_code) override {
+    auto existing_scripts{m_scripts};
+    remove_all_scripts();
+    user_script_ptr recreated_script;
+    for (auto &script : existing_scripts) {
+      auto is_old_script = script->equals(old_script);
+      script = add_script_impl(is_old_script ? new_code : script->get_code(),
+                               script->get_injection_time());
+      if (is_old_script) {
+        recreated_script = script;
+      }
+    }
+    return recreated_script;
+  }
+
+  void remove_script(user_script_ptr script) override {
+    webkit_user_content_manager_remove_all_scripts(m_native_ucm);
+    for (auto &script_ : m_scripts) {
+      if (!script_->equals(script)) {
+        script_ =
+            add_script_impl(script->get_code(), script->get_injection_time());
+      }
+    }
+  }
+
+  void remove_all_scripts() override {
+    webkit_user_content_manager_remove_all_scripts(m_native_ucm);
+    m_scripts.clear();
+  }
+
+private:
+  template <typename T>
+  user_script_ptr add_script_impl(T &&code, user_script_injection_time where) {
     auto *native_script{webkit_user_script_new(
         code.c_str(), WEBKIT_USER_CONTENT_INJECT_TOP_FRAME, map(where), nullptr,
         nullptr)};
-    auto script{
-        user_script_ptr{new webkitgtk_user_script{code, native_script}}};
+    auto script{user_script_ptr{new webkitgtk_user_script{
+        std::forward<T>(code), native_script, where}}};
     m_scripts.push_back(script);
     webkit_user_content_manager_add_script(m_native_ucm, native_script);
     webkit_user_script_unref(native_script);
     return script;
   }
 
-  void replace_script(user_script_ptr old_script,
-                      const std::string &new_code) override {}
-
-  void remove_script(user_script_ptr script) override {}
-
-  void remove_all_scripts() override {
-    webkit_user_content_manager_remove_all_scripts(m_native_ucm);
-  }
-
-private:
   static WebKitUserScriptInjectionTime
-  map(user_content_injection_time where) noexcept {
+  map(user_script_injection_time where) noexcept {
     switch (where) {
-    case user_content_injection_time::start:
+    case user_script_injection_time::start:
       return WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START;
-    case user_content_injection_time::end:
+    case user_script_injection_time::end:
       return WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END;
     }
   }
 
+  user_content_manager_events m_events;
   WebKitUserContentManager *m_native_ucm{};
   std::list<user_script_ptr> m_scripts;
 };

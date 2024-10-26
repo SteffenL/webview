@@ -31,6 +31,8 @@
 
 namespace webview {
 
+enum class user_script_injection_time { start, end };
+
 class iuser_script;
 
 using user_script_ptr = std::shared_ptr<iuser_script>;
@@ -40,6 +42,7 @@ public:
   virtual ~iuser_script() = default;
   virtual void *get_native_handle() const = 0;
   virtual const std::string &get_code() const = 0;
+  virtual user_script_injection_time get_injection_time() const = 0;
   virtual bool equals(user_script_ptr script) const = 0;
 };
 

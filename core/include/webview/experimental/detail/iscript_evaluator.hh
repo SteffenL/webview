@@ -23,50 +23,19 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_BROWSER_BASE_HH
-#define WEBVIEW_DETAIL_BROWSER_BASE_HH
+#ifndef WEBVIEW_DETAIL_ISCRIPT_EVALUATOR_HH
+#define WEBVIEW_DETAIL_ISCRIPT_EVALUATOR_HH
 
-#include "../../detail/signal.hh"
-#include "../../types.hh"
-#include "bridge_base.hh"
-#include "iscript_evaluator.hh"
-#include "user_content_manager_base.hh"
-
-#include <memory>
 #include <string>
 
 namespace webview {
 
-class browser_events {
+class iscript_evaluator {
 public:
-  detail::signal<void()> ready;
+  virtual ~iscript_evaluator() = default;
+  virtual void eval(const std::string &script) = 0;
 };
 
-class ibrowser : public iscript_evaluator {
-public:
-  virtual ~ibrowser() = default;
-
-  virtual browser_events &events() = 0;
-  virtual void *get_native_handle() const = 0;
-  virtual void *get_native_embeddable() = 0;
-
-  virtual void navigate(const std::string &url) = 0;
-  virtual void set_html(const std::string &html) = 0;
-  //virtual void eval(const std::string& js) = 0;
-  virtual user_content_manager_ptr user_content() = 0;
-  virtual bridge_ptr bridge() = 0;
-};
-
-using browser_ptr = std::shared_ptr<ibrowser>;
-
-namespace detail {
-
-class browser_base : public ibrowser {
-public:
-  virtual ~browser_base() = default;
-};
-
-} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_BROWSER_BASE_HH
+#endif // WEBVIEW_DETAIL_ISCRIPT_EVALUATOR_HH

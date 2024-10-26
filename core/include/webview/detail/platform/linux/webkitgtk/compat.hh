@@ -70,7 +70,7 @@ public:
 #endif
 
   using on_script_message_received_t =
-      std::function<void(WebKitUserContentManager *, const std::string &)>;
+      std::function<void(WebKitUserContentManager *, std::string)>;
   static void
   connect_script_message_received(WebKitUserContentManager *manager,
                                   const std::string &handler_name,

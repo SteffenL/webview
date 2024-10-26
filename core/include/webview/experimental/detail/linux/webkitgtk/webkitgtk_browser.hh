@@ -35,6 +35,7 @@
 #include "../../browser_base.hh"
 #include "../../event_loop_base.hh"
 #include "../gtk/gtk_ref.hh"
+#include "webkitgtk_bridge.hh"
 #include "webkitgtk_user_content_manager.hh"
 
 #include <gtk/gtk.h>
@@ -62,6 +63,7 @@ public:
     m_user_content.reset(new webkitgtk_user_content_manager{
         webkit_web_view_get_user_content_manager(
             WEBKIT_WEB_VIEW(m_native_browser.get()))});
+    m_bridge.reset(new webkitgtk_bridge{m_user_content, this});
     m_event_loop->dispatch([&] { m_events.ready.emit(); });
   }
 
@@ -99,12 +101,14 @@ public:
   }
 
   user_content_manager_ptr user_content() override { return m_user_content; }
+  bridge_ptr bridge() override { return m_bridge; }
 
 private:
   browser_events m_events;
   event_loop_ptr m_event_loop;
   gtk_ref<GtkWidget> m_native_browser;
   user_content_manager_ptr m_user_content;
+  bridge_ptr m_bridge;
 };
 
 } // namespace detail

@@ -28,19 +28,26 @@ public:
       webview::current_application().terminate();
       return true;
     });
+    add_bindings();
     m_inner.browser()->set_html(make_html(main_window_html));
     m_inner.set_visible(true);
   }
 
 private:
+  void add_bindings() {
+    m_inner.browser()->bridge()->bind("cmdNewWindow",
+                                      [=] { cmd_new_window(); });
+    m_inner.browser()->bridge()->bind("cmdCloseWindow",
+                                      [=] { cmd_close_window(); });
+  }
+
   void cmd_new_window() {
     std::shared_ptr<sub_window> ptr{new sub_window{}};
     auto it{m_sub_windows.insert(m_sub_windows.end(), ptr)};
     m_sub_window_map.emplace(ptr.get(), it);
   }
 
-  void cmd_request_close() { m_inner.destroy(); }
-  void cmd_close() { m_inner.close(); }
+  void cmd_close_window() { m_inner.close(); }
   void cmd_fullscreen() {}
   void cmd_unfullscreen() {}
 

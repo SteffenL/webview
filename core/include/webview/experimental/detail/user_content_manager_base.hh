@@ -26,6 +26,7 @@
 #ifndef WEBVIEW_DETAIL_USER_CONTENT_MANAGER_BASE_HH
 #define WEBVIEW_DETAIL_USER_CONTENT_MANAGER_BASE_HH
 
+#include "../../detail/signal.hh"
 #include "user_script_base.hh"
 
 #include <memory>
@@ -33,16 +34,26 @@
 
 namespace webview {
 
-enum class user_content_injection_time { start, end };
+class iuser_content_manager;
+
+class user_content_manager_events {
+public:
+  detail::signal<void(iuser_content_manager *sender, std::string payload)>
+      message_received;
+};
 
 class iuser_content_manager {
 public:
   virtual ~iuser_content_manager() = default;
 
+  virtual user_content_manager_events &events() = 0;
+
   virtual user_script_ptr add_script(const std::string &code,
-                                     user_content_injection_time where) = 0;
-  virtual void replace_script(user_script_ptr old_script,
-                              const std::string &new_code) = 0;
+                                     user_script_injection_time where) = 0;
+  virtual user_script_ptr add_script(std::string &&code,
+                                     user_script_injection_time where) = 0;
+  virtual user_script_ptr replace_script(user_script_ptr old_script,
+                                         const std::string &new_code) = 0;
   virtual void remove_script(user_script_ptr script) = 0;
   virtual void remove_all_scripts() = 0;
 };
