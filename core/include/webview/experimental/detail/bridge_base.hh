@@ -48,14 +48,44 @@ public:
   binding_promise(resolve_fn resolve, reject_fn reject)
       : m_resolve{resolve}, m_reject{reject} {}
 
-  void resolve() { m_resolve({}); }
-  void resolve(std::string value) { m_resolve(std::move(value)); }
-  void reject() { m_reject({}); }
-  void reject(std::string value) { m_reject(std::move(value)); }
+  binding_promise(const binding_promise &) = delete;
+  binding_promise &operator=(const binding_promise &) = delete;
+  binding_promise(binding_promise &&) = default;
+  binding_promise &operator=(binding_promise &&) = default;
+  ~binding_promise() = default;
+
+  void resolve() {
+    if (!m_invoked) {
+      m_invoked = true;
+      m_resolve({});
+    }
+  }
+
+  void resolve(std::string value) {
+    if (!m_invoked) {
+      m_invoked = true;
+      m_resolve(std::move(value));
+    }
+  }
+
+  void reject() {
+    if (!m_invoked) {
+      m_invoked = true;
+      m_reject({});
+    }
+  }
+
+  void reject(std::string value) {
+    if (!m_invoked) {
+      m_invoked = true;
+      m_reject(std::move(value));
+    }
+  }
 
 private:
   resolve_fn m_resolve;
   reject_fn m_reject;
+  bool m_invoked{};
 };
 
 using binding0_fn = std::function<void()>;
