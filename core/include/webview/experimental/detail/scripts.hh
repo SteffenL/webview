@@ -41,16 +41,25 @@ window.__webview__.onBind(" +
 }";
 }
 
-inline std::string create_reply_script(const std::string& id, const std::string &value, bool resolved) {
-    std::string script;
-    script += "window.__webview__.onReply(";
-    script += json_escape(id);
-    script += ", ";
-    script += resolved ? "0" : "1";
-    script += ", ";
-    script += value.empty() ? "undefined" : json_escape(value);
-    script += ")";
-    return script;
+inline std::string create_call_on_unbind_script(const std::string &name) {
+  return "if (window.__webview__) {\n\
+window.__webview__.onUnbind(" +
+         json_escape(name) + ")\n\
+}";
+}
+
+inline std::string create_reply_script(const std::string &id,
+                                       const std::string &value,
+                                       bool resolved) {
+  std::string script;
+  script += "window.__webview__.onReply(";
+  script += json_escape(id);
+  script += ", ";
+  script += resolved ? "0" : "1";
+  script += ", ";
+  script += value.empty() ? "undefined" : json_escape(value);
+  script += ")";
+  return script;
 }
 
 inline std::string create_init_script(const std::string &post_fn) {

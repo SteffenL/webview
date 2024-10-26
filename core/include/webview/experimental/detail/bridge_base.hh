@@ -58,60 +58,25 @@ private:
   reject_fn m_reject;
 };
 
-class binding_handler {
-public:
-  template<typename T>
-  using binding0_member_fn = std::function<void(T::*)()>;
-
-  using binding0_fn = std::function<void()>;
-  using binding1_fn = std::function<void(binding_promise promise)>;
-  using binding2_fn =
-      std::function<void(binding_promise promise, void *user_data)>;
-
-  template<typename T>
-  binding_handler(T handler) {
-    //init(std::move(handler));
-  }
-
-  void call(binding_promise promise, void *user_data) {
-    //if (m_handler0) {
-    //  m_handler0();
-    //} else if (m_handler1) {
-    //  m_handler1(std::move(promise));
-    //} else if (m_handler2) {
-    //  m_handler2(std::move(promise), user_data);
-    //}
-  }
-
-private:
-  template<typename T>
-  void init(binding0_member_fn<T> handler) { m_handler0 = std::move(handler); }
-
-  //void init(binding0_fn handler) { m_handler0 = std::move(handler); }
-  //void init(binding1_fn handler) { m_handler1 = std::move(handler); }
-  //void init(binding2_fn handler) { m_handler2 = std::move(handler); }
-
-  binding0_fn m_handler0;
-  binding1_fn m_handler1;
-  binding2_fn m_handler2;
-};
+using binding0_fn = std::function<void()>;
+using binding1_ud_fn = std::function<void(void *user_data)>;
+using binding1_p_fn = std::function<void(binding_promise promise)>;
+using binding2_p_ud_fn =
+    std::function<void(binding_promise promise, void *user_data)>;
 
 class ibridge {
 public:
-  using binding0_fn = std::function<void()>;
-  using binding1_ud_fn = std::function<void(void *user_data)>;
-  using binding1_p_fn = std::function<void(binding_promise promise)>;
-  using binding2_p_ud_fn = std::function<void(binding_promise promise, void *user_data)>;
-
   virtual ~ibridge() = default;
 
   //virtual void bind(const std::string &name, binding_handler handler) = 0;
   //virtual void bind(const std::string &name, binding_handler handler,
   //                  void *user_data) = 0;
   virtual void bind(const std::string &name, binding0_fn handler) = 0;
-  virtual void bind(const std::string &name, binding1_ud_fn handler, void *user_data) = 0;
+  virtual void bind(const std::string &name, binding1_ud_fn handler,
+                    void *user_data) = 0;
   virtual void bind(const std::string &name, binding1_p_fn handler) = 0;
-  virtual void bind(const std::string &name, binding2_p_ud_fn handler, void *user_data) = 0;
+  virtual void bind(const std::string &name, binding2_p_ud_fn handler,
+                    void *user_data) = 0;
   virtual void unbind(const std::string &name) = 0;
   virtual void unbind(const std::string &name,
                       std::function<void(void *user_data)> deleter) = 0;
@@ -122,49 +87,19 @@ using bridge_ptr = std::shared_ptr<ibridge>;
 namespace detail {
 
 class bridge_base : public ibridge {
-  class user_data_holder {
-  public:
-    using deleter_fn = std::function<void(void *data)>;
-
-    explicit user_data_holder(void *data, deleter_fn deleter)
-        : m_data{data}, m_deleter{deleter} {}
-
-    user_data_holder(const user_data_holder &) = delete;
-    user_data_holder &operator=(const user_data_holder &) = delete;
-    user_data_holder(user_data_holder &&) = default;
-    user_data_holder &operator=(user_data_holder &&) = default;
-
-    ~user_data_holder() {
-      if (m_deleter) {
-        m_deleter(m_data);
-      }
-    }
-
-  private:
-    void *m_data{};
-    deleter_fn m_deleter;
-  };
-
-  /*class mapping {
-  public:
-    explicit mapping(user_data_holder user_data)
-        : m_user_data{std::move(user_data)} {}
-
-  private:
-    user_data_holder m_user_data;
-  };*/
-
   class mapping {
   public:
-    explicit mapping(binding_handler handler, void *user_data)
+    explicit mapping(binding2_p_ud_fn handler, void *user_data)
         : m_handler{std::move(handler)}, m_user_data{user_data} {}
 
-    void call(binding_promise promise) {
-      m_handler.call(std::move(promise), m_user_data);
+    void invoke(binding_promise promise) {
+      m_handler(std::move(promise), m_user_data);
     }
 
+    void *get_user_data() const { return m_user_data; }
+
   private:
-    binding_handler m_handler;
+    binding2_p_ud_fn m_handler;
     void *m_user_data{};
   };
 
@@ -182,11 +117,38 @@ public:
 
   virtual ~bridge_base() = default;
 
-  void bind(const std::string &name, binding_handler handler) override {
-    bind(name, std::move(handler), nullptr);
+  void bind(const std::string &name, binding0_fn handler) override {
+    bind(
+        name,
+        [=](binding_promise promise, void * /*user_data*/) {
+          handler();
+          promise.resolve();
+        },
+        nullptr);
   }
 
-  void bind(const std::string &name, binding_handler handler,
+  void bind(const std::string &name, binding1_ud_fn handler,
+            void *user_data) override {
+    bind(
+        name,
+        [=](binding_promise promise, void *user_data) {
+          handler(user_data);
+          promise.resolve();
+        },
+        user_data);
+  }
+
+  void bind(const std::string &name, binding1_p_fn handler) override {
+    bind(
+        name,
+        [=](binding_promise promise, void * /*user_data*/) {
+          handler(std::move(promise));
+          promise.resolve();
+        },
+        nullptr);
+  }
+
+  void bind(const std::string &name, binding2_p_ud_fn handler,
             void *user_data) override {
     // NOLINTNEXTLINE(readability-container-contains): contains() requires C++20
     if (m_mappings.count(name) > 0) {
@@ -200,10 +162,24 @@ public:
     m_script_evaluator->eval(scripts::create_call_on_bind_script(name));
   }
 
-  void unbind(const std::string &name) override {}
+  void unbind(const std::string &name) override { unbind(name, {}); }
 
   void unbind(const std::string &name,
-              std::function<void(void *user_data)> deleter) override {}
+              std::function<void(void *user_data)> deleter) override {
+    auto found{m_mappings.find(name)};
+    if (found == m_mappings.end()) {
+      //return error_info{WEBVIEW_ERROR_NOT_FOUND};
+      return;
+    }
+    if (deleter) {
+      deleter(found->second.get_user_data());
+    }
+    m_mappings.erase(found);
+    replace_bind_script();
+    // Notify that a binding was created if the init script has already
+    // set things up.
+    m_script_evaluator->eval(scripts::create_call_on_unbind_script(name));
+  }
 
 protected:
   void add_init_script(const std::string &post_fn) {
@@ -229,15 +205,15 @@ private:
   }
 
   void handle_received_message(const std::string &payload) {
-    auto id = json_parse(payload, "id", 0);
-    auto name = json_parse(payload, "method", 0);
-    auto params = json_parse(payload, "params", 0);
-    auto found = m_mappings.find(name);
+    auto id{json_parse(payload, "id", 0)};
+    auto name{json_parse(payload, "method", 0)};
+    auto params{json_parse(payload, "params", 0)};
+    auto found{m_mappings.find(name)};
     if (found == m_mappings.end()) {
       m_script_evaluator->eval(scripts::create_reply_script(id, {}, false));
       return;
     }
-    found->second.call(
+    found->second.invoke(
         binding_promise{[=](std::string value) {
                           m_script_evaluator->eval(
                               scripts::create_reply_script(id, value, true));
