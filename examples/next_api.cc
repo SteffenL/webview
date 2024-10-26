@@ -44,7 +44,7 @@ private:
     bridge->bind("cmdCloseWindow", [=] { w.close(); });
     bridge->bind("cmdFullscreen", [=] { w.set_fullscreen(true); });
     bridge->bind("cmdUnfullscreen", [=] { w.set_fullscreen(false); });
-    bridge->bind("cmdPromise", [=](webview::binding_promise promise) {
+    bridge->bind("cmdTasks", [=](webview::binding_promise promise) {
       promise.resolve("\"hello\"");
     });
   }
