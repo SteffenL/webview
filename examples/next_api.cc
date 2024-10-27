@@ -1,5 +1,5 @@
 #include "resources/next_api/html.hh"
-#include "webview/detail/thread.hh"
+#include "webview/experimental/task_executor.hh"
 #include "webview/experimental/webview.hh"
 
 #include <chrono>
@@ -48,12 +48,12 @@ private:
     bridge->bind("cmdFullscreen", [=] { w.set_fullscreen(true); });
     bridge->bind("cmdUnfullscreen", [=] { w.set_fullscreen(false); });
     bridge->bind("cmdTasks", [=](webview::binding_arg &arg) {
-      m_task_thread = webview::detail::thread{
+      m_tasks.submit(
           [](webview::binding_promise promise) {
             std::this_thread::sleep_for(std::chrono::seconds{1});
             promise.resolve("\"hello\"");
           },
-          arg.get_promise()};
+          arg.get_promise());
     });
   }
 
@@ -62,7 +62,7 @@ private:
   std::list<std::shared_ptr<sub_window>> m_sub_windows;
   std::unordered_map<sub_window *, typename decltype(m_sub_windows)::iterator>
       m_sub_window_map;
-  webview::detail::thread m_task_thread;
+  webview::task_executor m_tasks;
 };
 
 #ifdef _WIN32

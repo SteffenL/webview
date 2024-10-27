@@ -46,47 +46,60 @@ public:
   using resolve_fn = std::function<void(std::string value)>;
   using reject_fn = std::function<void(std::string value)>;
 
-  binding_promise(resolve_fn resolve, reject_fn reject)
-      : m_resolve{resolve}, m_reject{reject} {}
+private:
+  class shared_state {
+  public:
+    shared_state(resolve_fn resolve_, reject_fn reject_)
+        : resolve{resolve_}, reject{reject_} {}
 
-  binding_promise(const binding_promise &) = delete;
-  binding_promise &operator=(const binding_promise &) = delete;
+    resolve_fn resolve;
+    reject_fn reject;
+    bool invoked{};
+  };
+
+public:
+  binding_promise(resolve_fn resolve, reject_fn reject)
+      : m_shared_state{new shared_state{resolve, reject}} {}
+
+  // Must be copyable to be used with std::function
+  binding_promise(const binding_promise &) = default;
+  binding_promise &operator=(const binding_promise &) = default;
   binding_promise(binding_promise &&) = default;
   binding_promise &operator=(binding_promise &&) = default;
   ~binding_promise() = default;
 
   void resolve() {
-    if (!m_invoked) {
-      m_invoked = true;
-      m_resolve({});
+    if (!m_shared_state->invoked) {
+      m_shared_state->invoked = true;
+      m_shared_state->resolve({});
     }
   }
 
   void resolve(std::string value) {
-    if (!m_invoked) {
-      m_invoked = true;
-      m_resolve(std::move(value));
+    if (!m_shared_state->invoked) {
+      m_shared_state->invoked = true;
+      m_shared_state->resolve(std::move(value));
     }
   }
 
   void reject() {
-    if (!m_invoked) {
-      m_invoked = true;
-      m_reject({});
+    if (!m_shared_state->invoked) {
+      m_shared_state->invoked = true;
+      m_shared_state->reject({});
     }
   }
 
   void reject(std::string value) {
-    if (!m_invoked) {
-      m_invoked = true;
-      m_reject(std::move(value));
+    if (!m_shared_state->invoked) {
+      m_shared_state->invoked = true;
+      m_shared_state->reject(std::move(value));
     }
   }
 
 private:
-  resolve_fn m_resolve;
-  reject_fn m_reject;
-  bool m_invoked{};
+  // Share state between copies because std::function requires this class to
+  // be copyable.
+  std::shared_ptr<shared_state> m_shared_state;
 };
 
 class binding_arg {
