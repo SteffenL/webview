@@ -8,7 +8,7 @@ constexpr auto *html_start{R"html(
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <style>
-      *, *:before, *:after { margin: 0; padding: 0; }
+      * { margin: 0; padding: 0; }
       body {
           background: #191919; color: #8e8e8e; cursor: default;
           font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
