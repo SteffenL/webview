@@ -117,6 +117,14 @@
   WEBVIEW_DEPRECATED("Private API should not be used")
 #endif
 
+#ifndef WEBVIEW_NODISCARD
+#if __cplusplus >= 201703L
+#define WEBVIEW_NODISCARD [[nodiscard]]
+#else
+#define WEBVIEW_NODISCARD
+#endif
+#endif
+
 #endif // WEBVIEW_HEADER
 #endif // __cplusplus
 

@@ -27,6 +27,7 @@
 #define WEBVIEW_DETAIL_BRIDGE_BASE_HH
 
 #include "../../detail/json.hh"
+#include "../../macros.h"
 #include "iscript_evaluator.hh"
 #include "scripts.hh"
 #include "user_content_manager_base.hh"
@@ -88,21 +89,34 @@ private:
   bool m_invoked{};
 };
 
+class binding_arg {
+public:
+  binding_arg(binding_promise promise, void *user_data)
+      : m_promise{std::move(promise)}, m_user_data{user_data} {}
+
+  WEBVIEW_NODISCARD binding_promise get_promise() {
+    return std::move(m_promise);
+  }
+
+  void *get_user_data() const { return m_user_data; }
+
+private:
+  binding_promise m_promise;
+  void *m_user_data{};
+};
+
 using binding0_fn = std::function<void()>;
-using binding1_ud_fn = std::function<void(void *user_data)>;
-using binding1_p_fn = std::function<void(binding_promise promise)>;
-using binding2_p_ud_fn =
-    std::function<void(binding_promise promise, void *user_data)>;
+using binding1_fn = std::function<void(binding_arg &arg)>;
 
 class ibridge {
 public:
   virtual ~ibridge() = default;
 
   virtual void bind(const std::string &name, binding0_fn handler) = 0;
-  virtual void bind(const std::string &name, binding1_ud_fn handler,
+  virtual void bind(const std::string &name, binding0_fn handler,
                     void *user_data) = 0;
-  virtual void bind(const std::string &name, binding1_p_fn handler) = 0;
-  virtual void bind(const std::string &name, binding2_p_ud_fn handler,
+  virtual void bind(const std::string &name, binding1_fn handler) = 0;
+  virtual void bind(const std::string &name, binding1_fn handler,
                     void *user_data) = 0;
   virtual void unbind(const std::string &name) = 0;
   virtual void unbind(const std::string &name,
@@ -116,17 +130,18 @@ namespace detail {
 class bridge_base : public ibridge {
   class mapping {
   public:
-    explicit mapping(binding2_p_ud_fn handler, void *user_data)
+    explicit mapping(binding1_fn handler, void *user_data)
         : m_handler{std::move(handler)}, m_user_data{user_data} {}
 
     void invoke(binding_promise promise) {
-      m_handler(std::move(promise), m_user_data);
+      binding_arg arg{std::move(promise), m_user_data};
+      m_handler(arg);
     }
 
     void *get_user_data() const { return m_user_data; }
 
   private:
-    binding2_p_ud_fn m_handler;
+    binding1_fn m_handler;
     void *m_user_data{};
   };
 
@@ -147,34 +162,30 @@ public:
   void bind(const std::string &name, binding0_fn handler) override {
     bind(
         name,
-        [=](binding_promise promise, void * /*user_data*/) {
+        [=](binding_arg &arg) {
           handler();
-          promise.resolve();
+          arg.get_promise().resolve();
         },
         nullptr);
   }
 
-  void bind(const std::string &name, binding1_ud_fn handler,
+  void bind(const std::string &name, binding0_fn handler,
             void *user_data) override {
     bind(
         name,
-        [=](binding_promise promise, void *user_data) {
-          handler(user_data);
-          promise.resolve();
+        [=](binding_arg &arg) {
+          handler();
+          arg.get_promise().resolve();
         },
         user_data);
   }
 
-  void bind(const std::string &name, binding1_p_fn handler) override {
+  void bind(const std::string &name, binding1_fn handler) override {
     bind(
-        name,
-        [=](binding_promise promise, void * /*user_data*/) {
-          handler(std::move(promise));
-        },
-        nullptr);
+        name, [=](binding_arg &arg) { handler(arg); }, nullptr);
   }
 
-  void bind(const std::string &name, binding2_p_ud_fn handler,
+  void bind(const std::string &name, binding1_fn handler,
             void *user_data) override {
     // NOLINTNEXTLINE(readability-container-contains): contains() requires C++20
     if (m_mappings.count(name) > 0) {
