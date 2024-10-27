@@ -64,7 +64,7 @@ private:
   std::list<std::shared_ptr<sub_window>> m_sub_windows;
   std::unordered_map<sub_window *, typename decltype(m_sub_windows)::iterator>
       m_sub_window_map;
-  webview::task_executor m_tasks{4};
+  webview::task_executor m_tasks;
 };
 
 #ifdef _WIN32
