@@ -2,6 +2,7 @@
 #include "webview/experimental/task_executor.hh"
 #include "webview/experimental/webview.hh"
 
+#include <atomic>
 #include <chrono>
 #include <list>
 #include <memory>
@@ -50,8 +51,9 @@ private:
     bridge->bind("cmdTasks", [=](webview::binding_arg &arg) {
       m_tasks.put(
           [](webview::binding_promise promise) {
+            static std::atomic_int i{};
             std::this_thread::sleep_for(std::chrono::seconds{1});
-            promise.resolve("\"hello\"");
+            promise.resolve(std::to_string(++i));
           },
           arg.get_promise());
     });
@@ -62,7 +64,7 @@ private:
   std::list<std::shared_ptr<sub_window>> m_sub_windows;
   std::unordered_map<sub_window *, typename decltype(m_sub_windows)::iterator>
       m_sub_window_map;
-  webview::task_executor m_tasks;
+  webview::task_executor m_tasks{4};
 };
 
 #ifdef _WIN32

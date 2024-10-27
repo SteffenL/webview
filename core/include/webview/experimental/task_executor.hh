@@ -32,6 +32,7 @@
 #include <functional>
 #include <mutex>
 #include <queue>
+#include <vector>
 
 namespace webview {
 
@@ -42,28 +43,43 @@ class task_executor {
 public:
   using task_fn = std::function<void()>;
 
-  task_executor() {
-    m_worker_thread = [this] {
-      while (true) {
-        task_fn task;
-        {
-          ulock_t lock{m_mutex};
-          m_cv.wait(lock, [this] { return m_stop || !m_queue.empty(); });
-          if (m_stop && m_queue.empty()) {
-            return;
+  task_executor(size_t thread_count = 1) {
+    for (size_t i{}; i < thread_count; ++i) {
+      m_worker_threads.emplace_back([this] {
+        while (true) {
+          task_fn task;
+          {
+            ulock_t lock{m_mutex};
+            m_cv.wait(lock, [this] {
+              return m_cancel || m_stop || !m_queue.empty();
+            });
+            if (m_cancel || (m_stop && m_queue.empty())) {
+              return;
+            }
+            if (m_queue.empty()) {
+              continue;
+            }
+            task = std::move(m_queue.front());
+            m_queue.pop();
           }
-          task = std::move(m_queue.front());
-          m_queue.pop();
+          task();
         }
-        task();
-      }
-    };
+      });
+    }
   }
 
   ~task_executor() {
     {
       lock_t lock{m_mutex};
       m_stop = true;
+    }
+    m_cv.notify_all();
+  }
+
+  void cancel() {
+    {
+      lock_t lock{m_mutex};
+      m_cancel = true;
     }
     m_cv.notify_all();
   }
@@ -83,8 +99,9 @@ private:
   std::mutex m_mutex;
   std::condition_variable m_cv;
   bool m_stop{};
+  bool m_cancel{};
   std::queue<task_fn> m_queue;
-  detail::thread m_worker_thread;
+  std::vector<detail::thread> m_worker_threads;
 };
 
 } // namespace webview

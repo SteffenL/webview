@@ -16,6 +16,7 @@ constexpr auto *html_start{R"html(
       button { background: #e6e6e6; color: #333; border: .1em solid #32323226; border-radius: .5em; padding: .25em 1em; white-space: pre; }
       button:active { background: #c3c3c3; }
       button:focus { outline: .1em solid #575757; outline-offset: -.25em; }
+      button:disabled { background: #c3c3c3; outline: none; opacity: .5; cursor: not-allowed; }
       .hstack { display: flex; flex-direction: row; flex-wrap: nowrap; }
       .vstack { display: flex; flex-direction: column; flex-wrap: nowrap; }
       .gap { gap: .5em; }
@@ -48,10 +49,13 @@ constexpr auto *main_window_html{R"html(
 </div>
 <script type="module">
   const funcs = {
-    async cmdTasks() {
-      tasksReply.textContent = "(pending)";
-      const res = await __webview__.call("cmdTasks");
-      tasksReply.textContent = res;
+    async cmdTasks(event) {
+      try {
+        event.target.disabled = true;
+        tasksReply.textContent = await __webview__.call("cmdTasks");
+      } finally {
+        event.target.disabled = false;
+      }
     }
   };
   window.addEventListener("contextmenu", e => e.preventDefault(), false);
@@ -61,7 +65,7 @@ constexpr auto *main_window_html{R"html(
   });
   document.querySelectorAll("*[data-\\#on]").forEach(element => {
     const [event, name] = element.dataset["#on"].split(":");
-    element.addEventListener(event, () => funcs[name]());
+    element.addEventListener(event, (...args) => funcs[name](...args));
   });
 </script>
 )html"};
