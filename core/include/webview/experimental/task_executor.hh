@@ -68,7 +68,7 @@ public:
     m_cv.notify_all();
   }
 
-  template <typename F, typename... Args> void submit(F &&fn, Args &&...args) {
+  template <typename F, typename... Args> void put(F &&fn, Args &&...args) {
     {
       lock_t lock{m_mutex};
       if (m_stop) {

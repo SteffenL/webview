@@ -48,7 +48,7 @@ private:
     bridge->bind("cmdFullscreen", [=] { w.set_fullscreen(true); });
     bridge->bind("cmdUnfullscreen", [=] { w.set_fullscreen(false); });
     bridge->bind("cmdTasks", [=](webview::binding_arg &arg) {
-      m_tasks.submit(
+      m_tasks.put(
           [](webview::binding_promise promise) {
             std::this_thread::sleep_for(std::chrono::seconds{1});
             promise.resolve("\"hello\"");
