@@ -74,6 +74,13 @@ public:
     return *this;
   }
 
+  bool get_terminate_on_destroy() const noexcept { return m_terminate; }
+
+  window_options &set_terminate_on_destroy(bool terminate) {
+    m_terminate = terminate;
+    return *this;
+  }
+
   const widget_options &get_widget_options() const noexcept {
     return m_widget_options;
   }
@@ -87,6 +94,7 @@ private:
   std::string m_title;
   //bool m_visible;
   ui_size m_size{get_default_ui_size()};
+  bool m_terminate{};
   widget_options m_widget_options;
 };
 

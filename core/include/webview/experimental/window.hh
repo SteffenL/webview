@@ -38,7 +38,8 @@ public:
   window(const window_options &options = {},
          event_loop_ptr loop = event_loop::get_default())
       : m_event_loop{loop},
-        m_widget{new class widget{options.get_widget_options(), loop}} {
+        m_widget{new class widget{options.get_widget_options(), loop}},
+        m_terminate_on_destroy{options.get_terminate_on_destroy()} {
     set_initial_size(options.get_size());
     set_title(options.get_title());
     embed(m_widget->get_native_handle());
@@ -59,11 +60,19 @@ private:
           return true;
         },
         detail::get_internal_signal_priority());
+    events().destroy.bind([=](iwindow * /*sender*/) {
+      if (m_terminate_on_destroy) {
+        current_application().terminate();
+        return true;
+      }
+      return false;
+    });
   }
 
   event_loop_ptr m_event_loop;
   widget_ptr m_widget;
   window_events m_events;
+  bool m_terminate_on_destroy{};
 };
 
 } // namespace webview
