@@ -24,10 +24,6 @@ private:
 class main_window {
 public:
   main_window() {
-    w.events().close_requested.bind([&](webview::iwindow *sender) {
-      sender->destroy();
-      return true;
-    });
     w.events().destroy.bind([&](webview::iwindow * /*sender*/) {
       webview::current_application().terminate();
       return true;
