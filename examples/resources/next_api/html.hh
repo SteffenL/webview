@@ -34,25 +34,25 @@ constexpr auto *html_end{R"html(
 constexpr auto *main_window_html{R"html(
 <h2>Window</h2>
 <div class="hstack gap">
-  <button data-#bind="click:cmdNewWindow">New window</button>
-  <button data-#bind="click:cmdCloseWindow">Close window</button>
+  <button data-#bind="click:newWindow">New window</button>
+  <button data-#bind="click:closeWindow">Close window</button>
 </div>
 <h2>Fullscreen</h2>
 <div class="hstack gap">
-  <button data-#bind="click:cmdFullscreen">Fullscreen</button>
-  <button data-#bind="click:cmdUnfullscreen">Unfullscreen</button>
+  <button data-#bind="click:fullscreen">Fullscreen</button>
+  <button data-#bind="click:unfullscreen">Unfullscreen</button>
 </div>
 <h2>Tasks</h2>
 <div class="hstack gap">
-  <button data-#on="click:cmdTasks">Run</button>
+  <button data-#on="click:runTasks">Run</button>
   <span id="tasksReply"></span>
 </div>
 <script type="module">
   const funcs = {
-    async cmdTasks(event) {
+    async runTasks(event) {
       try {
         event.target.disabled = true;
-        tasksReply.textContent = await __webview__.call("cmdTasks");
+        tasksReply.textContent = await __webview__.call("runTasks");
       } finally {
         event.target.disabled = false;
       }
