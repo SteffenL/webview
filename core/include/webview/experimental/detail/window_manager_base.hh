@@ -80,7 +80,7 @@ protected:
   void bind_default_event_handlers() {
     events().last_window_destroyed.bind(
         [](iwindow_manager * /*sender*/) {
-          webview::current_application().terminate();
+          current_application().terminate();
           return true;
         },
         detail::get_internal_signal_priority());

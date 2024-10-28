@@ -29,7 +29,9 @@
 #include "application.hh"
 #include "browser.hh"
 #include "event_loop.hh"
+#include "task_executor.hh"
 #include "widget.hh"
 #include "window.hh"
+#include "window_manager.hh"
 
 #endif // WEBVIEW_HH

@@ -59,19 +59,19 @@ public:
   virtual ~application_base() = default;
 };
 
-inline iapplication *&current_application() {
+inline iapplication *&current_application_internal() {
   static iapplication *instance{};
   return instance;
 }
 
 inline void set_current_application(iapplication *instance) {
-  current_application() = instance;
+  current_application_internal() = instance;
 }
 
 } // namespace detail
 
 inline iapplication &current_application() {
-  return *detail::current_application();
+  return *detail::current_application_internal();
 }
 
 } // namespace webview
