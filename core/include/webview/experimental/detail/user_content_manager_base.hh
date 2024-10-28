@@ -38,7 +38,7 @@ class iuser_content_manager;
 
 class user_content_manager_events {
 public:
-  detail::signal<void(iuser_content_manager *sender, std::string payload)>
+  detail::signal<bool(iuser_content_manager *sender, std::string payload)>
       message_received;
 };
 

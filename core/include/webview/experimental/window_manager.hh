@@ -23,54 +23,33 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_WINDOW_BASE_HH
-#define WEBVIEW_DETAIL_WINDOW_BASE_HH
+#ifndef WEBVIEW_WINDOW_MANAGER_HH
+#define WEBVIEW_WINDOW_MANAGER_HH
 
-#include "../../detail/signal.hh"
-#include "widget_base.hh"
-
-#include <memory>
-#include <string>
+#include "detail/window_manager_base.hh"
+#include "options.hh"
+#include "window.hh"
 
 namespace webview {
 
-class iwindow;
-
-class window_events {
+class window_manager : public detail::window_manager_base {
 public:
-  detail::signal<void(iwindow *sender)> ready;
-  detail::signal<bool(iwindow *sender)> close_requested;
-  detail::signal<void(iwindow *sender)> destroy;
+  window_manager(event_loop_ptr loop = event_loop::get_default())
+      : m_event_loop{loop} {
+    bind_default_event_handlers();
+  }
+
+  window_manager_events &events() override { return m_events; }
+
+private:
+  window_ptr new_window_impl(const window_options &options) override {
+    return window_ptr{new window{options, m_event_loop}};
+  }
+
+  event_loop_ptr m_event_loop;
+  window_manager_events m_events;
 };
 
-class iwindow {
-public:
-  virtual ~iwindow() = default;
-
-  virtual window_events &events() = 0;
-  virtual void dispatch(dispatch_fn_t f) = 0;
-  virtual void *get_native_handle() const = 0;
-  virtual browser_ptr browser() = 0;
-  virtual widget_ptr widget() = 0;
-  virtual void embed(void *native_embeddable) = 0;
-
-  virtual void set_title(const std::string &title) = 0;
-  virtual void set_visible(bool visible) = 0;
-  virtual void set_fullscreen(bool enable) = 0;
-  virtual void close() = 0;
-  virtual void destroy() = 0;
-};
-
-using window_ptr = std::shared_ptr<iwindow>;
-
-namespace detail {
-
-class window_base : public iwindow {
-public:
-  virtual ~window_base() = default;
-};
-
-} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_WINDOW_BASE_HH
+#endif // WEBVIEW_WINDOW_MANAGER_HH

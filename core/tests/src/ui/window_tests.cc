@@ -14,6 +14,7 @@ TEST_CASE("window event: close_requested") {
   win.events().close_requested.bind([&] (iwindow* sender) {
     sender->destroy();
     app.terminate();
+    return true;
   });
 
   app.dispatch([&] { app.terminate(); });

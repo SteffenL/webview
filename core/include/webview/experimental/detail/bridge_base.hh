@@ -125,12 +125,10 @@ class ibridge {
 public:
   virtual ~ibridge() = default;
 
-  virtual void bind(const std::string &name, binding0_fn handler) = 0;
   virtual void bind(const std::string &name, binding0_fn handler,
-                    void *user_data) = 0;
-  virtual void bind(const std::string &name, binding1_fn handler) = 0;
+                    void *user_data = nullptr) = 0;
   virtual void bind(const std::string &name, binding1_fn handler,
-                    void *user_data) = 0;
+                    void *user_data = nullptr) = 0;
   virtual void unbind(const std::string &name) = 0;
   virtual void unbind(const std::string &name,
                       std::function<void(void *user_data)> deleter) = 0;
@@ -167,20 +165,11 @@ public:
         [=](iuser_content_manager * /*sender*/, const std::string &payload) {
           handle_received_message(payload);
           return true;
-        });
+        },
+        detail::get_internal_signal_priority());
   }
 
   virtual ~bridge_base() = default;
-
-  void bind(const std::string &name, binding0_fn handler) override {
-    bind(
-        name,
-        [=](binding_arg &arg) {
-          handler();
-          arg.get_promise().resolve();
-        },
-        nullptr);
-  }
 
   void bind(const std::string &name, binding0_fn handler,
             void *user_data) override {
@@ -191,11 +180,6 @@ public:
           arg.get_promise().resolve();
         },
         user_data);
-  }
-
-  void bind(const std::string &name, binding1_fn handler) override {
-    bind(
-        name, [=](binding_arg &arg) { handler(arg); }, nullptr);
   }
 
   void bind(const std::string &name, binding1_fn handler,

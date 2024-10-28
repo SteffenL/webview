@@ -29,6 +29,7 @@
 #include "backends.hh"
 #include "event_loop.hh"
 #include "options.hh"
+#include "widget.hh"
 
 namespace webview {
 
@@ -52,10 +53,12 @@ public:
 
 private:
   void bind_default_event_handlers() noexcept {
-    events().close_requested.bind([](iwindow *sender) {
-      sender->destroy();
-      return true;
-    });
+    events().close_requested.bind(
+        [](iwindow *sender) {
+          sender->destroy();
+          return true;
+        },
+        detail::get_internal_signal_priority());
   }
 
   event_loop_ptr m_event_loop;
