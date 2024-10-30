@@ -6,8 +6,6 @@
 #include <memory>
 #include <thread>
 
-#include <iostream>
-
 #ifdef _WIN32
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #else
@@ -21,12 +19,34 @@ int main() {
   auto main{wm.new_window(
       webview::window_options{}.set_size({480, 320}).set_title("Main Window"))};
   auto main_bridge{main->browser()->bridge()};
-  main_bridge->bind("newWindow", [&wm] {
+  main_bridge->bind("newWindow", [&] {
     auto sub{wm.new_window(webview::window_options{}
                                .set_size({480, 320})
                                .set_title("Sub Window"))};
     sub->browser()->bridge()->bind("closeWindow", [=] { sub->close(); });
-    sub->browser()->set_html(make_html(sub_window_html));
+    sub->browser()->uri_schemes()->bind(
+        "app", [&](const webview::http::request &request,
+                   webview::http::response_promise response_promise) {
+          scheme_tasks.put(
+              [](const webview::http::request &request,
+                 webview::http::response_promise promise) {
+                if (request.get_method() == "GET") {
+                  if (request.get_path() == "/index") {
+                    static const std::string html{make_html(sub_window_html)};
+                    promise.resolve(
+                        webview::http::response{200}.set_content_source(
+                            webview::http::content_source::string(
+                                html, "text/html")));
+                    return;
+                  }
+                }
+                promise.resolve(webview::http::response{404}.set_content_source(
+                    webview::http::content_source::string("Not found",
+                                                          "text/plain")));
+              },
+              request, response_promise);
+        });
+    sub->browser()->navigate("app:///index");
     sub->set_visible(true);
   });
   main_bridge->bind("closeWindow", [=] { main->close(); });
@@ -41,20 +61,18 @@ int main() {
         },
         arg.get_promise());
   });
-  //main->browser()->set_html(make_html(main_window_html));
   main->browser()->uri_schemes()->bind(
-      "app", [&scheme_tasks](const webview::http::request &request,
-                             webview::http::response_promise response_promise) {
-        std::cout << "req: " << request.get_method() << ' '
-                  << request.get_path() << '\n';
+      "app", [&](const webview::http::request &request,
+                 webview::http::response_promise response_promise) {
         scheme_tasks.put(
             [](const webview::http::request &request,
                webview::http::response_promise promise) {
               if (request.get_method() == "GET") {
                 if (request.get_path() == "/index") {
+                  static const std::string html{make_html(main_window_html)};
                   promise.resolve(
                       webview::http::response{200}.set_content_source(
-                          webview::http::content_source::string("Hello",
+                          webview::http::content_source::string(html,
                                                                 "text/html")));
                   return;
                 }
