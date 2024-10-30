@@ -76,8 +76,8 @@ public:
                         WEBVIEW_TYPE_G_INPUT_STREAM_WRAPPER, nullptr)),
                     false};
                 webview_g_input_stream_wrapper_init(stream_wrapper.get());
-                auto source{response.get_content_source()};
-                webview_g_input_stream_wrapper_set_stream(stream_wrapper.get(), );
+                const auto& source{response.get_content_source()};
+                webview_g_input_stream_wrapper_set_stream(stream_wrapper.get(), source.create_stream());
 
                 gtk_ref<WebKitURISchemeResponse> native_response{
                     webkit_uri_scheme_response_new(
@@ -88,7 +88,7 @@ public:
                     static_cast<guint>(response.get_status().get_code()),
                     response.get_status().get_reason().c_str());
                 webkit_uri_scheme_response_set_content_type(
-                    native_response.get(), response.get_content_type().c_str());
+                    native_response.get(), source.get_content_type().c_str());
                 webkit_uri_scheme_request_finish_with_response(
                     native_request, native_response.get());
               },

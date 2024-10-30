@@ -30,11 +30,11 @@
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
-#include "../../stream.hh"
-
 #include <gtk/gtk.h>
 
+#include <istream>
 #include <memory>
+#include <sstream>
 
 namespace webview {
 namespace detail {
@@ -48,7 +48,7 @@ inline G_DECLARE_FINAL_TYPE(WebViewGInputStreamWrapper,
                             G_INPUT_STREAM_WRAPPER, GInputStream);
 
 struct WebViewGInputStreamWrapperPrivate {
-  input_stream_ptr stream;
+  std::unique_ptr<std::istream> stream;
 };
 
 struct _WebViewGInputStreamWrapper {
@@ -77,13 +77,15 @@ inline gssize webview_g_input_stream_wrapper_read_fn(
       return 0;
     }
     if (error) {
-      *error = g_error_new(G_IO_ERROR, G_IO_ERROR_FAILED,
-                           "Unable to read from stream");
+      *error = g_error_new(G_IO_ERROR, G_IO_ERROR_FAILED, "Stream is no good");
     }
     return -1;
   }
-  return static_cast<gssize>(
-      stream_.read(buffer, static_cast<std::streamsize>(count)));
+  using char_type =
+      typename std::remove_reference<decltype(stream_)>::type::char_type;
+  stream_.read(static_cast<char_type *>(buffer),
+               static_cast<std::streamsize>(count));
+  return static_cast<gssize>(stream_.gcount());
 }
 
 // Ref.: https://docs.gtk.org/gio/vfunc.InputStream.skip.html
@@ -96,16 +98,15 @@ webview_g_input_stream_wrapper_skip(GInputStream *stream, gsize count,
     *error = nullptr;
   }
   auto &stream_{*self->priv->stream};
-  auto pos_before{stream_.tell()};
-  stream_.seek(static_cast<intptr_t>(count));
+  auto pos_before{stream_.tellg()};
+  stream_.seekg(static_cast<gssize>(count));
   if (!stream_.good()) {
     if (error) {
-      *error = g_error_new(G_IO_ERROR, G_IO_ERROR_UNKNOWN,
-                           "Unable to read from stream");
+      *error = g_error_new(G_IO_ERROR, G_IO_ERROR_UNKNOWN, "Stream is no good");
     }
     return -1;
   }
-  auto pos_after{stream_.tell()};
+  auto pos_after{stream_.tellg()};
   auto distance{pos_after - pos_before};
   return static_cast<gssize>(distance);
 }
@@ -148,10 +149,16 @@ webview_g_input_stream_wrapper_init(WebViewGInputStreamWrapper *self) {
   self->priv = new WebViewGInputStreamWrapperPrivate{};
 }
 
-inline void
-webview_g_input_stream_wrapper_set_stream(WebViewGInputStreamWrapper *self,
-                                          input_stream_ptr stream) {
-  self->priv->stream = std::move(stream);
+template <typename T>
+void webview_g_input_stream_wrapper_load_string(
+    WebViewGInputStreamWrapper *self, T &&content) {
+  self->priv->stream.reset(new std::istringstream{std::forward<T>(content)});
+}
+
+template <typename T>
+void webview_g_input_stream_wrapper_set_stream(WebViewGInputStreamWrapper *self,
+                                               T &&stream) {
+  self->priv->stream = std::forward<T>(stream);
 }
 
 } // namespace detail

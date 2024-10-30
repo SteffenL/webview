@@ -26,7 +26,7 @@
 #ifndef WEBVIEW_DETAIL_MEMSTREAM_HH
 #define WEBVIEW_DETAIL_MEMSTREAM_HH
 
-#include "memstreambuf.hpp"
+#include "memstreambuf.hh"
 
 #include <istream>
 
@@ -40,6 +40,7 @@ public:
       : std::basic_istream<Char, Traits>{nullptr},
         m_buffer{cast(start), cast(end)} {
     this->set_rdbuf(&m_buffer);
+    this->clear();
   }
 
   imemstream(const Char *start, size_t length)

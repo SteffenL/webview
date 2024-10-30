@@ -53,12 +53,13 @@ int main() {
               if (request.get_method() == "GET" &&
                   request.get_path() == "/index") {
                 promise.resolve(webview::http::response{200}.set_content_source(
-                    webview::http::make_string_source("Hello", "text/html")));
+                    webview::http::content_source::string("Hello",
+                                                          "text/html")));
                 return;
               }
               promise.resolve(webview::http::response{404}.set_content_source(
-                  webview::http::make_string_source("Not found",
-                                                    "text/plain")));
+                  webview::http::content_source::string("Not found",
+                                                        "text/plain")));
             },
             request, response_promise);
       });

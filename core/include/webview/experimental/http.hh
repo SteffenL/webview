@@ -26,8 +26,9 @@
 #ifndef WEBVIEW_HTTP_HH
 #define WEBVIEW_HTTP_HH
 
-#include "detail/memstream.hpp"
+#include "detail/memstream.hh"
 #include "detail/promise.hh"
+#include "detail/stream.hh"
 
 #include <cstdint>
 #include <limits>
@@ -161,55 +162,41 @@ private:
   std::string m_reason;
 };
 
-class icontent_source {
+class content_source {
 public:
-  virtual ~icontent_source() = default;
+  const std::string &get_content_type() const { return m_content_type; }
 
-  virtual const std::string &get_content_type() const = 0;
-  virtual intptr_t read(void *buffer, intptr_t count) = 0;
-  virtual intptr_t seek(intptr_t count) = 0;
-  virtual void close() = 0;
-};
+  detail::input_stream_ptr create_stream() const { return m_factory(); }
 
-using content_source_ptr = std::shared_ptr<icontent_source>;
-
-class string_source : public icontent_source {
-public:
-  string_source(std::string value, std::string content_type)
-      : m_value{std::move(value)},
-        m_content_type{std::move(content_type)},
-        m_stream{m_value.data(), m_value.size()} {}
-
-  const std::string &get_content_type() const override {
-    return m_content_type;
+  static content_source string(std::string value, std::string content_type) {
+    return content_source{std::bind(
+                              [](std::string value_) {
+                                return detail::make_string_input_stream(
+                                    std::move(value_));
+                              },
+                              std::move(value)),
+                          std::move(content_type)};
   }
 
-  intptr_t read(void *buffer, intptr_t count) override {
-    m_stream.read(static_cast<char *>(buffer), count);
+  static content_source file(std::string file_path, std::string content_type) {
+    return content_source{std::bind(
+                              [](std::string file_path_) {
+                                return detail::make_file_input_stream(
+                                    file_path_);
+                              },
+                              file_path),
+                          std::move(content_type)};
   }
 
-  intptr_t seek(intptr_t count) override {
-    m_stream.seekg(count, std::ios_base::cur);
-    return m_stream.tellg();
-  }
-
-  void close() override {}
+protected:
+  explicit content_source(std::function<detail::input_stream_ptr()> factory,
+                          std::string content_type)
+      : m_factory{std::move(factory)},
+        m_content_type{std::move(content_type)} {}
 
 private:
-  std::string m_value;
+  std::function<detail::input_stream_ptr()> m_factory;
   std::string m_content_type;
-  detail::imemstream<char> m_stream;
-};
-
-inline content_source_ptr make_string_source(std::string value,
-                                             std::string content_type) {
-  return content_source_ptr{
-      new string_source{std::move(value), std::move(content_type)}};
-}
-
-class file_source : public icontent_source {
-public:
-  virtual ~file_source() = default;
 };
 
 class response {
@@ -219,11 +206,7 @@ public:
   const status &get_status() const noexcept { return m_status; }
   const header_map &get_headers() const noexcept { return m_headers; }
 
-  const std::string &get_content_type() const noexcept {
-    return m_content_type;
-  }
-
-  content_source_ptr get_content_source() const noexcept {
+  const content_source &get_content_source() const noexcept {
     return m_content_source;
   }
 
@@ -233,12 +216,7 @@ public:
     return *this;
   }
 
-  response &set_content_type(std::string content_type) {
-    m_content_type = std::move(content_type);
-    return *this;
-  }
-
-  response &set_content_source(content_source_ptr source) {
+  response &set_content_source(content_source source) {
     m_content_source = std::move(source);
     return *this;
   }
@@ -246,8 +224,7 @@ public:
 private:
   status m_status;
   header_map m_headers;
-  std::string m_content_type{"text/plain"};
-  content_source_ptr m_content_source;
+  content_source m_content_source{content_source::string({}, "text/plain")};
 };
 
 using response_promise = ::webview::detail::promise<response>;
