@@ -54,14 +54,14 @@ int main() {
           headers += '\n';
         }
         std::cout << "req: " << request.get_method() << ' '
-                  << request.get_path() << headers << '\n';
-        //return http::response{200}; //, "text/html", http::body::text("Hello")
-        scheme_tasks.put(
-            [](webview::http::response_promise response) {
-              response.resolve(webview::http::response{
-                  {200, "OK"}}.set_content_type("text/html"));
-            },
-            response);
+                  << request.get_path() << '\n'
+                  << headers << '\n';
+        //scheme_tasks.put(
+        //    [](webview::http::response_promise response) {
+        response.resolve(
+            webview::http::response{{200, "OK"}}.set_content_type("text/html"));
+        //     },
+        //     response);
       });
   main->set_visible(true);
 

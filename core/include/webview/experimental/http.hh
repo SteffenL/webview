@@ -34,6 +34,87 @@
 namespace webview {
 namespace http {
 
+namespace detail {
+
+inline const std::map<int, std::string> &status_codes() noexcept {
+  static const std::map<int, std::string> codes{
+      {100, "Continue"},
+      {101, "Switching Protocols"},
+      {102, "Processing (WebDAV)"},
+      {103, "Early Hints"},
+      {200, "OK"},
+      {201, "Created"},
+      {202, "Accepted"},
+      {203, "Non-Authoritative Information"},
+      {204, "No Content"},
+      {205, "Reset Content"},
+      {206, "Partial Content"},
+      {207, "Multi-Status (WebDAV)"},
+      {208, "Already Reported (WebDAV)"},
+      {226, "IM Used (HTTP Delta encoding)"},
+      {300, "Multiple Choices"},
+      {301, "Moved Permanently"},
+      {302, "Found"},
+      {303, "See Other"},
+      {304, "Not Modified"},
+      {305, "Use Proxy Deprecated"},
+      {306, "unused"},
+      {307, "Temporary Redirect"},
+      {308, "Permanent Redirect"},
+      {400, "Bad Request"},
+      {401, "Unauthorized"},
+      {402, "Payment Required"},
+      {403, "Forbidden"},
+      {404, "Not Found"},
+      {405, "Method Not Allowed"},
+      {406, "Not Acceptable"},
+      {407, "Proxy Authentication Required"},
+      {408, "Request Timeout"},
+      {409, "Conflict"},
+      {410, "Gone"},
+      {411, "Length Required"},
+      {412, "Precondition Failed"},
+      {413, "Payload Too Large"},
+      {414, "URI Too Long"},
+      {415, "Unsupported Media Type"},
+      {416, "Range Not Satisfiable"},
+      {417, "Expectation Failed"},
+      {418, "I'm a teapot"},
+      {421, "Misdirected Request"},
+      {422, "Unprocessable Content (WebDAV)"},
+      {423, "Locked (WebDAV)"},
+      {424, "Failed Dependency (WebDAV)"},
+      {425, "Too Early"},
+      {426, "Upgrade Required"},
+      {428, "Precondition Required"},
+      {429, "Too Many Requests"},
+      {431, "Request Header Fields Too Large"},
+      {451, "Unavailable For Legal Reasons"},
+      {500, "Internal Server Error"},
+      {501, "Not Implemented"},
+      {502, "Bad Gateway"},
+      {503, "Service Unavailable"},
+      {504, "Gateway Timeout"},
+      {505, "HTTP Version Not Supported"},
+      {506, "Variant Also Negotiates"},
+      {507, "Insufficient Storage (WebDAV)"},
+      {508, "Loop Detected (WebDAV)"},
+      {510, "Not Extended"},
+      {511, "Network Authentication Required"}};
+  return codes;
+}
+
+inline const std::string &get_status_reason_by_code(int code) noexcept {
+  auto found{status_codes().find(code)};
+  if (found == status_codes().end()) {
+    static std::string empty;
+    return empty;
+  }
+  return found->second;
+}
+
+} // namespace detail
+
 class content_type {};
 
 using header_map = std::map<std::string, std::string>;
@@ -61,7 +142,10 @@ private:
 
 class status {
 public:
-  status(int code, std::string reason = {})
+  status(int code)
+      : m_code{code}, m_reason{detail::get_status_reason_by_code(code)} {}
+
+  status(int code, std::string reason)
       : m_code{code}, m_reason{std::move(reason)} {}
 
   int get_code() const noexcept { return m_code; }
@@ -100,7 +184,7 @@ private:
   std::string m_content_type;
 };
 
-using response_promise = detail::promise<response>;
+using response_promise = ::webview::detail::promise<response>;
 
 } // namespace http
 } // namespace webview
