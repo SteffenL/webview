@@ -76,8 +76,8 @@ public:
                         WEBVIEW_TYPE_G_INPUT_STREAM_WRAPPER, nullptr)),
                     false};
                 webview_g_input_stream_wrapper_init(stream_wrapper.get());
-                webview_g_input_stream_wrapper_load_string(stream_wrapper.get(),
-                                                           "hello, web");
+                auto source{response.get_content_source()};
+                webview_g_input_stream_wrapper_set_stream(stream_wrapper.get(), );
 
                 gtk_ref<WebKitURISchemeResponse> native_response{
                     webkit_uri_scheme_response_new(

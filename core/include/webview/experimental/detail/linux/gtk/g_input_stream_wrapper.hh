@@ -30,14 +30,11 @@
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
-#include "../gtk/gtk_ref.hh"
-
 #include <gtk/gtk.h>
 
 #include <istream>
 #include <memory>
 #include <sstream>
-#include <string>
 
 namespace webview {
 namespace detail {
@@ -156,6 +153,12 @@ template <typename T>
 void webview_g_input_stream_wrapper_load_string(
     WebViewGInputStreamWrapper *self, T &&content) {
   self->priv->stream.reset(new std::istringstream{std::forward<T>(content)});
+}
+
+template <typename T>
+void webview_g_input_stream_wrapper_set_stream(WebViewGInputStreamWrapper *self,
+                                               T &&stream) {
+  self->priv->stream = std::forward<T>(stream);
 }
 
 } // namespace detail

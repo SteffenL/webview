@@ -26,15 +26,20 @@
 #ifndef WEBVIEW_HTTP_HH
 #define WEBVIEW_HTTP_HH
 
+#include "detail/memstream.hpp"
 #include "detail/promise.hh"
 
+#include <cstdint>
+#include <limits>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace webview {
 namespace http {
-
 namespace detail {
+
+using namespace webview::detail;
 
 inline const std::map<int, std::string> &status_codes() noexcept {
   static const std::map<int, std::string> codes{
@@ -156,6 +161,57 @@ private:
   std::string m_reason;
 };
 
+class icontent_source {
+public:
+  virtual ~icontent_source() = default;
+
+  virtual const std::string &get_content_type() const = 0;
+  virtual intptr_t read(void *buffer, intptr_t count) = 0;
+  virtual intptr_t seek(intptr_t count) = 0;
+  virtual void close() = 0;
+};
+
+using content_source_ptr = std::shared_ptr<icontent_source>;
+
+class string_source : public icontent_source {
+public:
+  string_source(std::string value, std::string content_type)
+      : m_value{std::move(value)},
+        m_content_type{std::move(content_type)},
+        m_stream{m_value.data(), m_value.size()} {}
+
+  const std::string &get_content_type() const override {
+    return m_content_type;
+  }
+
+  intptr_t read(void *buffer, intptr_t count) override {
+    m_stream.read(static_cast<char *>(buffer), count);
+  }
+
+  intptr_t seek(intptr_t count) override {
+    m_stream.seekg(count, std::ios_base::cur);
+    return m_stream.tellg();
+  }
+
+  void close() override {}
+
+private:
+  std::string m_value;
+  std::string m_content_type;
+  detail::imemstream<char> m_stream;
+};
+
+inline content_source_ptr make_string_source(std::string value,
+                                             std::string content_type) {
+  return content_source_ptr{
+      new string_source{std::move(value), std::move(content_type)}};
+}
+
+class file_source : public icontent_source {
+public:
+  virtual ~file_source() = default;
+};
+
 class response {
 public:
   explicit response(class status status) noexcept : m_status{status} {}
@@ -165,6 +221,10 @@ public:
 
   const std::string &get_content_type() const noexcept {
     return m_content_type;
+  }
+
+  content_source_ptr get_content_source() const noexcept {
+    return m_content_source;
   }
 
   response &set_header(const header_map::key_type &name,
@@ -178,10 +238,16 @@ public:
     return *this;
   }
 
+  response &set_content_source(content_source_ptr source) {
+    m_content_source = std::move(source);
+    return *this;
+  }
+
 private:
   status m_status;
   header_map m_headers;
   std::string m_content_type{"text/plain"};
+  content_source_ptr m_content_source;
 };
 
 using response_promise = ::webview::detail::promise<response>;

@@ -41,28 +41,28 @@ int main() {
         },
         arg.get_promise());
   });
-  main->browser()->set_html(make_html(main_window_html));
+  //main->browser()->set_html(make_html(main_window_html));
   main->browser()->uri_schemes()->bind(
       "app", [&scheme_tasks](const webview::http::request &request,
-                             webview::http::response_promise response) {
-        std::string headers;
-        for (const auto &header : request.get_headers()) {
-          headers += "header: ";
-          headers += header.first;
-          headers += ": ";
-          headers += header.second;
-          headers += '\n';
-        }
+                             webview::http::response_promise response_promise) {
         std::cout << "req: " << request.get_method() << ' '
-                  << request.get_path() << '\n'
-                  << headers << '\n';
+                  << request.get_path() << '\n';
         scheme_tasks.put(
-            [](webview::http::response_promise response) {
-              response.resolve(
-                  webview::http::response{200}.set_content_type("text/html"));
+            [](const webview::http::request &request,
+               webview::http::response_promise promise) {
+              if (request.get_method() == "GET" &&
+                  request.get_path() == "/index") {
+                promise.resolve(webview::http::response{200}.set_content_source(
+                    webview::http::make_string_source("Hello", "text/html")));
+                return;
+              }
+              promise.resolve(webview::http::response{404}.set_content_source(
+                  webview::http::make_string_source("Not found",
+                                                    "text/plain")));
             },
-            response);
+            request, response_promise);
       });
+  main->browser()->navigate("app:///index");
   main->set_visible(true);
 
   app.run();
