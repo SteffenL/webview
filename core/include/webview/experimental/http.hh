@@ -181,7 +181,7 @@ public:
 private:
   status m_status;
   header_map m_headers;
-  std::string m_content_type;
+  std::string m_content_type{"text/plain"};
 };
 
 using response_promise = ::webview::detail::promise<response>;

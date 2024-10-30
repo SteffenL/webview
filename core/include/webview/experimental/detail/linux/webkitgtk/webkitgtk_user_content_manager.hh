@@ -32,6 +32,7 @@
 
 #include "../../../../detail/platform/linux/webkitgtk/compat.hh"
 #include "../../user_content_manager_base.hh"
+#include "../gtk/gtk_ref.hh"
 #include "webkitgtk_user_script.hh"
 
 #include <gtk/gtk.h>
@@ -39,13 +40,8 @@
 #include <list>
 
 #if GTK_MAJOR_VERSION >= 4
-
-#include <jsc/jsc.h>
 #include <webkit/webkit.h>
-
 #elif GTK_MAJOR_VERSION >= 3
-
-#include <JavaScriptCore/JavaScript.h>
 #include <webkit2/webkit2.h>
 
 #endif
@@ -55,16 +51,16 @@ namespace detail {
 
 class webkitgtk_user_content_manager : public user_content_manager_base {
 public:
-  explicit webkitgtk_user_content_manager(WebKitUserContentManager *native_ucm)
+  explicit webkitgtk_user_content_manager(
+      gtk_ref<WebKitUserContentManager> native_ucm)
       : m_native_ucm{native_ucm} {
-    g_object_ref_sink(m_native_ucm);
     webkitgtk_compat::connect_script_message_received(
-        m_native_ucm, "__webview__",
+        m_native_ucm.get(), "__webview__",
         [=](WebKitUserContentManager *, const std::string &payload) {
           events().message_received.emit(this, payload);
         });
     webkitgtk_compat::user_content_manager_register_script_message_handler(
-        m_native_ucm, "__webview__");
+        m_native_ucm.get(), "__webview__");
   }
 
   webkitgtk_user_content_manager(const webkitgtk_user_content_manager &) =
@@ -73,27 +69,13 @@ public:
   webkitgtk_user_content_manager &
   operator=(const webkitgtk_user_content_manager &) = delete;
 
-  webkitgtk_user_content_manager(
-      webkitgtk_user_content_manager &&other) noexcept {
-    *this = std::move(other);
-  }
+  webkitgtk_user_content_manager(webkitgtk_user_content_manager &&other) =
+      default;
 
   webkitgtk_user_content_manager &
-  operator=(webkitgtk_user_content_manager &&other) noexcept {
-    if (this != &other) {
-      m_native_ucm = other.m_native_ucm;
-      other.m_native_ucm = nullptr;
+  operator=(webkitgtk_user_content_manager &&other) = default;
 
-      m_scripts = std::move(other.m_scripts);
-    }
-    return *this;
-  }
-
-  virtual ~webkitgtk_user_content_manager() {
-    if (m_native_ucm) {
-      g_object_unref(m_native_ucm);
-    }
-  }
+  virtual ~webkitgtk_user_content_manager() = default;
 
   user_content_manager_events &events() override { return m_events; }
 
@@ -124,7 +106,7 @@ public:
   }
 
   void remove_script(user_script_ptr script) override {
-    webkit_user_content_manager_remove_all_scripts(m_native_ucm);
+    webkit_user_content_manager_remove_all_scripts(m_native_ucm.get());
     for (auto &script_ : m_scripts) {
       if (!script_->equals(script)) {
         script_ =
@@ -134,7 +116,7 @@ public:
   }
 
   void remove_all_scripts() override {
-    webkit_user_content_manager_remove_all_scripts(m_native_ucm);
+    webkit_user_content_manager_remove_all_scripts(m_native_ucm.get());
     m_scripts.clear();
   }
 
@@ -147,7 +129,7 @@ private:
     auto script{user_script_ptr{new webkitgtk_user_script{
         std::forward<T>(code), native_script, where}}};
     m_scripts.push_back(script);
-    webkit_user_content_manager_add_script(m_native_ucm, native_script);
+    webkit_user_content_manager_add_script(m_native_ucm.get(), native_script);
     webkit_user_script_unref(native_script);
     return script;
   }
@@ -163,7 +145,7 @@ private:
   }
 
   user_content_manager_events m_events;
-  WebKitUserContentManager *m_native_ucm{};
+  gtk_ref<WebKitUserContentManager> m_native_ucm;
   std::list<user_script_ptr> m_scripts;
 };
 

@@ -60,10 +60,8 @@ class webkitgtk_browser : public browser_base {
 public:
   explicit webkitgtk_browser(event_loop_ptr loop) : m_event_loop{loop} {
     webkit_dmabuf::apply_webkit_dmabuf_workaround();
-    m_native_browser = webkit_web_view_new();
-
+    m_native_browser = {webkit_web_view_new(), false};
     m_native_context = webkit_web_context_get_default();
-    g_object_unref(m_native_context.get());
 
     m_user_content.reset(new webkitgtk_user_content_manager{
         webkit_web_view_get_user_content_manager(
@@ -71,6 +69,7 @@ public:
     m_bridge.reset(new webkitgtk_bridge{m_user_content, this});
     m_uri_scheme_manager.reset(
         new webkitgtk_uri_scheme_manager{m_native_context});
+
     m_event_loop->dispatch([&] { m_events.ready.emit(); });
   }
 

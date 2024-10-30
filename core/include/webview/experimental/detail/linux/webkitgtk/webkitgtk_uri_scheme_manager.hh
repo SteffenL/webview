@@ -30,157 +30,23 @@
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
 
-#include "../../../../detail/json.hh"
-#include "../../../../detail/platform/linux/webkitgtk/dmabuf.hh"
-#include "../../../../types.hh"
-#include "../../event_loop_base.hh"
 #include "../../uri_scheme_manager_base.hh"
-#include "../../user_content_manager_base.hh"
+#include "../gtk/g_input_stream_wrapper.hh"
 #include "../gtk/gtk_ref.hh"
 
 #include <gtk/gtk.h>
 
-#include <istream>
-#include <memory>
-#include <sstream>
 #include <string>
 
 #if GTK_MAJOR_VERSION >= 4
-
-#include <jsc/jsc.h>
 #include <webkit/webkit.h>
-
 #elif GTK_MAJOR_VERSION >= 3
-
-#include <JavaScriptCore/JavaScript.h>
 #include <webkit2/webkit2.h>
 
 #endif
 
 namespace webview {
 namespace detail {
-
-#define WEBVIEW_TYPE_G_INPUT_STREAM_WRAPPER                                    \
-  webview_g_input_stream_wrapper_get_type()
-
-// Ref.: https://docs.gtk.org/gobject/func.DECLARE_FINAL_TYPE.html
-inline G_DECLARE_FINAL_TYPE(WebViewGInputStreamWrapper,
-                            webview_g_input_stream_wrapper, WEBVIEW,
-                            G_INPUT_STREAM_WRAPPER, GInputStream);
-
-struct WebViewGInputStreamWrapperPrivate {
-  std::unique_ptr<std::istream> stream;
-};
-
-struct _WebViewGInputStreamWrapper {
-  GInputStream parent;
-  WebViewGInputStreamWrapperPrivate *priv;
-};
-
-G_DEFINE_TYPE(WebViewGInputStreamWrapper, webview_g_input_stream_wrapper,
-              G_TYPE_INPUT_STREAM)
-
-// Ref.: https://docs.gtk.org/gio/vfunc.InputStream.read_fn.html
-// Ref.: https://docs.gtk.org/gio/method.InputStream.read.html
-inline gssize webview_g_input_stream_wrapper_read(GInputStream *stream,
-                                                  void *buffer, gsize count,
-                                                  GCancellable *cancellable,
-                                                  GError **error) {
-  auto *self{WEBVIEW_G_INPUT_STREAM_WRAPPER(stream)};
-  if (error) {
-    *error = nullptr;
-  }
-  if (count == 0) {
-    return 0;
-  }
-  auto &stream_{*self->priv->stream};
-  if (!stream_.good()) {
-    if (stream_.eof()) {
-      return 0;
-    }
-    if (error) {
-      *error = g_error_new(G_IO_ERROR, G_IO_ERROR_FAILED, "Stream is no good");
-    }
-    return -1;
-  }
-  using char_type =
-      typename std::remove_reference<decltype(stream_)>::type::char_type;
-  stream_.read(static_cast<char_type *>(buffer),
-               static_cast<std::streamsize>(count));
-  return static_cast<gssize>(stream_.gcount());
-
-  //  // Your custom read logic here. For example, you might read from a file or network socket.
-  //  // Replace the following placeholder code with actual implementation:
-  //  static gsize total_read = 0;
-  //  const char *data = "Hello, this is some data to be read.";
-  //  gsize len = strlen(data);
-  //
-  //  if (total_read >= len) {
-  //    return -1; // End of stream.
-  //  }
-  //
-  //  gsize bytes_to_copy = MIN(count, len - total_read);
-  //  memcpy(buffer, data + total_read, bytes_to_copy);
-  //  total_read += bytes_to_copy;
-  //
-  //  return static_cast<gssize>(bytes_to_copy);
-}
-
-// Ref.: https://docs.gtk.org/gio/vfunc.InputStream.skip.html
-inline gssize webview_g_input_stream_wrapper_skip(GInputStream *stream,
-                                                  gsize count,
-                                                  GCancellable *cancellable,
-                                                  GError **error) {
-  auto *self{WEBVIEW_G_INPUT_STREAM_WRAPPER(stream)};
-  if (error) {
-    *error = nullptr;
-  }
-  auto &stream_{*self->priv->stream};
-  auto pos_before{stream_.tellg()};
-  stream_.seekg(static_cast<gssize>(count));
-  if (!stream_.good()) {
-    if (error) {
-      *error = g_error_new(G_IO_ERROR, G_IO_ERROR_UNKNOWN, "Stream is no good");
-    }
-    return -1;
-  }
-  auto pos_after{stream_.tellg()};
-  auto distance{pos_after - pos_before};
-  return static_cast<gssize>(distance);
-}
-
-// Ref.: https://docs.gtk.org/gio/vfunc.InputStream.close_fn.html
-inline gboolean webview_g_input_stream_wrapper_close(GInputStream *stream,
-                                                     GCancellable *cancellable,
-                                                     GError **error) {
-  auto *self{WEBVIEW_G_INPUT_STREAM_WRAPPER(stream)};
-  if (error) {
-    *error = nullptr;
-  }
-  delete self->priv;
-  self->priv = nullptr;
-  // TODO: Is the return value correct? Docs don't say.
-  return TRUE;
-}
-
-inline void webview_g_input_stream_wrapper_class_init(
-    WebViewGInputStreamWrapperClass *class_) {
-  auto *stream_class{G_INPUT_STREAM_CLASS(class_)};
-  stream_class->read_fn = webview_g_input_stream_wrapper_read;
-  stream_class->skip = webview_g_input_stream_wrapper_skip;
-  stream_class->close_fn = webview_g_input_stream_wrapper_close;
-}
-
-inline void
-webview_g_input_stream_wrapper_init(WebViewGInputStreamWrapper *self) {
-  self->priv = new WebViewGInputStreamWrapperPrivate{};
-  auto on_destroy{
-      +[](WebViewGInputStreamWrapper *self_, gpointer /*user_data*/) {
-        delete self_->priv;
-        self_->priv = nullptr;
-      }};
-  g_signal_connect(G_OBJECT(self), "destroy", G_CALLBACK(on_destroy), nullptr);
-}
 
 class webkitgtk_uri_scheme_manager : public uri_scheme_manager_base {
 public:
@@ -207,21 +73,24 @@ public:
               [=](http::response response) {
                 gtk_ref<WebViewGInputStreamWrapper> stream_wrapper{
                     WEBVIEW_G_INPUT_STREAM_WRAPPER(g_object_new(
-                        WEBVIEW_TYPE_G_INPUT_STREAM_WRAPPER, nullptr))};
+                        WEBVIEW_TYPE_G_INPUT_STREAM_WRAPPER, nullptr)),
+                    false};
                 webview_g_input_stream_wrapper_init(stream_wrapper.get());
-                //// TODO: pick stream type based on what's in the response object
-                //stream_wrapper->priv->stream.reset(
-                //    new std::stringstream{"Hello"});
-                gint64 stream_length{-1};
-                gtk_ref<WebKitURISchemeResponse> response_ref{
+                webview_g_input_stream_wrapper_load_string(stream_wrapper.get(),
+                                                           "hello, web");
+
+                gtk_ref<WebKitURISchemeResponse> native_response{
                     webkit_uri_scheme_response_new(
-                        G_INPUT_STREAM(stream_wrapper.get()), stream_length)};
+                        G_INPUT_STREAM(stream_wrapper.get()), -1),
+                    false};
                 webkit_uri_scheme_response_set_status(
-                    response_ref.get(),
+                    native_response.get(),
                     static_cast<guint>(response.get_status().get_code()),
                     response.get_status().get_reason().c_str());
+                webkit_uri_scheme_response_set_content_type(
+                    native_response.get(), response.get_content_type().c_str());
                 webkit_uri_scheme_request_finish_with_response(
-                    native_request, response_ref.get());
+                    native_request, native_response.get());
               },
               [=](http::response) {
                 webkit_uri_scheme_request_finish_error(native_request, nullptr);
@@ -230,6 +99,10 @@ public:
     webkit_web_context_register_uri_scheme(
         m_context.get(), name.c_str(), fn, new handler_type{std::move(handler)},
         +[](void *p) { delete static_cast<handler_type *>(p); });
+    auto *security_manager{
+        webkit_web_context_get_security_manager(m_context.get())};
+    webkit_security_manager_register_uri_scheme_as_secure(security_manager,
+                                                          name.c_str());
   }
 
   void unbind(const std::string &name) override {
@@ -246,7 +119,6 @@ private:
           static_cast<http::request *>(user_data)->set_header(name, value);
         },
         &to);
-    soup_message_headers_unref(from_headers);
   }
 
   gtk_ref<WebKitWebContext> m_context;

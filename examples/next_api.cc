@@ -56,12 +56,12 @@ int main() {
         std::cout << "req: " << request.get_method() << ' '
                   << request.get_path() << '\n'
                   << headers << '\n';
-        //scheme_tasks.put(
-        //    [](webview::http::response_promise response) {
-        response.resolve(
-            webview::http::response{{200, "OK"}}.set_content_type("text/html"));
-        //     },
-        //     response);
+        scheme_tasks.put(
+            [](webview::http::response_promise response) {
+              response.resolve(
+                  webview::http::response{200}.set_content_type("text/html"));
+            },
+            response);
       });
   main->set_visible(true);
 

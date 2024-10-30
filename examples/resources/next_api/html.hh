@@ -50,7 +50,7 @@ constexpr auto *main_window_html{R"html(
 </div>
 <h2>Navigate</h2>
 <div class="hstack gap">
-  <a href="app://./hello">Custom URI scheme</a>
+  <a href="app:///hello">Custom URI scheme</a>
 </div>
 <script type="module">
   const funcs = {

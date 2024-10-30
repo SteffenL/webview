@@ -40,7 +40,12 @@ namespace detail {
 template <typename T> class gtk_ref {
 public:
   gtk_ref() = default;
-  gtk_ref(T *ptr) : m_ptr{ptr} { ref(); }
+
+  gtk_ref(T *ptr, bool ref = true) : m_ptr{ptr} {
+    if (ref) {
+      this->ref();
+    }
+  }
 
   gtk_ref(const gtk_ref &other) { *this = other; }
 
