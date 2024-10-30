@@ -50,12 +50,14 @@ int main() {
         scheme_tasks.put(
             [](const webview::http::request &request,
                webview::http::response_promise promise) {
-              if (request.get_method() == "GET" &&
-                  request.get_path() == "/index") {
-                promise.resolve(webview::http::response{200}.set_content_source(
-                    webview::http::content_source::string("Hello",
-                                                          "text/html")));
-                return;
+              if (request.get_method() == "GET") {
+                if (request.get_path() == "/index") {
+                  promise.resolve(
+                      webview::http::response{200}.set_content_source(
+                          webview::http::content_source::string("Hello",
+                                                                "text/html")));
+                  return;
+                }
               }
               promise.resolve(webview::http::response{404}.set_content_source(
                   webview::http::content_source::string("Not found",
