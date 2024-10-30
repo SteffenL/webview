@@ -36,6 +36,7 @@
 #include "../../event_loop_base.hh"
 #include "../gtk/gtk_ref.hh"
 #include "webkitgtk_bridge.hh"
+#include "webkitgtk_uri_scheme_manager.hh"
 #include "webkitgtk_user_content_manager.hh"
 
 #include <gtk/gtk.h>
@@ -60,10 +61,16 @@ public:
   explicit webkitgtk_browser(event_loop_ptr loop) : m_event_loop{loop} {
     webkit_dmabuf::apply_webkit_dmabuf_workaround();
     m_native_browser = webkit_web_view_new();
+
+    m_native_context = webkit_web_context_get_default();
+    g_object_unref(m_native_context.get());
+
     m_user_content.reset(new webkitgtk_user_content_manager{
         webkit_web_view_get_user_content_manager(
             WEBKIT_WEB_VIEW(m_native_browser.get()))});
     m_bridge.reset(new webkitgtk_bridge{m_user_content, this});
+    m_uri_scheme_manager.reset(
+        new webkitgtk_uri_scheme_manager{m_native_context});
     m_event_loop->dispatch([&] { m_events.ready.emit(); });
   }
 
@@ -102,13 +109,16 @@ public:
 
   user_content_manager_ptr user_content() override { return m_user_content; }
   bridge_ptr bridge() override { return m_bridge; }
+  uri_scheme_manager_ptr uri_schemes() override { return m_uri_scheme_manager; }
 
 private:
   browser_events m_events;
   event_loop_ptr m_event_loop;
   gtk_ref<GtkWidget> m_native_browser;
+  gtk_ref<WebKitWebContext> m_native_context;
   user_content_manager_ptr m_user_content;
   bridge_ptr m_bridge;
+  uri_scheme_manager_ptr m_uri_scheme_manager;
 };
 
 } // namespace detail

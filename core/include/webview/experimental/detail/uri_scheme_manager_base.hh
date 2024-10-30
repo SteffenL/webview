@@ -23,52 +23,44 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_BROWSER_BASE_HH
-#define WEBVIEW_DETAIL_BROWSER_BASE_HH
+#ifndef WEBVIEW_DETAIL_URI_SCHEME_MANAGER_BASE_HH
+#define WEBVIEW_DETAIL_URI_SCHEME_MANAGER_BASE_HH
 
-#include "../../detail/signal.hh"
-#include "../../types.hh"
-#include "bridge_base.hh"
-#include "iscript_evaluator.hh"
-#include "user_content_manager_base.hh"
-#include "uri_scheme_manager_base.hh"
+#include "../http.hh"
 
+#include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 namespace webview {
 
-class browser_events {
+class iuri_scheme_manager;
+
+class iuri_scheme_manager {
 public:
-  detail::signal<void()> ready;
+  using handler_type = std::function<void(const http::request &request,
+                                          http::response_promise response)>;
+
+  virtual ~iuri_scheme_manager() = default;
+
+  virtual void bind(const std::string &name, handler_type handler) = 0;
+  virtual void unbind(const std::string &name) = 0;
 };
 
-class ibrowser : public iscript_evaluator {
-public:
-  virtual ~ibrowser() = default;
-
-  virtual browser_events &events() = 0;
-  virtual void *get_native_handle() const = 0;
-  virtual void *get_native_embeddable() = 0;
-
-  virtual void navigate(const std::string &url) = 0;
-  virtual void set_html(const std::string &html) = 0;
-  //virtual void eval(const std::string& js) = 0;
-  virtual user_content_manager_ptr user_content() = 0;
-  virtual bridge_ptr bridge() = 0;
-  virtual uri_scheme_manager_ptr uri_schemes() = 0;
-};
-
-using browser_ptr = std::shared_ptr<ibrowser>;
+using uri_scheme_manager_ptr = std::shared_ptr<iuri_scheme_manager>;
 
 namespace detail {
 
-class browser_base : public ibrowser {
+class uri_scheme_manager_base : public iuri_scheme_manager {
 public:
-  virtual ~browser_base() = default;
+  virtual ~uri_scheme_manager_base() = default;
+
+private:
+  std::unordered_map<std::string, handler_type> m_handlers;
 };
 
 } // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_BROWSER_BASE_HH
+#endif // WEBVIEW_DETAIL_URI_SCHEME_MANAGER_BASE_HH

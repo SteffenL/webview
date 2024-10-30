@@ -17,6 +17,7 @@ constexpr auto *html_start{R"html(
       button:active { background: #c3c3c3; }
       button:focus { outline: .1em solid #575757; outline-offset: -.25em; }
       button:disabled { background: #c3c3c3; outline: none; opacity: .5; cursor: not-allowed; }
+      a { color: #ddd; }
       .hstack { display: flex; flex-direction: row; flex-wrap: nowrap; }
       .vstack { display: flex; flex-direction: column; flex-wrap: nowrap; }
       .gap { gap: .5em; }
@@ -46,6 +47,10 @@ constexpr auto *main_window_html{R"html(
 <div class="hstack gap">
   <button data-#on="click:runTasks">Run</button>
   <span id="tasksReply"></span>
+</div>
+<h2>Navigate</h2>
+<div class="hstack gap">
+  <a href="app://./hello">Custom URI scheme</a>
 </div>
 <script type="module">
   const funcs = {

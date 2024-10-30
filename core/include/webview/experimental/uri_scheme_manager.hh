@@ -23,52 +23,29 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_BROWSER_BASE_HH
-#define WEBVIEW_DETAIL_BROWSER_BASE_HH
+#ifndef WEBVIEW_WINDOW_MANAGER_HH
+#define WEBVIEW_WINDOW_MANAGER_HH
 
-#include "../../detail/signal.hh"
-#include "../../types.hh"
-#include "bridge_base.hh"
-#include "iscript_evaluator.hh"
-#include "user_content_manager_base.hh"
-#include "uri_scheme_manager_base.hh"
-
-#include <memory>
-#include <string>
+#include "detail/uri_scheme_manager_base.hh"
+#include "options.hh"
+#include "window.hh"
 
 namespace webview {
 
-class browser_events {
+class uri_scheme_manager : public detail::uri_scheme_manager_base {
 public:
-  detail::signal<void()> ready;
+  void bind(const std::string &name, handler_type handler) override {
+
+  }
+
+  void unbind(const std::string &name) override {
+
+  }
+
+private:
+  std::unordered_map<std::string, handler_type> m_handlers;
 };
 
-class ibrowser : public iscript_evaluator {
-public:
-  virtual ~ibrowser() = default;
-
-  virtual browser_events &events() = 0;
-  virtual void *get_native_handle() const = 0;
-  virtual void *get_native_embeddable() = 0;
-
-  virtual void navigate(const std::string &url) = 0;
-  virtual void set_html(const std::string &html) = 0;
-  //virtual void eval(const std::string& js) = 0;
-  virtual user_content_manager_ptr user_content() = 0;
-  virtual bridge_ptr bridge() = 0;
-  virtual uri_scheme_manager_ptr uri_schemes() = 0;
-};
-
-using browser_ptr = std::shared_ptr<ibrowser>;
-
-namespace detail {
-
-class browser_base : public ibrowser {
-public:
-  virtual ~browser_base() = default;
-};
-
-} // namespace detail
 } // namespace webview
 
-#endif // WEBVIEW_DETAIL_BROWSER_BASE_HH
+#endif // WEBVIEW_WINDOW_MANAGER_HH
