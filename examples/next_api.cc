@@ -32,11 +32,10 @@ int main() {
                  webview::http::response_promise promise) {
                 if (request.get_method() == "GET") {
                   if (request.get_path() == "/index") {
-                    static const std::string html{make_html(sub_window_html)};
                     promise.resolve(
                         webview::http::response{200}.set_content_source(
                             webview::http::content_source::string(
-                                html, "text/html")));
+                                make_html(sub_window_html), "text/html")));
                     return;
                   }
                 }
@@ -69,11 +68,10 @@ int main() {
                webview::http::response_promise promise) {
               if (request.get_method() == "GET") {
                 if (request.get_path() == "/index") {
-                  static const std::string html{make_html(main_window_html)};
                   promise.resolve(
                       webview::http::response{200}.set_content_source(
-                          webview::http::content_source::string(html,
-                                                                "text/html")));
+                          webview::http::content_source::string(
+                              make_html(main_window_html), "text/html")));
                   return;
                 }
               }
