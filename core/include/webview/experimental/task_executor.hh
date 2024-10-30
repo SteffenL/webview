@@ -32,6 +32,7 @@
 #include <functional>
 #include <mutex>
 #include <queue>
+#include <thread>
 #include <vector>
 
 namespace webview {
@@ -43,7 +44,7 @@ class task_executor {
 public:
   using task_fn = std::function<void()>;
 
-  task_executor(size_t thread_count = 1) {
+  task_executor(size_t thread_count = std::thread::hardware_concurrency()) {
     for (size_t i{}; i < thread_count; ++i) {
       m_worker_threads.emplace_back([this] {
         while (true) {

@@ -13,8 +13,8 @@ int main() {
 #endif
   webview::application app;
   webview::window_manager wm;
-  webview::task_executor bridge_tasks;
-  webview::task_executor scheme_tasks{std::thread::hardware_concurrency()};
+  webview::task_executor bridge_tasks{1};
+  webview::task_executor scheme_tasks;
 
   auto main{wm.new_window(
       webview::window_options{}.set_size({480, 320}).set_title("Main Window"))};
