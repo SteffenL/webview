@@ -508,16 +508,16 @@ public:
       throw exception{WEBVIEW_ERROR_INVALID_STATE, "Message window is null"};
     }
 
+    auto cb =
+        std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1);
+
+    embed(m_widget, debug, cb).ensure_ok();
+
     if (m_owns_window) {
       ShowWindow(m_window, SW_SHOW);
       UpdateWindow(m_window);
       SetFocus(m_window);
     }
-
-    auto cb =
-        std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1);
-
-    embed(m_widget, debug, cb).ensure_ok();
   }
 
   virtual ~win32_edge_engine() {
