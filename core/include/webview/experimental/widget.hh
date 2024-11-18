@@ -34,11 +34,13 @@
 namespace webview {
 
 class widget : public detail::widget_impl {
+  using browser_type = class browser;
+
 public:
   widget(const widget_options &options = {},
          event_loop_ptr loop = event_loop::get_default())
       : m_event_loop{loop},
-        m_browser{new class browser{options.get_browser_options(), loop}} {
+        m_browser{new browser_type{options.get_browser_options(), loop}} {
     embed(m_browser->get_native_embeddable());
   }
 

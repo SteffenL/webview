@@ -105,7 +105,7 @@ public:
                                                           name.c_str());
   }
 
-  void unbind(const std::string &name) override {
+  void unbind(const std::string &/*name*/) override {
     // not supported by WebKitGTK?
   }
 

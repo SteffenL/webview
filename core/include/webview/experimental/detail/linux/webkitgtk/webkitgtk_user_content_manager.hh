@@ -37,7 +37,9 @@
 
 #include <gtk/gtk.h>
 
+#include <cassert>
 #include <list>
+#include <stdexcept>
 
 #if GTK_MAJOR_VERSION >= 4
 #include <webkit/webkit.h>
@@ -134,14 +136,15 @@ private:
     return script;
   }
 
-  static WebKitUserScriptInjectionTime
-  map(user_script_injection_time where) noexcept {
+  static WebKitUserScriptInjectionTime map(user_script_injection_time where) {
     switch (where) {
     case user_script_injection_time::start:
       return WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START;
     case user_script_injection_time::end:
       return WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END;
     }
+    assert(!!"Invalid enum value");
+    throw std::logic_error{"Invalid enum value"};
   }
 
   user_content_manager_events m_events;
