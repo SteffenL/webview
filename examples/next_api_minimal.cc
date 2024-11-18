@@ -1,10 +1,7 @@
+#include "webview/experimental/main.h"
 #include "webview/experimental/webview.hh"
 
-#ifdef _WIN32
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-#else
-int main() {
-#endif
+int webview_main(int /*argc*/, const char * /*argv*/[]) {
   webview::application app;
   webview::window window{webview::window_options{}
                              .set_size({480, 320})

@@ -1,4 +1,5 @@
 #include "resources/next_api/html.hh"
+#include "webview/experimental/main.h"
 #include "webview/experimental/webview.hh"
 
 #include <atomic>
@@ -6,11 +7,7 @@
 #include <memory>
 #include <thread>
 
-#ifdef _WIN32
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-#else
-int main() {
-#endif
+int webview_main(int /*argc*/, const char * /*argv*/[]) {
   webview::application app;
   webview::window_manager wm;
   webview::task_executor bridge_tasks{1};
