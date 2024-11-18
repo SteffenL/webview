@@ -33,11 +33,24 @@
 #endif
 
 #ifdef _WIN32
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+
+#include <wchar.h>
+
+// Windows header must be included first
+// clang-format off
 #include <windows.h>
+#include <shellapi.h>
+// clang-format on
+
+#ifdef _MSC_VER
+#pragma comment(lib, "shell32.lib")
 #endif
+
+#endif // _WIN32
 
 int webview_main(int argc, const char *argv[]);
 
