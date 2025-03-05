@@ -83,6 +83,18 @@
 namespace webview {
 namespace detail {
 
+inline std::string
+format_time_point(const std::chrono::system_clock::time_point &tp) {
+  std::time_t t{std::chrono::system_clock::to_time_t(tp)};
+  std::string s{std::ctime(&t)};
+  s.resize(s.size() - 1);
+  return s;
+}
+
+inline std::string log_msg_prefix() {
+  return "[" + format_time_point(std::chrono::system_clock::now()) + "] ";
+}
+
 using msg_cb_t = std::function<void(const std::string)>;
 
 class webview2_com_handler
@@ -729,13 +741,12 @@ private:
         wnd, cb,
         [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
           if (!controller || !webview) {
-            std::cout << "[" << std::chrono::system_clock::now()
-                      << "] WebView2 controller init failed\n";
+            std::cout << log_msg_prefix()
+                      << "WebView2 controller init failed\n";
             flag.clear();
             return;
           }
-          std::cout << "[" << std::chrono::system_clock::now()
-                    << "] got WebView2 controller\n";
+          std::cout << log_msg_prefix() << "got WebView2 controller\n";
           controller->AddRef();
           webview->AddRef();
           m_controller = controller;
@@ -753,35 +764,29 @@ private:
     bool got_quit_msg = false;
     MSG msg;
     while (true) {
-      std::cout << "[" << std::chrono::system_clock::now()
-                << "] embed(): checking flag\n";
+      std::cout << log_msg_prefix() << "embed(): checking flag\n";
       if (!flag.test_and_set()) {
-        std::cout << "[" << std::chrono::system_clock::now()
-                  << "] embed(): flag.test_and_set() returned false\n";
+        std::cout << log_msg_prefix()
+                  << "embed(): flag.test_and_set() returned false\n";
         break;
       }
-      std::cout << "[" << std::chrono::system_clock::now()
-                << "] embed(): before GetMessageW()\n";
+      std::cout << log_msg_prefix() << "embed(): before GetMessageW()\n";
       auto gm{GetMessageW(&msg, nullptr, 0, 0)};
-      std::cout << "[" << std::chrono::system_clock::now()
-                << "] embed(): after GetMessageW(); returned " << gm << "\n";
+      std::cout << log_msg_prefix() << "embed(): after GetMessageW(); returned "
+                << gm << "\n";
       if (gm < 0) {
-        std::cout << "[" << std::chrono::system_clock::now()
-                  << "] embed(): GetMessageW() failed\n";
+        std::cout << log_msg_prefix() << "embed(): GetMessageW() failed\n";
         break;
       }
       if (msg.message == WM_QUIT) {
-        std::cout << "[" << std::chrono::system_clock::now()
-                  << "] embed(): got quit message\n";
+        std::cout << log_msg_prefix() << "embed(): got quit message\n";
         got_quit_msg = true;
         break;
       }
       TranslateMessage(&msg);
-      std::cout << "[" << std::chrono::system_clock::now()
-                << "] embed(): before DispatchMessageW()\n";
+      std::cout << log_msg_prefix() << "embed(): before DispatchMessageW()\n";
       DispatchMessageW(&msg);
-      std::cout << "[" << std::chrono::system_clock::now()
-                << "] embed(): after DispatchMessageW()\n";
+      std::cout << log_msg_prefix() << "embed(): after DispatchMessageW()\n";
     }
     if (got_quit_msg) {
       return error_info{WEBVIEW_ERROR_CANCELED};
@@ -886,8 +891,7 @@ private:
 
   // Blocks while depleting the run loop of events.
   void deplete_run_loop_event_queue() {
-    std::cout << "[" << std::chrono::system_clock::now()
-              << "] deplete_run_loop_event_queue(): begin\n";
+    std::cout << log_msg_prefix() << "deplete_run_loop_event_queue(): begin\n";
     bool done{};
     dispatch([&] { done = true; });
     while (!done) {
@@ -897,8 +901,7 @@ private:
         DispatchMessageW(&msg);
       }
     }
-    std::cout << "[" << std::chrono::system_clock::now()
-              << "] deplete_run_loop_event_queue(): end\n"
+    std::cout << log_msg_prefix() << "deplete_run_loop_event_queue(): end\n"
   }
 
   // The app is expected to call CoInitializeEx before
