@@ -901,7 +901,7 @@ private:
         DispatchMessageW(&msg);
       }
     }
-    std::cout << log_msg_prefix() << "deplete_run_loop_event_queue(): end\n"
+    std::cout << log_msg_prefix() << "deplete_run_loop_event_queue(): end\n";
   }
 
   // The app is expected to call CoInitializeEx before
