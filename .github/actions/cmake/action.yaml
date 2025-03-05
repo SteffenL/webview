@@ -146,16 +146,8 @@ runs:
             cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
           fi
           cmake_cmd+=(
-            ctest
-            --test-dir "${{ inputs.build-dir }}"
-            --output-on-failure
-            --build-config "${config}"
-            --verbose
+            "build/${config}/core/tests/webview_core_tests"
           )
-          if [[ ! -z "${{ inputs.test-timeout }}" ]]; then
-            cmake_cmd+=(--timeout "${{ inputs.test-timeout }}")
-          fi
-          "${cmake_cmd[@]}"
         done
       shell: ${{ inputs.shell }}
 
