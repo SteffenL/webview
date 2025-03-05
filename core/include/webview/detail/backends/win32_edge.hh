@@ -693,10 +693,8 @@ protected:
     auto res =
         m_webview->AddScriptToExecuteOnDocumentCreated(wjs.c_str(), &handler);
     if (SUCCEEDED(res)) {
-      // Sadly we need to pump the even loop in order to get the script ID.
-      while (!done) {
-        deplete_run_loop_event_queue();
-      }
+      // Sadly we need to pump the event loop in order to get the script ID.
+      run_event_loop_until([&] { return done; });
     }
     // TODO: There's a non-zero chance that we didn't get the script ID.
     //       We need to convey the error somehow.
@@ -894,14 +892,21 @@ private:
     std::cout << log_msg_prefix() << "deplete_run_loop_event_queue(): begin\n";
     bool done{};
     dispatch([&] { done = true; });
-    while (!done) {
+    run_event_loop_until([&] { return done; });
+    std::cout << log_msg_prefix() << "deplete_run_loop_event_queue(): end\n";
+  }
+
+  // Blocks while depleting the run loop of events.
+  template <typename Callable> void run_event_loop_until(Callable &&fn) {
+    std::cout << log_msg_prefix() << "run_event_loop_until(): begin\n";
+    while (!fn()) {
       MSG msg;
       if (GetMessageW(&msg, nullptr, 0, 0) > 0) {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
       }
     }
-    std::cout << log_msg_prefix() << "deplete_run_loop_event_queue(): end\n";
+    std::cout << log_msg_prefix() << "run_event_loop_until(): end\n";
   }
 
   // The app is expected to call CoInitializeEx before
