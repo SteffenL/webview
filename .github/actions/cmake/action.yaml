@@ -150,6 +150,7 @@ runs:
             --test-dir "${{ inputs.build-dir }}"
             --output-on-failure
             --build-config "${config}"
+            --verbose
           )
           if [[ ! -z "${{ inputs.test-timeout }}" ]]; then
             cmake_cmd+=(--timeout "${{ inputs.test-timeout }}")
