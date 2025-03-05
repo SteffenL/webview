@@ -59,7 +59,7 @@ inputs:
   test-timeout:
     description: Test timeout in seconds
     required: false
-    default: '60'
+    default: '10'
   test-wrapper-cmd:
     description: Test wrapper command
     required: false
