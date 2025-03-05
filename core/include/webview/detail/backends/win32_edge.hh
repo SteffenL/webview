@@ -54,8 +54,10 @@
 #include "../utility/string.hh"
 
 #include <atomic>
+#include <chrono>
 #include <cstdlib>
 #include <functional>
+#include <iostream>
 #include <list>
 #include <memory>
 #include <utility>
@@ -727,9 +729,13 @@ private:
         wnd, cb,
         [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
           if (!controller || !webview) {
+            std::cout << "[" << std::chrono::system_clock::now()
+                      << "] WebView2 controller init failed\n";
             flag.clear();
             return;
           }
+          std::cout << "[" << std::chrono::system_clock::now()
+                    << "] got WebView2 controller\n";
           controller->AddRef();
           webview->AddRef();
           m_controller = controller;
@@ -746,13 +752,36 @@ private:
     // Pump the message loop until WebView2 has finished initialization.
     bool got_quit_msg = false;
     MSG msg;
-    while (flag.test_and_set() && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
+    while (true) {
+      std::cout << "[" << std::chrono::system_clock::now()
+                << "] embed(): checking flag\n";
+      if (!flag.test_and_set()) {
+        std::cout << "[" << std::chrono::system_clock::now()
+                  << "] embed(): flag.test_and_set() returned false\n";
+        break;
+      }
+      std::cout << "[" << std::chrono::system_clock::now()
+                << "] embed(): before GetMessageW()\n";
+      auto gm{GetMessageW(&msg, nullptr, 0, 0)};
+      std::cout << "[" << std::chrono::system_clock::now()
+                << "] embed(): after GetMessageW(); returned " << gm << "\n";
+      if (gm < 0) {
+        std::cout << "[" << std::chrono::system_clock::now()
+                  << "] embed(): GetMessageW() failed\n";
+        break;
+      }
       if (msg.message == WM_QUIT) {
+        std::cout << "[" << std::chrono::system_clock::now()
+                  << "] embed(): got quit message\n";
         got_quit_msg = true;
         break;
       }
       TranslateMessage(&msg);
+      std::cout << "[" << std::chrono::system_clock::now()
+                << "] embed(): before DispatchMessageW()\n";
       DispatchMessageW(&msg);
+      std::cout << "[" << std::chrono::system_clock::now()
+                << "] embed(): after DispatchMessageW()\n";
     }
     if (got_quit_msg) {
       return error_info{WEBVIEW_ERROR_CANCELED};
@@ -857,6 +886,8 @@ private:
 
   // Blocks while depleting the run loop of events.
   void deplete_run_loop_event_queue() {
+    std::cout << "[" << std::chrono::system_clock::now()
+              << "] deplete_run_loop_event_queue(): begin\n";
     bool done{};
     dispatch([&] { done = true; });
     while (!done) {
@@ -866,6 +897,8 @@ private:
         DispatchMessageW(&msg);
       }
     }
+    std::cout << "[" << std::chrono::system_clock::now()
+              << "] deplete_run_loop_event_queue(): end\n"
   }
 
   // The app is expected to call CoInitializeEx before
