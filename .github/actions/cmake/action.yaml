@@ -126,29 +126,16 @@ runs:
 
     - name: Build
       run: |
-        configs=(${{ steps.generate-build-config-names.outputs.configs }})
-        for config in "${configs[@]}"; do
-          cmake_cmd=(
-            cmake
-            --build "${{ inputs.build-dir }}"
-            --config "${config}"
-          )
-          "${cmake_cmd[@]}"
-        done
+        cmake_cmd=(
+          cmake
+          --build "${{ inputs.build-dir }}"
+          --config Debug
+        )
+        "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
     - name: Test
-      run: |
-        configs=(${{ steps.generate-build-config-names.outputs.configs }})
-        for config in "${configs[@]}"; do
-          cmake_cmd=()
-          if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
-            cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
-          fi
-          cmake_cmd+=(
-            "build/core/tests/${config}/webview_core_tests.exe"
-          )
-        done
+      run: build/core/tests/Debug/webview_core_tests.exe
       shell: ${{ inputs.shell }}
 
     - if: inputs.package != '' && fromJson(inputs.package)
