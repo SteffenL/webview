@@ -60,8 +60,8 @@
 #include <iostream>
 #include <list>
 #include <memory>
-#include <utility>
 #include <thread>
+#include <utility>
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -93,7 +93,12 @@ format_time_point(const std::chrono::system_clock::time_point &tp) {
 }
 
 inline std::string log_msg_prefix() {
-  return "[" + format_time_point(std::chrono::system_clock::now()) + "] ";
+  return "[" + format_time_point(std::chrono::system_clock::now()) + "][" +
+         std::this_thread::get_id() + "] ";
+}
+
+template <typename... Args> void print(Args &&args) {
+  ((std::cout << std::forward<Args>(args)), ...);
 }
 
 using msg_cb_t = std::function<void(const std::string)>;
@@ -751,7 +756,6 @@ private:
           m_controller = controller;
           m_webview = webview;
           flag.clear();
-          std::this_thread::sleep_for(std::chrono::seconds{3});
         });
 
     m_com_handler->set_attempt_handler([&] {
