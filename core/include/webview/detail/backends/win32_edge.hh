@@ -92,15 +92,11 @@ format_time_point(const std::chrono::system_clock::time_point &tp) {
   return s;
 }
 
-inline void log_msg_prefix(std::ostream &os) {
-  os << "[" << format_time_point(std::chrono::system_clock::now()) << "]["
-     << std::to_string(std::this_thread::get_id()) << "] ";
-}
-
 template <typename Arg, typename... Args>
 void print(Arg &&arg, Args &&...args) {
-  log_msg_prefix(std::cout);
-  std::cout << std::forward<Arg>(arg);
+  std::cout << "[" << format_time_point(std::chrono::system_clock::now())
+            << "][" << std::to_string(std::this_thread::get_id()) << "] "
+            << std::forward<Arg>(arg);
   ((std::cout << std::forward<Args>(args)), ...);
 }
 
