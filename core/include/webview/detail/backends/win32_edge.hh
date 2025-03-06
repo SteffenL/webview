@@ -771,7 +771,7 @@ private:
         print("embed(): flag.test_and_set() returned false\n");
         break;
       }
-      print("embed(): before GetMessageW()\n";
+      print("embed(): before GetMessageW()\n");
       auto gm{GetMessageW(&msg, nullptr, 0, 0)};
       print("embed(): after GetMessageW(); returned ", gm, "\n");
       if (gm < 0) {
