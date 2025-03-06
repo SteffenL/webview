@@ -42,6 +42,7 @@
 #include "../../errors.hh"
 #include "../../types.hh"
 #include "../engine_base.hh"
+#include "../logging.hh"
 #include "../native_library.hh"
 #include "../platform/windows/com_init_wrapper.hh"
 #include "../platform/windows/dpi.hh"
@@ -54,13 +55,11 @@
 #include "../utility/string.hh"
 
 #include <atomic>
-#include <chrono>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <list>
 #include <memory>
-#include <thread>
 #include <utility>
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -83,22 +82,6 @@
 
 namespace webview {
 namespace detail {
-
-inline std::string
-format_time_point(const std::chrono::system_clock::time_point &tp) {
-  std::time_t t{std::chrono::system_clock::to_time_t(tp)};
-  std::string s{std::ctime(&t)};
-  s.resize(s.size() - 1);
-  return s;
-}
-
-template <typename Arg, typename... Args>
-void print(Arg &&arg, Args &&...args) {
-  std::cout << "[" << format_time_point(std::chrono::system_clock::now())
-            << "][" << std::this_thread::get_id() << "] "
-            << std::forward<Arg>(arg);
-  ((std::cout << std::forward<Args>(args)), ...);
-}
 
 using msg_cb_t = std::function<void(const std::string)>;
 

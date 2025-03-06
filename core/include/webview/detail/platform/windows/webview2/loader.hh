@@ -31,6 +31,7 @@
 #if defined(WEBVIEW_PLATFORM_WINDOWS) && defined(WEBVIEW_EDGE)
 
 #include "../../../native_library.hh"
+#include "../../../logging.hh"
 #include "../iid.hh"
 #include "../reg_key.hh"
 #include "../version.hh"
@@ -159,6 +160,7 @@ public:
       ICoreWebView2EnvironmentOptions *env_options,
       ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler
           *created_handler) const {
+    print("loader::create_environment_with_options(): m_lib.is_loaded(): ", m_lib.is_loaded())
 #if WEBVIEW_MSWEBVIEW2_EXPLICIT_LINK == 1
     if (m_lib.is_loaded()) {
       if (auto fn = m_lib.get(
