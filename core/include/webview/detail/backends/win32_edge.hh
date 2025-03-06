@@ -740,6 +740,8 @@ private:
         });
 
     m_com_handler->set_attempt_handler([&] {
+      print("com_handler attempt handler: calling "
+            "create_environment_with_options()\n");
       return m_webview2_loader.create_environment_with_options(
           nullptr, userDataFolder, nullptr, m_com_handler);
     });
