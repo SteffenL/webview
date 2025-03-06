@@ -745,12 +745,11 @@ private:
         wnd, cb,
         [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
           if (!controller || !webview) {
-            std::cout << log_msg_prefix()
-                      << "WebView2 controller init failed\n";
+            print("WebView2 controller init failed\n");
             flag.clear();
             return;
           }
-          std::cout << log_msg_prefix() << "got WebView2 controller\n";
+          print("got WebView2 controller\n");
           controller->AddRef();
           webview->AddRef();
           m_controller = controller;
@@ -768,29 +767,27 @@ private:
     bool got_quit_msg = false;
     MSG msg;
     while (true) {
-      std::cout << log_msg_prefix() << "embed(): checking flag\n";
+      print("embed(): checking flag\n");
       if (!flag.test_and_set()) {
-        std::cout << log_msg_prefix()
-                  << "embed(): flag.test_and_set() returned false\n";
+        print("embed(): flag.test_and_set() returned false\n");
         break;
       }
-      std::cout << log_msg_prefix() << "embed(): before GetMessageW()\n";
+      print("embed(): before GetMessageW()\n";
       auto gm{GetMessageW(&msg, nullptr, 0, 0)};
-      std::cout << log_msg_prefix() << "embed(): after GetMessageW(); returned "
-                << gm << "\n";
+      print("embed(): after GetMessageW(); returned ", gm, "\n");
       if (gm < 0) {
-        std::cout << log_msg_prefix() << "embed(): GetMessageW() failed\n";
+        print("embed(): GetMessageW() failed\n");
         break;
       }
       if (msg.message == WM_QUIT) {
-        std::cout << log_msg_prefix() << "embed(): got quit message\n";
+        print("embed(): got quit message\n");
         got_quit_msg = true;
         break;
       }
       TranslateMessage(&msg);
-      std::cout << log_msg_prefix() << "embed(): before DispatchMessageW()\n";
+      print("embed(): before DispatchMessageW()\n");
       DispatchMessageW(&msg);
-      std::cout << log_msg_prefix() << "embed(): after DispatchMessageW()\n";
+      print("embed(): after DispatchMessageW()\n");
     }
     if (got_quit_msg) {
       return error_info{WEBVIEW_ERROR_CANCELED};
@@ -895,16 +892,16 @@ private:
 
   // Blocks while depleting the run loop of events.
   void deplete_run_loop_event_queue() {
-    std::cout << log_msg_prefix() << "deplete_run_loop_event_queue(): begin\n";
+    print("deplete_run_loop_event_queue(): begin\n");
     bool done{};
     dispatch([&] { done = true; });
     run_event_loop_until([&] { return done; });
-    std::cout << log_msg_prefix() << "deplete_run_loop_event_queue(): end\n";
+    print("deplete_run_loop_event_queue(): end\n");
   }
 
   // Blocks while depleting the run loop of events.
   template <typename Callable> void run_event_loop_until(Callable &&fn) {
-    std::cout << log_msg_prefix() << "run_event_loop_until(): begin\n";
+    print("run_event_loop_until(): begin\n");
     while (!fn()) {
       MSG msg;
       if (GetMessageW(&msg, nullptr, 0, 0) > 0) {
@@ -912,7 +909,7 @@ private:
         DispatchMessageW(&msg);
       }
     }
-    std::cout << log_msg_prefix() << "run_event_loop_until(): end\n";
+    print("run_event_loop_until(): end\n");
   }
 
   // The app is expected to call CoInitializeEx before
