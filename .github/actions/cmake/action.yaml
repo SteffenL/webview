@@ -124,6 +124,10 @@ runs:
         "${cmake_cmd[@]}"
       shell: ${{ inputs.shell }}
 
+    - name: Copy WebView2Loader.dll
+      run: cp build/_deps/microsoft_web_webview2-src/build/native/x64/WebView2Loader.dll build/examples/
+      shell: bash
+
     - name: Build
       run: |
         cmake_cmd=(
