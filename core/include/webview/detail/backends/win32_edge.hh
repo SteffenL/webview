@@ -97,7 +97,7 @@ inline std::string log_msg_prefix() {
          std::this_thread::get_id() + "] ";
 }
 
-template <typename... Args> void print(Args &&args) {
+template <typename... Args> void print(Args &&...args) {
   ((std::cout << std::forward<Args>(args)), ...);
 }
 
