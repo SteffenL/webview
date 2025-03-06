@@ -95,7 +95,7 @@ format_time_point(const std::chrono::system_clock::time_point &tp) {
 template <typename Arg, typename... Args>
 void print(Arg &&arg, Args &&...args) {
   std::cout << "[" << format_time_point(std::chrono::system_clock::now())
-            << "][" << std::to_string(std::this_thread::get_id()) << "] "
+            << "][" << std::this_thread::get_id() << "] "
             << std::forward<Arg>(arg);
   ((std::cout << std::forward<Args>(args)), ...);
 }
