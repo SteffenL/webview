@@ -94,7 +94,7 @@ format_time_point(const std::chrono::system_clock::time_point &tp) {
 
 inline std::string log_msg_prefix() {
   return "[" + format_time_point(std::chrono::system_clock::now()) + "][" +
-         std::this_thread::get_id() + "] ";
+         std::to_string(std::this_thread::get_id()) + "] ";
 }
 
 template <typename... Args> void print(Args &&...args) {
