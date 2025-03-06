@@ -61,6 +61,7 @@
 #include <list>
 #include <memory>
 #include <utility>
+#include <thread>
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
