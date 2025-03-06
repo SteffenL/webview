@@ -69,4 +69,4 @@ runs:
     - if: runner.os == 'Windows'
       name: Disable proxy
       run: Set-ItemProperty -Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\' -Name 'ProxyEnable' -Value 0
-      shell: pwsh
+      shell: powershell
