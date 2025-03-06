@@ -750,6 +750,7 @@ private:
           m_controller = controller;
           m_webview = webview;
           flag.clear();
+          std::this_thread::sleep_for(std::chrono::seconds{3});
         });
 
     m_com_handler->set_attempt_handler([&] {
