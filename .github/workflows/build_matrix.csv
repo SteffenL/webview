@@ -1,5 +1,3 @@
 job-type,os,image,arch,cxx-std,toolchain,toolchain-executable-suffix,generator,pr-only,checks,strict-clang-tidy,package,package-amalgamation,package-docs,package-headers,package-lib,package-source,shell,msvc-mt,msys,msys-pacboy,apt,gcov,osx-deployment-target,test-wrapper-cmd,webkitgtk-api,job-name-suffix,comments
 package,windows,windows-2022,x86_64,17,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,bash,FALSE,,,,,,,,", md",
-package,windows,windows-2022,x86_64,17,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,bash,FALSE,,,,,,,,", md",
-package,windows,windows-2022,x86_64,17,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,bash,FALSE,,,,,,,,", md",
-package,windows,windows-2022,x86_64,17,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,bash,FALSE,,,,,,,,", md",
+package,windows,self-hosted,x86_64,17,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,bash,FALSE,,,,,,,,", md",

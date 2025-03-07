@@ -140,7 +140,17 @@ runs:
 #      shell: bash
 
     - name: Test
-      run: build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+      run: |
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
+        build/core/tests/Debug/webview_core_tests.exe "Ensure that JS code can call native code and vice versa"
       shell: ${{ inputs.shell }}
 
     - if: inputs.package != '' && fromJson(inputs.package)
