@@ -57,7 +57,6 @@
 #include <atomic>
 #include <cstdlib>
 #include <functional>
-#include <iostream>
 #include <list>
 #include <memory>
 #include <utility>
