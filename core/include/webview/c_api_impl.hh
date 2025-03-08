@@ -26,6 +26,9 @@
 #ifndef WEBVIEW_C_API_IMPL_H
 #define WEBVIEW_C_API_IMPL_H
 
+#ifdef __cplusplus
+#ifndef WEBVIEW_HEADER
+
 #include "backends.hh"
 #include "errors.h"
 #include "errors.hh"
@@ -251,5 +254,8 @@ WEBVIEW_API webview_error_t webview_return(webview_t w, const char *id,
 WEBVIEW_API const webview_version_info_t *webview_version(void) {
   return &webview::detail::library_version_info;
 }
+
+#endif
+#endif
 
 #endif // WEBVIEW_C_API_IMPL_H
