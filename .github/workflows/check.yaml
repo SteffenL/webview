@@ -25,11 +25,16 @@ jobs:
 #          - "3.10"
 #          - "3.11"
           - "3.12"
+        config:
+          - { type: header, static: OFF, shared: OFF }
+          - { type: shared, static: OFF, shared: ON }
+          - { type: static, static: ON,  shared: OFF }
         include:
           - image: macos-14
             clang-format-exe: clang-format
           - image: ubuntu-22.04
             clang-format-exe: clang-format-15
+            test-wrapper-cmd: xvfb-run
           - image: windows-2022
             clang-format-exe: clang-format
     steps:
@@ -65,26 +70,17 @@ jobs:
         shell: bash
         working-directory: scripts/amalgamate
 
-      - name: Test (header-only library)
+      - name: Test (${{ matrix.config.type }})
         run: |
-          cmake -B build-header -S . -D WEBVIEW_BUILD=OFF
-          cmake --build build-header
-          ./build-header/webview_amalgamation_test
-        shell: bash
-        working-directory: scripts/amalgamate/test
-
-      - name: Test (static library)
-        run: |
-          cmake -B build-static -S . -D WEBVIEW_BUILD=OFF -D WEBVIEW_BUILD_STATIC_LIBRARY=ON
-          cmake --build build-static
-          ./build-static/webview_amalgamation_test
-        shell: bash
-        working-directory: scripts/amalgamate/test
-
-      - name: Test (shared library)
-        run: |
-          cmake -B build-shared -S . -D WEBVIEW_BUILD=OFF -D WEBVIEW_BUILD_SHARED_LIBRARY=ON
-          cmake --build build-shared
-          ./build-shared/webview_amalgamation_test
+          cmake -B build-header -S . -D WEBVIEW_BUILD=OFF \
+            -D "WEBVIEW_BUILD_STATIC_LIBRARY=${{ matrix.config.static }}" \
+            -D "WEBVIEW_BUILD_SHARED_LIBRARY=${{ matrix.config.shared }}"
+          cmake --build "${build_dir}"
+          test_cmd=()
+          if [[ ! -z "${{ matrix.test-wrapper-cmd }}" ]]; then
+            test_cmd+=("${{ matrix.test-wrapper-cmd }}")
+          fi
+          test_cmd+=("${build_dir}/webview_amalgamation_test")
+          "${test_cmd[@]}"
         shell: bash
         working-directory: scripts/amalgamate/test
