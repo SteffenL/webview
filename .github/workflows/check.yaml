@@ -34,6 +34,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up environment
+        uses: ./.github/actions/setup-env
+        with:
+          apt: gcc-12 g++-12
+          msys-pacboy: clang-tools-extra:p
+          webkitgtk-api: 6.0
+
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y clang-format-15
@@ -49,10 +56,34 @@ jobs:
 
       - name: Generate amalgamated header
         run: |
-          python3 scripts/amalgamate.py \
+          python3 amalgamate.py \
             --clang-format-exe "${{ matrix.clang-format-exe }}" \
-            --search core/include \
-            --output build/amalgamation/webviev.h \
-            core/src/
+            --search ../../core/include \
+            --output test/generated/webview_amalgamation.h \
+            ../../core/src/
         shell: bash
-      - name: 
+        working-directory: scripts/amalgamate
+
+      - name: Test (header-only library)
+        run: |
+          cmake -B build-header -S .
+          cmake --build build-header
+          ./build-header/webview_amalgamation_test
+        shell: bash
+        working-directory: scripts/amalgamate/test
+
+      - name: Test (static library)
+        run: |
+          cmake -B build-static -S .
+          cmake --build build-static
+          ./build-static/webview_amalgamation_test
+        shell: bash
+        working-directory: scripts/amalgamate/test
+
+      - name: Test (shared library)
+        run: |
+          cmake -B build-shared -S .
+          cmake --build build-shared
+          ./build-shared/webview_amalgamation_test
+        shell: bash
+        working-directory: scripts/amalgamate/test
