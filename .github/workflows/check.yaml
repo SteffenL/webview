@@ -25,10 +25,10 @@ jobs:
 #          - "3.10"
 #          - "3.11"
           - "3.12"
-        config:
-          - { type: header }
-          - { type: shared }
-          - { type: static }
+        build-type:
+          - header
+          - shared
+          - static
         include:
           - image: macos-14
             clang-format-exe: clang-format
@@ -70,16 +70,16 @@ jobs:
         shell: bash
         working-directory: scripts/amalgamate
 
-      - name: Test (${{ matrix.config.type }}, Linux)
+      - name: Test (${{ matrix.build-type }}, Linux)
         if: runner.os == 'Linux'
         run: |
           mkdir -p build
-          if [[ "${{ matrix.config.type }}" == "header" ]]; then
+          if [[ "${{ matrix.build-type }}" == "header" ]]; then
             c++ main.cc --std=c++11 $(pkg-config --cflags --libs gtk4 webkitgtk-6.0) -ldl -I../generated -o build/main
-          if [[ "${{ matrix.config.type }}" == "shared" ]]; then
+          if [[ "${{ matrix.build-type }}" == "shared" ]]; then
             c++ webview.cc --shared --std=c++11 -fPIC $(pkg-config --cflags --libs gtk4 webkitgtk-6.0) -ldl -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
             cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main
-          if [[ "${{ matrix.config.type }}" == "static" ]]; then
+          if [[ "${{ matrix.build-type }}" == "static" ]]; then
             c++ webview.cc -c --std=c++11 $(pkg-config --cflags gtk4 webkitgtk-6.0) -ldl -I../generated -DWEBVIEW_STATIC -o build/webview.o
             cc main.c build/webview.o --std=c99 $(pkg-config --libs gtk4 webkitgtk-6.0) -lstdc++ -I../generated -DWEBVIEW_STATIC -o build/main
           fi
@@ -87,16 +87,16 @@ jobs:
         shell: bash
         working-directory: scripts/amalgamate/test
 
-      - name: Test (${{ matrix.config.type }}, macOS)
+      - name: Test (${{ matrix.build-type }}, macOS)
         if: runner.os == 'macOS'
         run: |
           mkdir -p build
-          if [[ "${{ matrix.config.type }}" == "header" ]]; then
+          if [[ "${{ matrix.build-type }}" == "header" ]]; then
             c++ main.cc --std=c++11 -framework WebKit -ldl -I../generated -o build/main
-          if [[ "${{ matrix.config.type }}" == "shared" ]]; then
+          if [[ "${{ matrix.build-type }}" == "shared" ]]; then
             c++ webview.cc --shared --std=c++11 -fPIC $(pkg-config -framework WebKit -ldl -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
             cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main
-          if [[ "${{ matrix.config.type }}" == "static" ]]; then
+          if [[ "${{ matrix.build-type }}" == "static" ]]; then
             c++ webview.cc -c --std=c++11 -framework WebKit -ldl -I../generated -DWEBVIEW_STATIC -o build/webview.o
             cc main.c build/webview.o --std=c99 $(pkg-config --libs gtk4 webkitgtk-6.0) -lstdc++ -I../generated -DWEBVIEW_STATIC -o build/main
           fi
