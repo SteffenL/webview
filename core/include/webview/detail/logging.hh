@@ -18,12 +18,20 @@ format_time_point(const std::chrono::system_clock::time_point &tp) {
   return s;
 }
 
+template <typename Arg> void print_(Arg &&arg) {
+  std::cout << std::forward<Arg>(arg);
+}
+
 template <typename Arg, typename... Args>
-void print(Arg &&arg, Args &&...args) {
+void print_(Arg &&arg, Args &&...args) {
+  std::cout << std::forward<Arg>(arg);
+  print_(std::forward<Args>(args)...);
+}
+
+template <typename... Args> void print(Args &&...args) {
   std::cout << "[" << format_time_point(std::chrono::system_clock::now())
-            << "][" << std::this_thread::get_id() << "] "
-            << std::forward<Arg>(arg);
-  ((std::cout << std::forward<Args>(args)), ...);
+            << "][" << std::this_thread::get_id() << "] ";
+  print_(std::forward<Args>(args)...);
 }
 
 } // namespace detail
