@@ -6,6 +6,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 add_subdirectory(../../.. webview)
+list(APPEND CMAKE_MODULE_PATH "${WEBVIEW_CURRENT_CMAKE_DIR}/modules")
 webview_find_dependencies()
 
 add_executable(webview_amalgamation_test)
