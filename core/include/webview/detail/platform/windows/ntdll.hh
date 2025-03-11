@@ -53,6 +53,6 @@ constexpr auto RtlGetVersion = library_symbol<RtlGetVersion_t>("RtlGetVersion");
 } // namespace detail
 } // namespace webview
 
-#endif
-#endif // __cplusplus
+#endif // defined(WEBVIEW_PLATFORM_WINDOWS)
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_PLATFORM_WINDOWS_NTDLL_HH

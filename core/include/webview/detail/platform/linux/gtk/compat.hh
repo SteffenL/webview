@@ -130,6 +130,6 @@ public:
 } // namespace detail
 } // namespace webview
 
-#endif
-#endif // __cplusplus
+#endif // defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_PLATFORM_LINUX_GTK_COMPAT_HH

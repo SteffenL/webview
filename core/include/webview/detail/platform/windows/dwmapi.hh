@@ -62,6 +62,6 @@ constexpr auto DwmSetWindowAttribute =
 } // namespace detail
 } // namespace webview
 
-#endif
-#endif // __cplusplus
+#endif // defined(WEBVIEW_PLATFORM_WINDOWS)
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_PLATFORM_WINDOWS_DWMAPI_HH

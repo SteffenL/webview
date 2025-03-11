@@ -26,7 +26,7 @@
 #ifndef WEBVIEW_DETAIL_ENGINE_BASE_HH
 #define WEBVIEW_DETAIL_ENGINE_BASE_HH
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
 #include "../errors.hh"
 #include "../types.h"
@@ -342,5 +342,5 @@ private:
 } // namespace detail
 } // namespace webview
 
-#endif // __cplusplus
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_DETAIL_ENGINE_BASE_HH

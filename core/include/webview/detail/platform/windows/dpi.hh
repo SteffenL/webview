@@ -158,6 +158,6 @@ inline SIZE make_window_frame_size(HWND window, int width, int height,
 } // namespace detail
 } // namespace webview
 
-#endif
-#endif // __cplusplus
+#endif // defined(WEBVIEW_PLATFORM_WINDOWS)
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_PLATFORM_WINDOWS_DPI_HH

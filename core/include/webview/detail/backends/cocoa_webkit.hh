@@ -26,7 +26,7 @@
 #ifndef WEBVIEW_BACKENDS_COCOA_WEBKIT_HH
 #define WEBVIEW_BACKENDS_COCOA_WEBKIT_HH
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
 #include "../../macros.h"
 
@@ -690,6 +690,6 @@ using browser_engine = detail::cocoa_wkwebview_engine;
 
 } // namespace webview
 
-#endif
-#endif // __cplusplus
+#endif // defined(WEBVIEW_PLATFORM_DARWIN) && defined(WEBVIEW_COCOA)
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_BACKENDS_COCOA_WEBKIT_H

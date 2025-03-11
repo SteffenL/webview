@@ -26,7 +26,7 @@
 #ifndef WEBVIEW_DETAIL_OPTIONAL_HH
 #define WEBVIEW_DETAIL_OPTIONAL_HH
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
 #include "exceptions.hh"
 
@@ -114,5 +114,5 @@ template <> class optional<void> {};
 } // namespace detail
 } // namespace webview
 
-#endif // __cplusplus
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_DETAIL_OPTIONAL_HH

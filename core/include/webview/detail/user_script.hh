@@ -26,7 +26,7 @@
 #ifndef WEBVIEW_DETAIL_USER_SCRIPT_HH
 #define WEBVIEW_DETAIL_USER_SCRIPT_HH
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
 #include <functional>
 #include <memory>
@@ -72,5 +72,5 @@ private:
 } // namespace detail
 } // namespace webview
 
-#endif // __cplusplus
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_DETAIL_USER_SCRIPT_HH

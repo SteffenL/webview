@@ -26,7 +26,7 @@
 #ifndef WEBVIEW_PLATFORM_DARWIN_OBJC_HH
 #define WEBVIEW_PLATFORM_DARWIN_OBJC_HH
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
 #include "../../../macros.h"
 
@@ -114,6 +114,6 @@ inline id operator"" _str(const char *s, std::size_t) {
 } // namespace detail
 } // namespace webview
 
-#endif
-#endif // __cplusplus
+#endif // defined(WEBVIEW_PLATFORM_DARWIN)
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_PLATFORM_DARWIN_OBJC_HH

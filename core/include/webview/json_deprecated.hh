@@ -26,7 +26,7 @@
 #ifndef WEBVIEW_JSON_HH
 #define WEBVIEW_JSON_HH
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
 #include "detail/json.hh"
 #include "macros.h"
@@ -57,5 +57,5 @@ inline std::string json_parse(const std::string &s, const std::string &key,
 
 } // namespace webview
 
-#endif // __cplusplus
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_JSON_HH

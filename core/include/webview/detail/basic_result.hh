@@ -26,7 +26,7 @@
 #ifndef WEBVIEW_DETAIL_BASIC_RESULT_HH
 #define WEBVIEW_DETAIL_BASIC_RESULT_HH
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
 #include "exceptions.hh"
 #include "optional.hh"
@@ -115,5 +115,5 @@ private:
 } // namespace detail
 } // namespace webview
 
-#endif // __cplusplus
+#endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 #endif // WEBVIEW_DETAIL_BASIC_RESULT_HH
