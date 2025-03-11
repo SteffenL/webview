@@ -6,5 +6,5 @@ webview_find_dependencies()
 
 add_executable(webview_amalgamation_test)
 target_sources(webview_amalgamation_test PRIVATE main.cc)
-target_include_directories(webview_amalgamation_test PRIVATE ../generated)
+target_include_directories(webview_amalgamation_test PRIVATE generated)
 target_link_libraries(webview_amalgamation_test PRIVATE ${WEBVIEW_DEPENDENCIES})
