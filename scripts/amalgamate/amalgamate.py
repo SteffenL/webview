@@ -29,7 +29,7 @@ class Include:
 @dataclass
 class ProcessorContext:
     base_dir: os.PathLike
-    include_pattern = re.compile(r'^\s*#include "([^"]+)"', re.M)
+    include_pattern = re.compile(r'^\s*#include "([^"]+)"\s*(?://\s*(.+))?', re.M)
     block_comment_pattern = re.compile(r"^/\*.*?\*/\n", re.DOTALL)
     visited_files: MutableSet[os.PathLike] = field(default_factory=set)
     visited_copyright_notices: MutableSet[str] = field(default_factory=set)
@@ -80,6 +80,13 @@ def process_file(context: ProcessorContext, input: os.PathLike, search_dirs: Seq
             input_include.chunks.append(content[end: m.start(0)])
             end = m.end(0)
 
+            comment_instruction = m[2]
+            if comment_instruction is not None:
+                skip_include = False
+                match comment_instruction:
+                    case "amalgamate(skip)":
+                        skip_include = True
+
             include_file_in_parent_dir = os.path.realpath(
                 os.path.join(input_parent_dir, m[1]))
             if include_file_in_parent_dir in context.visited_files:
@@ -108,8 +115,12 @@ def process_file(context: ProcessorContext, input: os.PathLike, search_dirs: Seq
             if include_file_in_search_dir_found:
                 continue
 
-            print("Not found: {}".format(m[1]))
-            input_include.chunks.append(m[0])
+            if skip_include:
+                print("Skipped: {}".format(m[1]))
+                input_include.chunks.append(m[0])
+                continue
+
+            raise Exception("Not found: {}".format(m[1]))
         input_include.chunks.append(content[end:])
 
 

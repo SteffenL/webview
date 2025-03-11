@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_PLATFORM_WINDOWS_USER32_HH
 #define WEBVIEW_PLATFORM_WINDOWS_USER32_HH
 
+#ifdef __cplusplus
+
 #include "../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_WINDOWS)
@@ -84,4 +86,5 @@ constexpr auto AreDpiAwarenessContextsEqual =
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_PLATFORM_WINDOWS_USER32_HH

@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_PLATFORM_DARWIN_COCOA_HH
 #define WEBVIEW_PLATFORM_DARWIN_COCOA_HH
 
+#ifdef __cplusplus
+
 #include "../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_DARWIN) && defined(WEBVIEW_COCOA)
@@ -63,4 +65,5 @@ enum NSAutoresizingMaskOptions : NSUInteger {
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_PLATFORM_DARWIN_COCOA_HH

@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_PLATFORM_WINDOWS_SHCORE_HH
 #define WEBVIEW_PLATFORM_WINDOWS_SHCORE_HH
 
+#ifdef __cplusplus
+
 #include "../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_WINDOWS)
@@ -53,4 +55,5 @@ constexpr auto SetProcessDpiAwareness =
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_PLATFORM_WINDOWS_SHCORE_HH

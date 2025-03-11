@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_PLATFORM_WINDOWS_IID_HH
 #define WEBVIEW_PLATFORM_WINDOWS_IID_HH
 
+#ifdef __cplusplus
+
 #include "../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_WINDOWS)
@@ -72,4 +74,5 @@ To *cast_if_equal_iid(From *from, REFIID riid, const cast_info_t<To> &info,
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_PLATFORM_WINDOWS_IID_HH

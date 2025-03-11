@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_PLATFORM_WINDOWS_REG_KEY_HH
 #define WEBVIEW_PLATFORM_WINDOWS_REG_KEY_HH
 
+#ifdef __cplusplus
+
 #include "../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_WINDOWS)
@@ -129,4 +131,5 @@ private:
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_PLATFORM_WINDOWS_REG_KEY_HH

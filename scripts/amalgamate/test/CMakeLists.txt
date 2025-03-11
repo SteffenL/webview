@@ -14,3 +14,12 @@ target_sources(webview_amalgamation_test PRIVATE main.cc)
 target_include_directories(webview_amalgamation_test PRIVATE generated)
 target_link_libraries(webview_amalgamation_test PRIVATE ${WEBVIEW_DEPENDENCIES})
 target_compile_features(webview_amalgamation_test PRIVATE cxx_std_11)
+
+option(TEST_STATIC_LIBRARY "" OFF)
+option(TEST_SHARED_LIBRARY "" OFF)
+
+if(TEST_STATIC_LIBRARY)
+    target_compile_definitions(webview_amalgamation_test PRIVATE WEBVIEW_BUILD_SHARED_LIBRARY)
+elseif(TEST_SHARED_LIBRARY)
+    target_compile_definitions(webview_amalgamation_test PRIVATE WEBVIEW_STATIC_LIBRARY)
+endif()

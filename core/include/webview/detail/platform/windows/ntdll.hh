@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_PLATFORM_WINDOWS_NTDLL_HH
 #define WEBVIEW_PLATFORM_WINDOWS_NTDLL_HH
 
+#ifdef __cplusplus
+
 #include "../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_WINDOWS)
@@ -52,4 +54,5 @@ constexpr auto RtlGetVersion = library_symbol<RtlGetVersion_t>("RtlGetVersion");
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_PLATFORM_WINDOWS_NTDLL_HH

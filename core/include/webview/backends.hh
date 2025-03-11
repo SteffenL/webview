@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_BACKENDS_HH
 #define WEBVIEW_BACKENDS_HH
 
+#ifdef __cplusplus
+
 #include "detail/backends/cocoa_webkit.hh"
 #include "detail/backends/gtk_webkitgtk.hh"
 #include "detail/backends/win32_edge.hh"
@@ -34,4 +36,5 @@ namespace webview {
 using webview = browser_engine;
 }
 
+#endif // __cplusplus
 #endif // WEBVIEW_BACKENDS_HH

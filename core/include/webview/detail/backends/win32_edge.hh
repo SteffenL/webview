@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_BACKENDS_WIN32_EDGE_HH
 #define WEBVIEW_BACKENDS_WIN32_EDGE_HH
 
+#ifdef __cplusplus
+
 #include "../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_WINDOWS) && defined(WEBVIEW_EDGE)
@@ -893,4 +895,5 @@ using browser_engine = detail::win32_edge_engine;
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_BACKENDS_WIN32_EDGE_H

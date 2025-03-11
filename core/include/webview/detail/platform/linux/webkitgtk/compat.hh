@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_PLATFORM_LINUX_WEBKITGTK_COMPAT_HH
 #define WEBVIEW_PLATFORM_LINUX_WEBKITGTK_COMPAT_HH
 
+#ifdef __cplusplus
+
 #include "../../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
@@ -136,4 +138,5 @@ public:
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_PLATFORM_LINUX_WEBKITGTK_COMPAT_HH

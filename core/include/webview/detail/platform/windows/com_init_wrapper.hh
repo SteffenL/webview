@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_PLATFORM_WINDOWS_COM_INIT_WRAPPER_HH
 #define WEBVIEW_PLATFORM_WINDOWS_COM_INIT_WRAPPER_HH
 
+#ifdef __cplusplus
+
 #include "../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_WINDOWS)
@@ -116,4 +118,5 @@ private:
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_PLATFORM_WINDOWS_COM_INIT_WRAPPER_HH

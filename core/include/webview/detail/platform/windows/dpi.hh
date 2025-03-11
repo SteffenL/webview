@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_PLATFORM_WINDOWS_DPI_HH
 #define WEBVIEW_PLATFORM_WINDOWS_DPI_HH
 
+#ifdef __cplusplus
+
 #include "../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_WINDOWS)
@@ -157,4 +159,5 @@ inline SIZE make_window_frame_size(HWND window, int width, int height,
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_PLATFORM_WINDOWS_DPI_HH

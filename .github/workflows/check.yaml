@@ -26,9 +26,9 @@ jobs:
 #          - "3.11"
           - "3.12"
         config:
-          - { type: header, static: OFF, shared: OFF }
-          - { type: shared, static: OFF, shared: ON }
-          - { type: static, static: ON,  shared: OFF }
+          - { type: header }
+          - { type: shared }
+          - { type: static }
         include:
           - image: macos-14
             clang-format-exe: clang-format
@@ -65,22 +65,25 @@ jobs:
           python3 amalgamate.py \
             --clang-format-exe "${{ matrix.clang-format-exe }}" \
             --search ../../core/include \
-            --output test/generated/webview_amalgamation.h \
+            --output generated/webview_amalgamation.h \
             ../../core/src/
         shell: bash
         working-directory: scripts/amalgamate
 
-      - name: Test (${{ matrix.config.type }})
+      - name: Test (C++, Linux)
+        if: runner.os == 'Linux'
         run: |
-          cmake -B build -S . -D WEBVIEW_BUILD=OFF \
-            -D "WEBVIEW_BUILD_STATIC_LIBRARY=${{ matrix.config.static }}" \
-            -D "WEBVIEW_BUILD_SHARED_LIBRARY=${{ matrix.config.shared }}"
-          cmake --build build
-          test_cmd=()
-          if [[ ! -z "${{ matrix.test-wrapper-cmd }}" ]]; then
-            test_cmd+=("${{ matrix.test-wrapper-cmd }}")
-          fi
-          test_cmd+=(build/bin/webview_amalgamation_test)
-          "${test_cmd[@]}"
+          mkdir -p build
+          c++ main.cc --std=c++11 $(pkg-config --cflags --libs gtk4 webkitgtk-6.0) -ldl -I../generated -o build/main_cc
+          xvfb-run build/main_cc
+        shell: bash
+        working-directory: scripts/amalgamate/test
+
+      - name: Test (C, Linux)
+        if: runner.os == 'Linux'
+        run: |
+          c++ webview.cc --shared --std=c++11 -fPIC $(pkg-config --cflags --libs gtk4 webkitgtk-6.0) -ldl -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
+          cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main_c
+          xvfb-run build/test
         shell: bash
         working-directory: scripts/amalgamate/test

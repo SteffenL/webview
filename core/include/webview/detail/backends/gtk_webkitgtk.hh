@@ -26,6 +26,8 @@
 #ifndef WEBVIEW_BACKENDS_GTK_WEBKITGTK_HH
 #define WEBVIEW_BACKENDS_GTK_WEBKITGTK_HH
 
+#ifdef __cplusplus
+
 #include "../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_LINUX) && defined(WEBVIEW_GTK)
@@ -337,4 +339,5 @@ using browser_engine = detail::gtk_webkit_engine;
 } // namespace webview
 
 #endif
+#endif // __cplusplus
 #endif // WEBVIEW_BACKENDS_GTK_WEBKITGTK_H

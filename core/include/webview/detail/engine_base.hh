@@ -23,8 +23,10 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_DETAIL_ENGINE_BASE_H
-#define WEBVIEW_DETAIL_ENGINE_BASE_H
+#ifndef WEBVIEW_DETAIL_ENGINE_BASE_HH
+#define WEBVIEW_DETAIL_ENGINE_BASE_HH
+
+#ifdef __cplusplus
 
 #include "../errors.hh"
 #include "../types.h"
@@ -340,4 +342,5 @@ private:
 } // namespace detail
 } // namespace webview
 
-#endif
+#endif // __cplusplus
+#endif // WEBVIEW_DETAIL_ENGINE_BASE_HH
