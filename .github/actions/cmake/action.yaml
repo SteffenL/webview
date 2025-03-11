@@ -137,10 +137,10 @@ runs:
         done
       shell: ${{ inputs.shell }}
 
-#    - name: Copy WebView2Loader.dll
-#      run: |
-#        cp "${{ inputs.build-dir }}/_deps/microsoft_web_webview2-src/build/native/x64/WebView2Loader.dll" "${{ inputs.build-dir }}/core/tests/Debug/"
-#      shell: bash
+    - name: Copy WebView2Loader.dll
+      run: |
+        cp "${{ inputs.build-dir }}/_deps/microsoft_web_webview2-src/build/native/x64/WebView2Loader.dll" "${{ inputs.build-dir }}/core/tests/Debug/"
+      shell: bash
 
     - name: Test
       run: |
