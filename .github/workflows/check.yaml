@@ -70,7 +70,7 @@ jobs:
         shell: bash
         working-directory: scripts/amalgamate
 
-      - name: Test (C++, Linux)
+      - name: Test (C++, header, Linux)
         if: runner.os == 'Linux'
         run: |
           mkdir -p build
@@ -79,11 +79,20 @@ jobs:
         shell: bash
         working-directory: scripts/amalgamate/test
 
-      - name: Test (C, Linux)
+      - name: Test (C, shared, Linux)
         if: runner.os == 'Linux'
         run: |
           c++ webview.cc --shared --std=c++11 -fPIC $(pkg-config --cflags --libs gtk4 webkitgtk-6.0) -ldl -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
-          cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main_c
-          xvfb-run build/main_c
+          cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main_c_shared
+          xvfb-run build/main_c_shared
+        shell: bash
+        working-directory: scripts/amalgamate/test
+
+      - name: Test (C, static, Linux)
+        if: runner.os == 'Linux'
+        run: |
+          c++ webview.cc -c --std=c++11 $(pkg-config --cflags gtk4 webkitgtk-6.0) -ldl -I../generated -DWEBVIEW_STATIC -o build/webview.o
+          cc main.c build/webview.o --std=c99 $(pkg-config --libs gtk4 webkitgtk-6.0) -lstdc++ -I../generated -DWEBVIEW_STATIC -o build/main_c_static
+          xvfb-run build/main_c_static
         shell: bash
         working-directory: scripts/amalgamate/test
