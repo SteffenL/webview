@@ -76,10 +76,10 @@ jobs:
           mkdir -p build
           if [[ "${{ matrix.build-type }}" == "header" ]]; then
             c++ main.cc --std=c++11 $(pkg-config --cflags --libs gtk4 webkitgtk-6.0) -ldl -I../generated -o build/main
-          if [[ "${{ matrix.build-type }}" == "shared" ]]; then
+          elif [[ "${{ matrix.build-type }}" == "shared" ]]; then
             c++ webview.cc --shared --std=c++11 -fPIC $(pkg-config --cflags --libs gtk4 webkitgtk-6.0) -ldl -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
             cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main
-          if [[ "${{ matrix.build-type }}" == "static" ]]; then
+          elif [[ "${{ matrix.build-type }}" == "static" ]]; then
             c++ webview.cc -c --std=c++11 $(pkg-config --cflags gtk4 webkitgtk-6.0) -ldl -I../generated -DWEBVIEW_STATIC -o build/webview.o
             cc main.c build/webview.o --std=c99 $(pkg-config --libs gtk4 webkitgtk-6.0) -lstdc++ -I../generated -DWEBVIEW_STATIC -o build/main
           fi
@@ -93,10 +93,10 @@ jobs:
           mkdir -p build
           if [[ "${{ matrix.build-type }}" == "header" ]]; then
             c++ main.cc --std=c++11 -framework WebKit -ldl -I../generated -o build/main
-          if [[ "${{ matrix.build-type }}" == "shared" ]]; then
+          elif [[ "${{ matrix.build-type }}" == "shared" ]]; then
             c++ webview.cc --shared --std=c++11 -fPIC $(pkg-config -framework WebKit -ldl -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
             cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main
-          if [[ "${{ matrix.build-type }}" == "static" ]]; then
+          elif [[ "${{ matrix.build-type }}" == "static" ]]; then
             c++ webview.cc -c --std=c++11 -framework WebKit -ldl -I../generated -DWEBVIEW_STATIC -o build/webview.o
             cc main.c build/webview.o --std=c99 $(pkg-config --libs gtk4 webkitgtk-6.0) -lstdc++ -I../generated -DWEBVIEW_STATIC -o build/main
           fi
