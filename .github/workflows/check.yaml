@@ -14,6 +14,7 @@ jobs:
   amalgamate:
     runs-on: ${{ matrix.image }}
     strategy:
+      fail-fast: false
       matrix:
         image:
           - macos-14
@@ -39,7 +40,7 @@ jobs:
         with:
           apt: gcc-12 g++-12
           msys-pacboy: clang-tools-extra:p
-          webkitgtk-api: 6.0
+          webkitgtk-api: "6.0"
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
@@ -66,7 +67,7 @@ jobs:
 
       - name: Test (header-only library)
         run: |
-          cmake -B build-header -S .
+          cmake -B build-header -S . -D WEBVIEW_BUILD=OFF
           cmake --build build-header
           ./build-header/webview_amalgamation_test
         shell: bash
@@ -74,7 +75,7 @@ jobs:
 
       - name: Test (static library)
         run: |
-          cmake -B build-static -S .
+          cmake -B build-static -S . -D WEBVIEW_BUILD=OFF -D WEBVIEW_BUILD_STATIC_LIBRARY=ON
           cmake --build build-static
           ./build-static/webview_amalgamation_test
         shell: bash
@@ -82,7 +83,7 @@ jobs:
 
       - name: Test (shared library)
         run: |
-          cmake -B build-shared -S .
+          cmake -B build-shared -S . -D WEBVIEW_BUILD=OFF -D WEBVIEW_BUILD_SHARED_LIBRARY=ON
           cmake --build build-shared
           ./build-shared/webview_amalgamation_test
         shell: bash
