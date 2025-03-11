@@ -84,6 +84,6 @@ jobs:
         run: |
           c++ webview.cc --shared --std=c++11 -fPIC $(pkg-config --cflags --libs gtk4 webkitgtk-6.0) -ldl -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
           cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main_c
-          xvfb-run build/test
+          xvfb-run build/main_c
         shell: bash
         working-directory: scripts/amalgamate/test
