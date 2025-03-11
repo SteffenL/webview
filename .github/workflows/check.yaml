@@ -72,15 +72,15 @@ jobs:
 
       - name: Test (${{ matrix.config.type }})
         run: |
-          cmake -B build-header -S . -D WEBVIEW_BUILD=OFF \
+          cmake -G Ninja -B build -S . -D WEBVIEW_BUILD=OFF \
             -D "WEBVIEW_BUILD_STATIC_LIBRARY=${{ matrix.config.static }}" \
             -D "WEBVIEW_BUILD_SHARED_LIBRARY=${{ matrix.config.shared }}"
-          cmake --build "${build_dir}"
+          cmake --build build
           test_cmd=()
           if [[ ! -z "${{ matrix.test-wrapper-cmd }}" ]]; then
             test_cmd+=("${{ matrix.test-wrapper-cmd }}")
           fi
-          test_cmd+=("${build_dir}/webview_amalgamation_test")
+          test_cmd+=(build/webview_amalgamation_test)
           "${test_cmd[@]}"
         shell: bash
         working-directory: scripts/amalgamate/test
