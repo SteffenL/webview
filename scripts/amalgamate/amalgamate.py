@@ -82,9 +82,7 @@ def process_file(context: ProcessorContext, input: os.PathLike, search_dirs: Seq
 
             comment_instruction = m[2]
             if comment_instruction is not None:
-                skip_include = False
-                if comment_instruction == "amalgamate(skip)":
-                    skip_include = True
+                skip_include = comment_instruction == "amalgamate(skip)"
 
             include_file_in_parent_dir = os.path.realpath(
                 os.path.join(input_parent_dir, m[1]))
