@@ -94,12 +94,12 @@ jobs:
           if [[ "${{ matrix.build-type }}" == "header" ]]; then
             c++ main.cc --std=c++11 -framework WebKit -ldl -I../generated -o build/main
           elif [[ "${{ matrix.build-type }}" == "shared" ]]; then
-            c++ webview.cc --shared --std=c++11 -fPIC $(pkg-config -framework WebKit -ldl -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
+            c++ webview.cc --shared --std=c++11 -fPIC -framework WebKit -ldl -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
             cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main
           elif [[ "${{ matrix.build-type }}" == "static" ]]; then
             c++ webview.cc -c --std=c++11 -framework WebKit -ldl -I../generated -DWEBVIEW_STATIC -o build/webview.o
             cc main.c build/webview.o --std=c99 $(pkg-config --libs gtk4 webkitgtk-6.0) -lstdc++ -I../generated -DWEBVIEW_STATIC -o build/main
           fi
-          xvfb-run build/main
+          build/main
         shell: bash
         working-directory: scripts/amalgamate/test
