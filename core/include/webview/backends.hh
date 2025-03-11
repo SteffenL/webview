@@ -26,8 +26,8 @@
 #ifndef WEBVIEW_BACKENDS_HH
 #define WEBVIEW_BACKENDS_HH
 
-#include "detail/backends/gtk_webkitgtk.hh"
 #include "detail/backends/cocoa_webkit.hh"
+#include "detail/backends/gtk_webkitgtk.hh"
 #include "detail/backends/win32_edge.hh"
 
 namespace webview {
