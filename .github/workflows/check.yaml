@@ -115,12 +115,12 @@ jobs:
           unzip -q "${mswebview2_zip}" -d "${mswebview2_dir}"
           mkdir -p build
           if [[ "${{ matrix.build-type }}" == "header" ]]; then
-            c++ main.cc --std=c++11 "-I${mswebview2_include_dir}" -I../generated -o build/main
+            c++ main.cc --std=c++14 "-I${mswebview2_include_dir}" -I../generated -o build/main
           elif [[ "${{ matrix.build-type }}" == "shared" ]]; then
-            c++ webview.cc --shared --std=c++11 -fPIC "-I${mswebview2_include_dir}" -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
+            c++ webview.cc --shared --std=c++14 -fPIC "-I${mswebview2_include_dir}" -I../generated -DWEBVIEW_BUILD_SHARED -o build/libwebview.so
             cc main.c build/libwebview.so --std=c99 -I../generated -DWEBVIEW_SHARED -o build/main
           elif [[ "${{ matrix.build-type }}" == "static" ]]; then
-            c++ webview.cc -c --std=c++11 "-I${mswebview2_include_dir}" -I../generated -DWEBVIEW_STATIC -o build/webview.o
+            c++ webview.cc -c --std=c++14 "-I${mswebview2_include_dir}" -I../generated -DWEBVIEW_STATIC -o build/webview.o
             cc main.c build/webview.o --std=c99 -lstdc++ -I../generated -DWEBVIEW_STATIC -o build/main
           fi
           build/main
