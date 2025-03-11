@@ -20,9 +20,9 @@ jobs:
           - ubuntu-22.04
           - windows-2022
         python-version:
-          - "3.9"
-          - "3.10"
-          - "3.11"
+#          - "3.9"
+#          - "3.10"
+#          - "3.11"
           - "3.12"
         include:
           - image: macos-14
@@ -33,16 +33,26 @@ jobs:
             clang-format-exe: clang-format
     steps:
       - uses: actions/checkout@v4
-      - if: runner.os == 'Linux'
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y clang-format-15
-      - if: runner.os == 'macOS'
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
         run: brew install clang-format
-      - uses: actions/setup-python@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: |
+
+      - name: Generate amalgamated header
+        run: |
           python3 scripts/amalgamate.py \
-            "--clang-format-exe=${{ matrix.clang-format-exe }}" \
-            --base core/include/webview \
-            --output webviev_amalgamation.h webview.h
+            --clang-format-exe "${{ matrix.clang-format-exe }}" \
+            --search core/include \
+            --output build/amalgamation/webviev.h \
+            core/src/
         shell: bash
+      - name: 
