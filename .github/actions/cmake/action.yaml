@@ -141,7 +141,7 @@ runs:
       run: |
         configs=(${{ steps.generate-build-config-names.outputs.configs }})
         for config in "${configs[@]}"; do
-          cp "${{ inputs.build-dir }}/_deps/microsoft_web_webview2-src/build/native/x64/WebView2Loader.dll" "${{ inputs.build-dir }}/core/tests/${config]/"
+          cp "${{ inputs.build-dir }}/_deps/microsoft_web_webview2-src/build/native/x64/WebView2Loader.dll" "${{ inputs.build-dir }}/core/tests/${config}/"
         done
       shell: bash
 
