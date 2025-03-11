@@ -146,7 +146,7 @@ runs:
       run: |
         configs=(${{ steps.generate-build-config-names.outputs.configs }})
         for config in "${configs[@]}"; do
-          cmake_cmd=()
+          cmake_cmd=(timeout 60)
           if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
             cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
           fi
