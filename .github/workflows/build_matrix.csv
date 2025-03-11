@@ -1,16 +1,2 @@
 job-type,os,image,arch,cxx-std,toolchain,toolchain-executable-suffix,generator,pr-only,checks,strict-clang-tidy,package,package-amalgamation,package-docs,package-headers,package-lib,package-source,shell,msvc-mt,msys,msys-pacboy,apt,gcov,osx-deployment-target,test-wrapper-cmd,webkitgtk-api,job-name-suffix,comments
-package,windows,windows-2022,arm64,14,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,bash,TRUE,,,,,,,,", mt",
-package,windows,windows-2022,x86_64,14,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,bash,TRUE,,,,,,,,", mt",
-package,windows,windows-2022,i686,14,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,bash,TRUE,,,,,,,,", mt",
-package,windows,windows-2022,arm64,14,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,bash,FALSE,,,,,,,,", md",
-package,windows,windows-2022,x86_64,14,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,bash,FALSE,,,,,,,,", md",
-package,windows,windows-2022,x86_64,17,windows-msvc,,Visual Studio 17 2022,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,bash,FALSE,,,,,,,,", md",
-package,windows,windows-2022,x86_64,20,windows-msvc,,Visual Studio 17 2022,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,bash,FALSE,,,,,,,,", md",
-package,windows,windows-2022,x86_64,23,windows-msvc,,Visual Studio 17 2022,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,bash,FALSE,,,,,,,,", md",
-package,windows,windows-2022,i686,14,windows-msvc,,Visual Studio 17 2022,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,bash,FALSE,,,,,,,,", md",
-package,windows,windows-2022,x86_64,11,msys2-gnu-ucrt64,,Ninja Multi-Config,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,msys2 {0},,UCRT64,,,,,,,", UCRT64",
-package,windows,windows-2022,x86_64,11,msys2-llvm-clang64,,Ninja Multi-Config,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,msys2 {0},,CLANG64,clang-tools-extra:p,,,,,,", CLANG64",Please enable strict clang-tidy when issues have been fixed.
-package,windows,windows-2022,x86_64,14,msys2-llvm-clang64,,Ninja Multi-Config,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,msys2 {0},,CLANG64,clang-tools-extra:p,,,,,,", CLANG64",Please enable strict clang-tidy when issues have been fixed.
-package,windows,windows-2022,x86_64,17,msys2-llvm-clang64,,Ninja Multi-Config,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,msys2 {0},,CLANG64,clang-tools-extra:p,,,,,,", CLANG64",Please enable strict clang-tidy when issues have been fixed.
-package,windows,windows-2022,x86_64,20,msys2-llvm-clang64,,Ninja Multi-Config,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,msys2 {0},,CLANG64,clang-tools-extra:p,,,,,,", CLANG64",Please enable strict clang-tidy when issues have been fixed.
-package,windows,windows-2022,x86_64,23,msys2-llvm-clang64,,Ninja Multi-Config,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,msys2 {0},,CLANG64,clang-tools-extra:p,,,,,,", CLANG64",Please enable strict clang-tidy when issues have been fixed.
+coverage,windows,windows-2022,x86_64,11,msys2-llvm-clang64,,Ninja Multi-Config,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,msys2 {0},,CLANG64,,,llvm-cov gcov,,,,", CLANG64",
