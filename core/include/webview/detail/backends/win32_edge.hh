@@ -713,8 +713,7 @@ protected:
 
 private:
   noresult embed(HWND wnd, bool debug, msg_cb_t cb) {
-    std::atomic_flag flag = ATOMIC_FLAG_INIT;
-    flag.test_and_set();
+    bool flag{};
 
     wchar_t currentExePath[MAX_PATH];
     GetModuleFileNameW(nullptr, currentExePath, MAX_PATH);
@@ -733,7 +732,7 @@ private:
         [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
           if (!controller || !webview) {
             print("WebView2 controller init failed\n");
-            flag.clear();
+            flag = true;
             return;
           }
           print("got WebView2 controller\n");
@@ -741,7 +740,7 @@ private:
           webview->AddRef();
           m_controller = controller;
           m_webview = webview;
-          flag.clear();
+          flag = true;
         });
 
     m_com_handler->set_attempt_handler([&] {
@@ -757,8 +756,8 @@ private:
     MSG msg;
     while (true) {
       print("embed(): checking flag\n");
-      if (!flag.test_and_set()) {
-        print("embed(): flag.test_and_set() returned false\n");
+      if (flag) {
+        print("embed(): flag is set\n");
         break;
       }
       print("embed(): before GetMessageW()\n");
