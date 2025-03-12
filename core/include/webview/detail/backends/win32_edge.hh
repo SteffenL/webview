@@ -779,7 +779,7 @@ private:
           print("embed(): GetMessageW() failed\n");
           break;
         }
-        if (msg.message == WM_QUIT) {
+        if (gm < 1) {
           print("embed(): got quit message\n");
           got_quit_msg = true;
           break;
