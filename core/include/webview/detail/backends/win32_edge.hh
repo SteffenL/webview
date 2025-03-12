@@ -676,6 +676,7 @@ protected:
     bool done{};
     auto *handler{
         new webview2_user_script_added_handler{[&](HRESULT res, LPCWSTR id) {
+          print("AddScriptToExecuteOnDocumentCreated: handler called\n");
           if (SUCCEEDED(res)) {
             script_id = id;
           }
