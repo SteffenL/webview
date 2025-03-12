@@ -255,11 +255,11 @@ public:
   ULONG STDMETHODCALLTYPE AddRef() { return ++m_ref_count; }
   ULONG STDMETHODCALLTYPE Release() {
     print("webview2_user_script_added_handler::Release(): current ref count: ",
-          m_ref_count);
+          m_ref_count, "\n");
     if (m_ref_count > 1) {
       return --m_ref_count;
     }
-    print("webview2_user_script_added_handler::Release(): deleting this");
+    print("webview2_user_script_added_handler::Release(): deleting this\n");
     delete this;
     return 0;
   }
