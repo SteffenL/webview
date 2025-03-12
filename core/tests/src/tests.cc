@@ -254,28 +254,33 @@ struct test_webview : webview::browser_engine {
 };
 
 TEST_CASE("Ensure that JS code can call native code and vice versa") {
-  test_webview browser([](test_webview *w, int i, const std::string &msg) {
+  bool foo{};
+  bool bar{};
+  test_webview browser([&](test_webview *w, int i, const std::string &msg) {
     switch (i) {
     case 0:
-      REQUIRE(msg == "loaded");
-      w->eval("window.__webview__.post('exiting ' + window.x)");
+      REQUIRE(msg == "foo");
+      foo = true;
+      w->eval("window.__webview__.post('bar ' + window.x)");
       break;
     case 1:
-      REQUIRE(msg == "exiting 42");
+      REQUIRE(msg == "bar 42");
+      bar = true;
       w->terminate();
       break;
     default:
       REQUIRE(0);
+      break;
     }
   });
   browser.init(R"(
     window.x = 42;
-    window.onload = () => {
-      window.__webview__.post('loaded');
-    };
+    window.__webview__.post('foo');
   )");
-  browser.navigate("data:text/html,%3Chtml%3Ehello%3C%2Fhtml%3E");
+  browser.set_html("<html>hello");
   browser.run();
+  REQUIRE(foo);
+  REQUIRE(bar);
 }
 
 TEST_CASE("Ensure that JSON parsing works") {
