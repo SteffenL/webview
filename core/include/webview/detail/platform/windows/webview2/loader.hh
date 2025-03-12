@@ -32,10 +32,12 @@
 
 #include "../../../logging.hh"
 #include "../../../native_library.hh"
+#include "../com_string.hh"
 #include "../iid.hh"
 #include "../reg_key.hh"
 #include "../version.hh"
 
+#include <atomic>
 #include <string>
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -117,11 +119,21 @@ static constexpr IID
         0x9B11,
         0x47B5,
         {0xBC, 0x6F, 0x8E, 0x78, 0x95, 0xFC, 0xEA, 0x17}};
+static constexpr IID IID_ICoreWebView2Environment{
+    0xB96D755E,
+    0x0319,
+    0x4E92,
+    {0xA2, 0x96, 0x23, 0x43, 0x6F, 0x46, 0xA1, 0xFC}};
 static constexpr IID IID_ICoreWebView2Environment10{
     0xEE0EB9DF,
     0x6F12,
     0x46CE,
     {0xB5, 0x3F, 0x3F, 0x47, 0xB9, 0xC9, 0x28, 0xE0}};
+static constexpr IID IID_ICoreWebView2EnvironmentOptions{
+    0x2FDE08A8,
+    0x1E9A,
+    0x4766,
+    {0x8C, 0x05, 0x95, 0xA9, 0xCE, 0xB9, 0xD1, 0xC5}};
 
 #if WEBVIEW_MSWEBVIEW2_BUILTIN_IMPL == 1
 enum class webview2_runtime_type { installed = 0, embedded = 1 };
@@ -378,7 +390,84 @@ static constexpr auto add_script_to_execute_on_document_created_completed =
     cast_info_t<
         ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler>{
         IID_ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler};
+
+static constexpr auto environment_options =
+    cast_info_t<ICoreWebView2EnvironmentOptions>{
+        IID_ICoreWebView2EnvironmentOptions};
 } // namespace cast_info
+
+#define WEBVIEW_COREWEBVIEW2ENVIRONMENTOPTIONS_STRING_PROPERTY(p)              \
+public:                                                                        \
+  HRESULT STDMETHODCALLTYPE get_##p(LPWSTR *value) override {                  \
+    if (!value) {                                                              \
+      return E_POINTER;                                                        \
+    }                                                                          \
+    *value = m_##p.copy();                                                     \
+    return S_OK;                                                               \
+  }                                                                            \
+  HRESULT STDMETHODCALLTYPE put_##p(LPCWSTR value) override {                  \
+    m_##p = value;                                                             \
+    return S_OK;                                                               \
+  }                                                                            \
+                                                                               \
+private:                                                                       \
+  com_string m_##p;
+
+#define WEBVIEW_COREWEBVIEW2ENVIRONMENTOPTIONS_BOOL_PROPERTY(p, defPVal)       \
+public:                                                                        \
+  HRESULT STDMETHODCALLTYPE get_##p(BOOL *value) override {                    \
+    if (!value) {                                                              \
+      return E_POINTER;                                                        \
+    }                                                                          \
+    *value = m_##p ? TRUE : FALSE;                                             \
+    return S_OK;                                                               \
+  }                                                                            \
+  HRESULT STDMETHODCALLTYPE put_##p(BOOL value) override {                     \
+    m_##p = value == TRUE;                                                     \
+    return S_OK;                                                               \
+  }                                                                            \
+                                                                               \
+private:                                                                       \
+  bool m_##p{(defPVal)};
+
+class CoreWebView2EnvironmentOptions : public ICoreWebView2EnvironmentOptions {
+public:
+  virtual ~CoreWebView2EnvironmentOptions() = default;
+
+  ULONG STDMETHODCALLTYPE AddRef() override { return ++m_ref_count; }
+  ULONG STDMETHODCALLTYPE Release() override {
+    if (m_ref_count > 1) {
+      return --m_ref_count;
+    }
+    delete this;
+    return 0;
+  }
+
+  HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID *ppv) override {
+    using namespace mswebview2::cast_info;
+
+    if (!ppv) {
+      return E_POINTER;
+    }
+
+    if (cast_if_equal_iid(this, riid, environment_options, ppv)) {
+      return S_OK;
+    }
+
+    return E_NOINTERFACE;
+  }
+
+  // ICoreWebView2EnvironmentOptions
+  WEBVIEW_COREWEBVIEW2ENVIRONMENTOPTIONS_STRING_PROPERTY(
+      AdditionalBrowserArguments)
+  WEBVIEW_COREWEBVIEW2ENVIRONMENTOPTIONS_STRING_PROPERTY(Language)
+  WEBVIEW_COREWEBVIEW2ENVIRONMENTOPTIONS_STRING_PROPERTY(
+      TargetCompatibleBrowserVersion)
+  WEBVIEW_COREWEBVIEW2ENVIRONMENTOPTIONS_BOOL_PROPERTY(
+      AllowSingleSignOnUsingOSPrimaryAccount, false)
+private:
+  std::atomic<ULONG> m_ref_count{1};
+};
 
 } // namespace mswebview2
 } // namespace detail

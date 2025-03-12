@@ -777,9 +777,11 @@ private:
     m_com_handler->set_attempt_handler([&] {
       print("com_handler attempt handler: calling "
             "create_environment_with_options()\n");
-      auto env_options{new ICoreWebView2EnvironmentOptions{}};
+      auto env_options{new mswebview2::CoreWebView2EnvironmentOptions{}};
+      // Must be set, but we just set it to the minimum allowed version
+      env_options->put_TargetCompatibleBrowserVersion(L"86.0.616.0");
       env_options->put_AdditionalBrowserArguments(
-          L"-msWebView2CancelInitialNavigation");
+          L"--msWebView2CancelInitialNavigation --incognito --no-first-run");
       auto res{m_webview2_loader.create_environment_with_options(
           nullptr, userDataFolder, env_options, m_com_handler)};
       env_options->Release();
