@@ -254,9 +254,12 @@ public:
 
   ULONG STDMETHODCALLTYPE AddRef() { return ++m_ref_count; }
   ULONG STDMETHODCALLTYPE Release() {
+    print("webview2_user_script_added_handler::Release(): current ref count: ",
+          m_ref_count);
     if (m_ref_count > 1) {
       return --m_ref_count;
     }
+    print("webview2_user_script_added_handler::Release(): deleting this");
     delete this;
     return 0;
   }
@@ -671,14 +674,15 @@ protected:
     auto wjs = widen_string(js);
     std::wstring script_id;
     bool done{};
-    webview2_user_script_added_handler handler{[&](HRESULT res, LPCWSTR id) {
-      if (SUCCEEDED(res)) {
-        script_id = id;
-      }
-      done = true;
-    }};
+    auto *handler{
+        new webview2_user_script_added_handler{[&](HRESULT res, LPCWSTR id) {
+          if (SUCCEEDED(res)) {
+            script_id = id;
+          }
+          done = true;
+        }}};
     auto res =
-        m_webview->AddScriptToExecuteOnDocumentCreated(wjs.c_str(), &handler);
+        m_webview->AddScriptToExecuteOnDocumentCreated(wjs.c_str(), handler);
     if (SUCCEEDED(res)) {
       // Sadly we need to pump the event loop in order to get the script ID.
       run_event_loop_until([&] { return done; });
