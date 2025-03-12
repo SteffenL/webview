@@ -11,6 +11,11 @@
 #include <cassert>
 #include <cstdint>
 
+// This is mainly for WebView2 on Windows because it's slow to initialize
+#ifdef _WIN32
+TEST_CASE("_ Warmup") { webview::webview{false, nullptr}; }
+#endif
+
 TEST_CASE("Start app loop and terminate it") {
   webview::webview w(false, nullptr);
   w.dispatch([&]() { w.terminate(); });
