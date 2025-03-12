@@ -683,6 +683,7 @@ protected:
         }}};
     auto res =
         m_webview->AddScriptToExecuteOnDocumentCreated(wjs.c_str(), handler);
+    handler->Release();
     if (SUCCEEDED(res)) {
       // Sadly we need to pump the event loop in order to get the script ID.
       run_event_loop_until([&] { return done; });
