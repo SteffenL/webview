@@ -515,6 +515,9 @@ public:
       throw exception{WEBVIEW_ERROR_INVALID_STATE, "Message window is null"};
     }
 
+    ShowWindow(m_widget, SW_SHOW);
+    UpdateWindow(m_widget);
+
     if (m_owns_window) {
       ShowWindow(m_window, SW_SHOW);
       UpdateWindow(m_window);
