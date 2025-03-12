@@ -759,6 +759,10 @@ private:
         print("embed(): flag is set\n");
         break;
       }
+      if (got_quit_msg) {
+        print("embed(): got_quit_msg is set\n");
+        break;
+      }
       auto pm{PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE)};
       if (pm < 0) {
         print("embed(): pm < 0\n");
