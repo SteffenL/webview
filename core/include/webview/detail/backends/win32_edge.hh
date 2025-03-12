@@ -145,7 +145,7 @@ public:
     print("got WebView2 env\n");
     ICoreWebView2Environment10 *env10{};
     res = env->QueryInterface(IID_ICoreWebView2Environment10,
-                              static_cast<void **>(&env10));
+                              reinterpret_cast<void **>(&env10));
     if (FAILED(res)) {
       print("couldn't get WebView2 env v10, creating controller without "
             "options\n");
@@ -777,8 +777,13 @@ private:
     m_com_handler->set_attempt_handler([&] {
       print("com_handler attempt handler: calling "
             "create_environment_with_options()\n");
-      return m_webview2_loader.create_environment_with_options(
-          nullptr, userDataFolder, nullptr, m_com_handler);
+      auto env_options{new ICoreWebView2EnvironmentOptions{}};
+      env_options->put_AdditionalBrowserArguments(
+          L"-msWebView2CancelInitialNavigation");
+      auto res{m_webview2_loader.create_environment_with_options(
+          nullptr, userDataFolder, env_options, m_com_handler)};
+      env_options->Release();
+      return res;
     });
     m_com_handler->try_create_environment();
 
