@@ -149,20 +149,20 @@ runs:
       run: |
         configs=(${{ steps.generate-build-config-names.outputs.configs }})
         for config in "${configs[@]}"; do
-          cmake_cmd=(timeout 60)
+          cmake_cmd=()
           if [[ ! -z "${{ inputs.test-wrapper-cmd }}" ]]; then
             cmake_cmd+=("${{ inputs.test-wrapper-cmd }}")
           fi
-          #cmake_cmd+=(
-          #  ctest
-          #  --test-dir "${{ inputs.build-dir }}"
-          #  --output-on-failure
-          #  --build-config "${config}"
-          #)
-          #if [[ ! -z "${{ inputs.test-timeout }}" ]]; then
-          #  cmake_cmd+=(--timeout "${{ inputs.test-timeout }}")
-          #fi
-          cmake_cmd+=("build/core/tests/${config}/webview_core_tests.exe")
+          cmake_cmd+=(
+            ctest
+            --test-dir "${{ inputs.build-dir }}"
+            --extra-verbose
+            --output-on-failure
+            --build-config "${config}"
+          )
+          if [[ ! -z "${{ inputs.test-timeout }}" ]]; then
+            cmake_cmd+=(--timeout "${{ inputs.test-timeout }}")
+          fi
           "${cmake_cmd[@]}"
         done
       shell: ${{ inputs.shell }}
