@@ -137,13 +137,39 @@ public:
     return E_NOINTERFACE;
   }
   HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Environment *env) {
-    if (SUCCEEDED(res)) {
-      res = env->CreateCoreWebView2Controller(m_window, this);
-      if (SUCCEEDED(res)) {
-        return S_OK;
-      }
+    if (FAILED(res)) {
+      print("WebView2 env failed\n");
+      try_create_environment();
+      return S_OK;
     }
-    try_create_environment();
+    print("got WebView2 env\n");
+    ICoreWebView2Environment10 *env10{};
+    res = env->QueryInterface(IID_ICoreWebView2Environment10, &env10);
+    if (FAILED(res)) {
+      print("couldn't get WebView2 env v10, creating controller without "
+            "options\n");
+      res = env->CreateCoreWebView2Controller(m_window, this);
+      if (FAILED(res)) {
+        print("WebView2 controller creation failed\n");
+        try_create_environment();
+      }
+      print("WebView2 controller creation without options ok\n");
+      return S_OK;
+    }
+    ICoreWebView2ControllerOptions *options{};
+    res = env10->CreateCoreWebView2ControllerOptions(&options);
+    if (FAILED(res)) {
+      print("WebView2 controller options creation failed\n");
+      try_create_environment();
+      return S_OK;
+    }
+    options->put_IsInPrivateModeEnabled(TRUE);
+    res = env10->CreateCoreWebView2ControllerWithOptions(options);
+    if (FAILED(res)) {
+      print("WebView2 controller creation with options failed\n");
+      try_create_environment();
+    }
+    print("WebView2 controller creation with options ok\n");
     return S_OK;
   }
   HRESULT STDMETHODCALLTYPE Invoke(HRESULT res,
