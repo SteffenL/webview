@@ -755,27 +755,40 @@ private:
     bool got_quit_msg = false;
     MSG msg;
     while (true) {
-      print("embed(): checking flag\n");
       if (flag) {
         print("embed(): flag is set\n");
         break;
       }
-      print("embed(): before GetMessageW()\n");
-      auto gm{GetMessageW(&msg, nullptr, 0, 0)};
-      print("embed(): after GetMessageW(); returned ", gm, "\n");
-      if (gm < 0) {
-        print("embed(): GetMessageW() failed\n");
+      auto pm{PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE)};
+      if (pm < 0) {
+        print("embed(): pm < 0\n");
+        PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE);
         break;
       }
-      if (msg.message == WM_QUIT) {
-        print("embed(): got quit message\n");
+      if (pm < 1) {
+        print("embed(): pm < 1\n");
+        PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE);
         got_quit_msg = true;
         break;
       }
-      TranslateMessage(&msg);
-      print("embed(): before DispatchMessageW()\n");
-      DispatchMessageW(&msg);
-      print("embed(): after DispatchMessageW()\n");
+      while ((pm = PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE)) > 0) {
+        print("embed(): before GetMessageW()\n");
+        auto gm{GetMessageW(&msg, nullptr, 0, 0)};
+        print("embed(): after GetMessageW(); returned ", gm, "\n");
+        if (gm < 0) {
+          print("embed(): GetMessageW() failed\n");
+          break;
+        }
+        if (msg.message == WM_QUIT) {
+          print("embed(): got quit message\n");
+          got_quit_msg = true;
+          break;
+        }
+        TranslateMessage(&msg);
+        print("embed(): before DispatchMessageW()\n");
+        DispatchMessageW(&msg);
+        print("embed(): after DispatchMessageW()\n");
+      }
     }
     if (got_quit_msg) {
       return error_info{WEBVIEW_ERROR_CANCELED};
