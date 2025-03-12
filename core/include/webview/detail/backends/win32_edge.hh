@@ -145,7 +145,7 @@ public:
     print("got WebView2 env\n");
     ICoreWebView2Environment10 *env10{};
     res = env->QueryInterface(IID_ICoreWebView2Environment10,
-                              static_cast<LPVOID *>(&env10));
+                              static_cast<void **>(&env10));
     if (FAILED(res)) {
       print("couldn't get WebView2 env v10, creating controller without "
             "options\n");
