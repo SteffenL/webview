@@ -164,7 +164,8 @@ public:
       return S_OK;
     }
     options->put_IsInPrivateModeEnabled(TRUE);
-    res = env10->CreateCoreWebView2ControllerWithOptions(options);
+    res =
+        env10->CreateCoreWebView2ControllerWithOptions(m_window, options, this);
     if (FAILED(res)) {
       print("WebView2 controller creation with options failed\n");
       try_create_environment();
