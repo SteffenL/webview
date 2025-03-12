@@ -763,19 +763,7 @@ private:
         print("embed(): got_quit_msg is set\n");
         break;
       }
-      auto pm{PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE)};
-      if (pm < 0) {
-        print("embed(): pm < 0\n");
-        PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE);
-        break;
-      }
-      if (pm < 1) {
-        print("embed(): pm < 1\n");
-        PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE);
-        got_quit_msg = true;
-        break;
-      }
-      while ((pm = PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE)) > 0) {
+      while (PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE)) {
         print("embed(): before GetMessageW()\n");
         auto gm{GetMessageW(&msg, nullptr, 0, 0)};
         print("embed(): after GetMessageW(); returned ", gm, "\n");
@@ -793,6 +781,7 @@ private:
         DispatchMessageW(&msg);
         print("embed(): after DispatchMessageW()\n");
       }
+      Sleep(1);
     }
     if (got_quit_msg) {
       return error_info{WEBVIEW_ERROR_CANCELED};
