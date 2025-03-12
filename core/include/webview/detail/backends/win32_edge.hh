@@ -763,24 +763,19 @@ private:
         print("embed(): got_quit_msg is set\n");
         break;
       }
-      while (PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE)) {
-        print("embed(): before GetMessageW()\n");
-        auto gm{GetMessageW(&msg, nullptr, 0, 0)};
-        print("embed(): after GetMessageW(); returned ", gm, "\n");
-        if (gm < 0) {
-          print("embed(): GetMessageW() failed\n");
-          break;
-        }
-        if (gm < 1) {
-          print("embed(): got quit message\n");
-          got_quit_msg = true;
-          break;
-        }
-        TranslateMessage(&msg);
-        print("embed(): before DispatchMessageW()\n");
-        DispatchMessageW(&msg);
-        print("embed(): after DispatchMessageW()\n");
+      if (!PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+        continue;
       }
+      print("embed(): got a message()\n");
+      if (msg.message == WM_QUIT) {
+        print("embed(): got quit message\n");
+        got_quit_msg = true;
+        break;
+      }
+      TranslateMessage(&msg);
+      print("embed(): before DispatchMessageW()\n");
+      DispatchMessageW(&msg);
+      print("embed(): after DispatchMessageW()\n");
       Sleep(1);
     }
     if (got_quit_msg) {
