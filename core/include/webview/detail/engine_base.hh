@@ -147,6 +147,7 @@ window.__webview__.onUnbind(" +
   }
 
   noresult eval(const std::string &js) { return eval_impl(js); }
+  noresult set_visible(bool visible) { return set_visible_impl(visible); }
 
 protected:
   virtual noresult navigate_impl(const std::string &url) = 0;
@@ -161,6 +162,7 @@ protected:
                                  webview_hint_t hints) = 0;
   virtual noresult set_html_impl(const std::string &html) = 0;
   virtual noresult eval_impl(const std::string &js) = 0;
+  virtual noresult set_visible_impl(bool visible) = 0;
 
   virtual user_script *add_user_script(const std::string &js) {
     return std::addressof(*m_user_scripts.emplace(m_user_scripts.end(),

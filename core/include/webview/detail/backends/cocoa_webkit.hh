@@ -298,6 +298,19 @@ protected:
     return {};
   }
 
+  noresult set_visible_impl(bool visible) override {
+    if (visible) {
+      objc::msg_send<void>(m_window, "orderBack:"_sel, m_window);
+      if (!m_has_shown_window) {
+        objc::msg_send<void>(m_window, "center"_sel);
+        m_has_shown_window = true;
+      }
+    } else {
+      objc::msg_send<void>(m_window, "orderOut:"_sel, m_window);
+    }
+    return {};
+  }
+
   user_script add_user_script_impl(const std::string &js) override {
     objc::autoreleasepool arp;
     auto wk_script = objc::msg_send<id>(
@@ -539,8 +552,7 @@ private:
     objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
 
     if (m_owns_window) {
-      objc::msg_send<void>(m_window, "center"_sel);
-      objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
+      objc::msg_send<void>(m_window, "makeKeyWindow:"_sel);
     }
   }
   void set_up_web_view() {
@@ -697,6 +709,7 @@ private:
   id m_webview{};
   id m_manager{};
   bool m_owns_window{};
+  bool m_has_shown_window{};
 };
 
 } // namespace detail

@@ -512,9 +512,9 @@ public:
     }
 
     if (m_owns_window) {
-      ShowWindow(m_window, SW_SHOW);
-      UpdateWindow(m_window);
-      SetFocus(m_window);
+      //ShowWindow(m_window, SW_SHOW);
+      //UpdateWindow(m_window);
+      //SetFocus(m_window);
     }
 
     auto cb =
@@ -658,6 +658,15 @@ protected:
     //       ICoreWebView2::get_Source because it returns "about:blank".
     auto wjs = widen_string(js);
     m_webview->ExecuteScript(wjs.c_str(), nullptr);
+    return {};
+  }
+
+  noresult set_visible_impl(bool visible) override {
+    ShowWindow(m_window, visible ? SW_SHOW : SW_HIDE);
+    if (visible) {
+      UpdateWindow(m_window);
+      SetFocus(m_window);
+    }
     return {};
   }
 

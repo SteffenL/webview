@@ -145,8 +145,8 @@ public:
     }
 
     if (m_owns_window) {
-      gtk_widget_grab_focus(GTK_WIDGET(m_webview));
-      gtk_compat::widget_set_visible(GTK_WIDGET(m_window), true);
+      //gtk_widget_grab_focus(GTK_WIDGET(m_webview));
+      //gtk_compat::widget_set_visible(GTK_WIDGET(m_window), true);
     }
   }
 
@@ -264,6 +264,14 @@ protected:
     webkit_web_view_run_javascript(WEBKIT_WEB_VIEW(m_webview), js.c_str(),
                                    nullptr, nullptr, nullptr);
 #endif
+    return {};
+  }
+
+  noresult set_visible_impl(bool visible) override {
+    if (visible) {
+      gtk_widget_grab_focus(GTK_WIDGET(m_webview));
+    }
+    gtk_compat::widget_set_visible(GTK_WIDGET(m_window), visible);
     return {};
   }
 
