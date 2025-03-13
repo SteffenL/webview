@@ -17,12 +17,14 @@ constexpr const auto html =
   <button id="compute">Compute</button>
   <span>Result: <span id="computeResult">(not started)</span></span>
 </div>
+<hr />
+<div><button id="peekaboo">Peek-a-boo</button></div>
 <script type="module">
   const getElements = ids => Object.assign({}, ...ids.map(
     id => ({ [id]: document.getElementById(id) })));
   const ui = getElements([
     "increment", "decrement", "counterResult", "compute",
-    "computeResult"
+    "computeResult", "peekaboo"
   ]);
   ui.increment.addEventListener("click", async () => {
     ui.counterResult.textContent = await window.count(1);
@@ -35,6 +37,9 @@ constexpr const auto html =
     ui.computeResult.textContent = "(pending)";
     ui.computeResult.textContent = await window.compute(6, 7);
     ui.compute.disabled = false;
+  });
+  ui.peekaboo.addEventListener("click", async () => {
+    await window.peekaboo();
   });
 </script>)html";
 
@@ -69,6 +74,18 @@ int main() {
             // Imagine that req is properly parsed or use your own JSON parser.
             const auto *result = "42";
             w.resolve(id, 0, result);
+          }).detach();
+        },
+        nullptr);
+
+    w.bind(
+        "peekaboo",
+        [&](const std::string &id, const std::string &req, void * /*arg*/) {
+          w.set_visible(false);
+          std::thread([&, id, req] {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            w.dispatch([&] { w.set_visible(true); });
+            w.resolve(id, 0, "");
           }).detach();
         },
         nullptr);

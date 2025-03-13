@@ -300,13 +300,13 @@ protected:
 
   noresult set_visible_impl(bool visible) override {
     if (visible) {
-      objc::msg_send<void>(m_window, "orderBack:"_sel, m_window);
+      objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
       if (!m_has_shown_window) {
         objc::msg_send<void>(m_window, "center"_sel);
         m_has_shown_window = true;
       }
     } else {
-      objc::msg_send<void>(m_window, "orderOut:"_sel, m_window);
+      objc::msg_send<void>(m_window, "orderOut:"_sel, nullptr);
     }
     return {};
   }
@@ -552,7 +552,7 @@ private:
     objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
 
     if (m_owns_window) {
-      objc::msg_send<void>(m_window, "makeKeyWindow:"_sel);
+      objc::msg_send<void>(m_window, "makeKeyWindow"_sel);
     }
   }
   void set_up_web_view() {
