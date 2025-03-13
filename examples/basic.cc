@@ -12,6 +12,7 @@ int main() {
     webview::webview w(false, nullptr);
     w.set_title("Basic Example");
     w.set_size(480, 320, WEBVIEW_HINT_NONE);
+    w.set_visible(true);
     w.set_html("Thanks for using webview!");
     w.run();
   } catch (const webview::exception &e) {
