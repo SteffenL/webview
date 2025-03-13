@@ -229,14 +229,20 @@ protected:
   noresult set_size_impl(int width, int height, webview_hint_t hints) override {
     objc::autoreleasepool arp;
 
-    auto style = static_cast<NSWindowStyleMask>(
-        NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
-        NSWindowStyleMaskMiniaturizable);
+    const auto old_style{
+        objc::msg_send<NSWindowStyleMask>(m_window, "styleMask"_sel)};
+    auto new_style{old_style};
     if (hints != WEBVIEW_HINT_FIXED) {
-      style =
-          static_cast<NSWindowStyleMask>(style | NSWindowStyleMaskResizable);
+      new_style = static_cast<NSWindowStyleMask>(new_style |
+                                                 NSWindowStyleMaskResizable);
+    } else {
+      new_style = static_cast<NSWindowStyleMask>(new_style &
+                                                 ~NSWindowStyleMaskResizable);
     }
-    objc::msg_send<void>(m_window, "setStyleMask:"_sel, style);
+
+    if (new_style != old_style) {
+      objc::msg_send<void>(m_window, "setStyleMask:"_sel, new_style);
+    }
 
     if (hints == WEBVIEW_HINT_MIN) {
       objc::msg_send<void>(m_window, "setContentMinSize:"_sel,
@@ -423,6 +429,18 @@ private:
     }
     return objc::msg_send<id>((id)cls, "new"_sel);
   }
+  static id create_window() {
+    objc::autoreleasepool arp;
+    auto style = static_cast<NSWindowStyleMask>(
+        NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
+        NSWindowStyleMaskMiniaturizable);
+    auto window{objc::msg_send<id>("NSWindow"_cls, "alloc"_sel)};
+    window = objc::msg_send<id>(
+        window, "initWithContentRect:styleMask:backing:defer:"_sel,
+        CGRectMake(0, 0, get_default_width(), get_default_height()), style,
+        NSBackingStoreBuffered, NO);
+    return window;
+  }
   static id create_window_delegate() {
     objc::autoreleasepool arp;
     constexpr auto class_name = "WebviewNSWindowDelegate";
@@ -505,11 +523,7 @@ private:
 
     // Main window
     if (m_owns_window) {
-      m_window = objc::msg_send<id>("NSWindow"_cls, "alloc"_sel);
-      auto style = NSWindowStyleMaskTitled;
-      m_window = objc::msg_send<id>(
-          m_window, "initWithContentRect:styleMask:backing:defer:"_sel,
-          CGRectMake(0, 0, 0, 0), style, NSBackingStoreBuffered, NO);
+      m_window = create_window();
 
       m_window_delegate = create_window_delegate();
       objc_setAssociatedObject(m_window_delegate, "webview", (id)this,
@@ -525,6 +539,7 @@ private:
     objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
 
     if (m_owns_window) {
+      objc::msg_send<void>(m_window, "center"_sel);
       objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
     }
   }

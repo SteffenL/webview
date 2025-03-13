@@ -318,7 +318,13 @@ protected:
     }
   }
 
+  static int get_default_width() noexcept { return m_initial_width; }
+  static int get_default_height() noexcept { return m_initial_height; }
+
 private:
+  static constexpr int m_initial_width{640};
+  static constexpr int m_initial_height{480};
+
   static std::atomic_uint &window_ref_count() {
     static std::atomic_uint ref_count{0};
     return ref_count;
