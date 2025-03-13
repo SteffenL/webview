@@ -145,11 +145,6 @@ public:
                                                                   true);
       webkit_settings_set_enable_developer_extras(settings, true);
     }
-
-    if (m_owns_window) {
-      //gtk_widget_grab_focus(GTK_WIDGET(m_webview));
-      //gtk_compat::widget_set_visible(GTK_WIDGET(m_window), true);
-    }
   }
 
   gtk_webkit_engine(const gtk_webkit_engine &) = delete;
