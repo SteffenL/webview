@@ -320,8 +320,11 @@ protected:
     }
   }
 
-  static int get_default_width() noexcept { return m_initial_width; }
-  static int get_default_height() noexcept { return m_initial_height; }
+  static constexpr int get_default_width() noexcept { return m_initial_width; }
+
+  static constexpr int get_default_height() noexcept {
+    return m_initial_height;
+  }
 
 private:
   static constexpr int m_initial_width{640};
