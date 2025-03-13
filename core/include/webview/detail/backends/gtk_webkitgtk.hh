@@ -106,6 +106,8 @@ public:
         throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
       }
       m_window = gtk_compat::window_new();
+      gtk_compat::window_set_size(GTK_WINDOW(m_window), get_default_width(),
+                                  get_default_height());
       on_window_created();
       auto on_window_destroy = +[](GtkWidget *, gpointer arg) {
         auto *w = static_cast<gtk_webkit_engine *>(arg);
