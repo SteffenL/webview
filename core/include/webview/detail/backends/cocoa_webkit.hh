@@ -301,10 +301,10 @@ protected:
   noresult set_visible_impl(bool visible) override {
     if (visible) {
       objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
-      if (!m_has_shown_window) {
+      if (m_owns_window && !m_has_shown_window) {
         objc::msg_send<void>(m_window, "center"_sel);
-        m_has_shown_window = true;
       }
+      m_has_shown_window = true;
     } else {
       objc::msg_send<void>(m_window, "orderOut:"_sel, nullptr);
     }
