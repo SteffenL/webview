@@ -38,6 +38,7 @@
 #include <functional>
 #include <list>
 #include <map>
+#include <queue>
 #include <string>
 
 namespace webview {
@@ -45,6 +46,8 @@ namespace detail {
 
 class engine_base {
 public:
+  engine_base(bool owns_window) : m_owns_window{owns_window} {}
+
   virtual ~engine_base() = default;
 
   noresult navigate(const std::string &url) {
@@ -130,7 +133,15 @@ window.__webview__.onUnbind(" +
   result<void *> window() { return window_impl(); }
   result<void *> widget() { return widget_impl(); }
   result<void *> browser_controller() { return browser_controller_impl(); }
-  noresult run() { return run_impl(); }
+
+  noresult run() {
+    while (!m_dispatch_on_run_queue.empty()) {
+      dispatch(std::move(m_dispatch_on_run_queue.front()));
+      m_dispatch_on_run_queue.pop();
+    }
+    return run_impl();
+  }
+
   noresult terminate() { return terminate_impl(); }
   noresult dispatch(std::function<void()> f) { return dispatch_impl(f); }
   noresult set_title(const std::string &title) { return set_title_impl(title); }
@@ -147,7 +158,12 @@ window.__webview__.onUnbind(" +
   }
 
   noresult eval(const std::string &js) { return eval_impl(js); }
-  noresult set_visible(bool visible) { return set_visible_impl(visible); }
+
+  noresult set_visible(bool visible) {
+    auto result{set_visible_impl(visible)};
+    m_has_set_visibility = true;
+    return result;
+  }
 
 protected:
   virtual noresult navigate_impl(const std::string &url) = 0;
@@ -310,6 +326,16 @@ protected:
     dispatch([=] { context.call(id, args); });
   }
 
+  void on_created() {
+    if (m_owns_window) {
+      dispatch_on_run([=] {
+        if (!m_has_set_visibility) {
+          set_visible(true);
+        }
+      });
+    }
+  }
+
   virtual void on_window_created() { inc_window_count(); }
 
   virtual void on_window_destroyed(bool skip_termination = false) {
@@ -324,6 +350,12 @@ protected:
 
   static constexpr int get_default_height() noexcept {
     return m_initial_height;
+  }
+
+  bool owns_window() const noexcept { return m_owns_window; }
+
+  void dispatch_on_run(std::function<void()> f) {
+    m_dispatch_on_run_queue.push(std::move(f));
   }
 
 private:
@@ -348,6 +380,9 @@ private:
   std::map<std::string, binding_ctx_t> bindings;
   user_script *m_bind_script{};
   std::list<user_script> m_user_scripts;
+  bool m_has_set_visibility{};
+  bool m_owns_window{};
+  std::queue<std::function<void()>> m_dispatch_on_run_queue;
 };
 
 } // namespace detail

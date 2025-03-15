@@ -90,7 +90,7 @@ int main() {
         },
         nullptr);
 
-    w.set_visible(true);
+    //w.set_visible(true);
     w.set_html(html);
     w.run();
   } catch (const webview::exception &e) {

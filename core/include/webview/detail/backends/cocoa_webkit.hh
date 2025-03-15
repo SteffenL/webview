@@ -86,12 +86,12 @@ private:
 class cocoa_wkwebview_engine : public engine_base {
 public:
   cocoa_wkwebview_engine(bool debug, void *window)
-      : m_debug{debug},
-        m_window{static_cast<id>(window)},
-        m_owns_window{!window} {
+      : engine_base{!window},
+        m_debug{debug},
+        m_window{static_cast<id>(window)} {
     auto app = get_shared_application();
     // See comments related to application lifecycle in create_app_delegate().
-    if (!m_owns_window) {
+    if (!owns_window()) {
       set_up_window();
     } else {
       // Only set the app delegate if it hasn't already been set.
@@ -119,6 +119,8 @@ public:
         }
       }
     }
+
+    on_created();
   }
 
   cocoa_wkwebview_engine(const cocoa_wkwebview_engine &) = delete;
@@ -145,7 +147,7 @@ public:
         objc::msg_send<void>(m_widget, "release"_sel);
         m_widget = nullptr;
       }
-      if (m_owns_window) {
+      if (owns_window()) {
         // Replace delegate to avoid callbacks and other bad things during
         // destruction.
         objc::msg_send<void>(m_window, "setDelegate:"_sel, nullptr);
@@ -165,7 +167,7 @@ public:
       objc::msg_send<void>(m_app_delegate, "release"_sel);
       m_app_delegate = nullptr;
     }
-    if (m_owns_window) {
+    if (owns_window()) {
       // Needed for the window to close immediately.
       deplete_run_loop_event_queue();
     }
@@ -301,7 +303,7 @@ protected:
   noresult set_visible_impl(bool visible) override {
     if (visible) {
       objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
-      if (m_owns_window && !m_has_shown_window) {
+      if (owns_window() && !m_has_shown_window) {
         objc::msg_send<void>(m_window, "center"_sel);
       }
       m_has_shown_window = true;
@@ -498,7 +500,7 @@ private:
   }
   void on_application_did_finish_launching(id /*delegate*/, id app) {
     // See comments related to application lifecycle in create_app_delegate().
-    if (m_owns_window) {
+    if (owns_window()) {
       // Stop the main run loop so that we can return
       // from the constructor.
       stop_run_loop();
@@ -535,7 +537,7 @@ private:
     objc::autoreleasepool arp;
 
     // Main window
-    if (m_owns_window) {
+    if (owns_window()) {
       m_window = create_window();
 
       m_window_delegate = create_window_delegate();
@@ -551,7 +553,7 @@ private:
 
     objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
 
-    if (m_owns_window) {
+    if (owns_window()) {
       objc::msg_send<void>(m_window, "makeKeyWindow"_sel);
     }
   }
@@ -708,7 +710,6 @@ private:
   id m_widget{};
   id m_webview{};
   id m_manager{};
-  bool m_owns_window{};
   bool m_has_shown_window{};
 };
 

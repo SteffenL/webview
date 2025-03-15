@@ -308,7 +308,7 @@ private:
 
 class win32_edge_engine : public engine_base {
 public:
-  win32_edge_engine(bool debug, void *window) : m_owns_window{!window} {
+  win32_edge_engine(bool debug, void *window) : engine_base{!window} {
     if (!is_webview2_available()) {
       throw exception{WEBVIEW_ERROR_MISSING_DEPENDENCY,
                       "WebView2 is unavailable"};
@@ -316,7 +316,7 @@ public:
 
     HINSTANCE hInstance = GetModuleHandle(nullptr);
 
-    if (m_owns_window) {
+    if (owns_window()) {
       m_com_init = {COINIT_APARTMENTTHREADED};
       enable_dpi_awareness();
 
@@ -414,7 +414,8 @@ public:
       on_window_created();
 
       m_dpi = get_window_dpi(m_window);
-      set_size(get_default_width(), get_default_height(), WEBVIEW_HINT_NONE);
+      set_size_impl(get_default_width(), get_default_height(),
+                    WEBVIEW_HINT_NONE);
     } else {
       m_window = IsWindow(static_cast<HWND>(window))
                      ? static_cast<HWND>(window)
@@ -515,6 +516,7 @@ public:
         std::bind(&win32_edge_engine::on_message, this, std::placeholders::_1);
 
     embed(m_widget, debug, cb).ensure_ok();
+    on_created();
   }
 
   virtual ~win32_edge_engine() {
@@ -539,7 +541,7 @@ public:
     if (m_widget) {
       SetWindowLongPtrW(m_widget, GWLP_WNDPROC, wndproc);
     }
-    if (m_window && m_owns_window) {
+    if (m_window && owns_window()) {
       SetWindowLongPtrW(m_window, GWLP_WNDPROC, wndproc);
     }
     if (m_widget) {
@@ -547,13 +549,13 @@ public:
       m_widget = nullptr;
     }
     if (m_window) {
-      if (m_owns_window) {
+      if (owns_window()) {
         DestroyWindow(m_window);
         on_window_destroyed(true);
       }
       m_window = nullptr;
     }
-    if (m_owns_window) {
+    if (owns_window()) {
       // Not strictly needed for windows to close immediately but aligns
       // behavior across backends.
       deplete_run_loop_event_queue();
@@ -785,7 +787,7 @@ private:
     m_controller->put_IsVisible(TRUE);
     ShowWindow(m_widget, SW_SHOW);
     UpdateWindow(m_widget);
-    if (m_owns_window) {
+    if (owns_window()) {
       focus_webview();
     }
     return {};
@@ -886,7 +888,6 @@ private:
   webview2_com_handler *m_com_handler = nullptr;
   mswebview2::loader m_webview2_loader;
   int m_dpi{};
-  bool m_owns_window{};
 };
 
 } // namespace detail

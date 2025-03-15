@@ -100,8 +100,8 @@ private:
 class gtk_webkit_engine : public engine_base {
 public:
   gtk_webkit_engine(bool debug, void *window)
-      : m_owns_window{!window}, m_window(static_cast<GtkWidget *>(window)) {
-    if (m_owns_window) {
+      : engine_base{!window}, m_window(static_cast<GtkWidget *>(window)) {
+    if (owns_window()) {
       if (!gtk_compat::init_check()) {
         throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
       }
@@ -145,6 +145,8 @@ public:
                                                                   true);
       webkit_settings_set_enable_developer_extras(settings, true);
     }
+
+    on_created();
   }
 
   gtk_webkit_engine(const gtk_webkit_engine &) = delete;
@@ -154,7 +156,7 @@ public:
 
   virtual ~gtk_webkit_engine() {
     if (m_window) {
-      if (m_owns_window) {
+      if (owns_window()) {
         // Disconnect handlers to avoid callbacks invoked during destruction.
         g_signal_handlers_disconnect_by_data(GTK_WINDOW(m_window), this);
         gtk_window_close(GTK_WINDOW(m_window));
@@ -167,7 +169,7 @@ public:
     if (m_webview) {
       g_object_unref(m_webview);
     }
-    if (m_owns_window) {
+    if (owns_window()) {
       // Needed for the window to close immediately.
       deplete_run_loop_event_queue();
     }
@@ -330,7 +332,6 @@ private:
     }
   }
 
-  bool m_owns_window{};
   GtkWidget *m_window{};
   GtkWidget *m_webview{};
   WebKitUserContentManager *m_user_content_manager{};
