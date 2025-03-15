@@ -328,7 +328,7 @@ protected:
 
   void on_created() {
     if (m_owns_window) {
-      dispatch_on_run([=] {
+      dispatch_on_run([this] {
         if (!m_has_set_visibility) {
           set_visible(true);
         }
