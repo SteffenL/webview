@@ -411,11 +411,12 @@ public:
       if (!m_window) {
         throw exception{WEBVIEW_ERROR_INVALID_STATE, "Window is null"};
       }
-      on_window_created();
 
       m_dpi = get_window_dpi(m_window);
       set_size_impl(get_default_width(), get_default_height(),
                     WEBVIEW_HINT_NONE);
+
+      on_window_created();
     } else {
       m_window = IsWindow(static_cast<HWND>(window))
                      ? static_cast<HWND>(window)
