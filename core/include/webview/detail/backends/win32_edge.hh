@@ -708,8 +708,7 @@ protected:
 
 private:
   noresult embed(HWND wnd, bool debug, msg_cb_t cb) {
-    std::atomic_flag flag = ATOMIC_FLAG_INIT;
-    flag.test_and_set();
+    bool flag{};
 
     wchar_t currentExePath[MAX_PATH];
     GetModuleFileNameW(nullptr, currentExePath, MAX_PATH);
@@ -727,14 +726,14 @@ private:
         wnd, cb,
         [&](ICoreWebView2Controller *controller, ICoreWebView2 *webview) {
           if (!controller || !webview) {
-            flag.clear();
+            flag = true;
             return;
           }
           controller->AddRef();
           webview->AddRef();
           m_controller = controller;
           m_webview = webview;
-          flag.clear();
+          flag = true;
         });
 
     m_com_handler->set_attempt_handler([&] {
@@ -746,7 +745,7 @@ private:
     // Pump the message loop until WebView2 has finished initialization.
     bool got_quit_msg = false;
     MSG msg;
-    while (flag.test_and_set() && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
+    while (!flag && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
       if (msg.message == WM_QUIT) {
         got_quit_msg = true;
         break;
