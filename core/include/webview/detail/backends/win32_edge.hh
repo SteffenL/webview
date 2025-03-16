@@ -243,7 +243,6 @@ public:
 
   webview2_user_script_added_handler(callback_fn cb) : m_cb{cb} {}
 
-  virtual ~webview2_user_script_added_handler() = default;
   webview2_user_script_added_handler(
       const webview2_user_script_added_handler &other) = delete;
   webview2_user_script_added_handler &
@@ -284,6 +283,8 @@ public:
   }
 
 private:
+  virtual ~webview2_user_script_added_handler() = default;
+
   callback_fn m_cb;
   std::atomic<ULONG> m_ref_count{1};
 };
@@ -672,14 +673,16 @@ protected:
     auto wjs = widen_string(js);
     std::wstring script_id;
     bool done{};
-    webview2_user_script_added_handler handler{[&](HRESULT res, LPCWSTR id) {
-      if (SUCCEEDED(res)) {
-        script_id = id;
-      }
-      done = true;
-    }};
+    auto *handler{
+        new webview2_user_script_added_handler{[&](HRESULT res, LPCWSTR id) {
+          if (SUCCEEDED(res)) {
+            script_id = id;
+          }
+          done = true;
+        }}};
     auto res =
-        m_webview->AddScriptToExecuteOnDocumentCreated(wjs.c_str(), &handler);
+        m_webview->AddScriptToExecuteOnDocumentCreated(wjs.c_str(), handler);
+    handler->Release();
     if (SUCCEEDED(res)) {
       // Sadly we need to pump the event loop in order to get the script ID.
       run_event_loop_while([&] { return !done; });
