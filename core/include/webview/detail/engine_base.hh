@@ -346,11 +346,8 @@ protected:
     }
   }
 
-  static constexpr int get_default_width() noexcept { return m_initial_width; }
-
-  static constexpr int get_default_height() noexcept {
-    return m_initial_height;
-  }
+  static constexpr int get_default_width() noexcept { return 640; }
+  static constexpr int get_default_height() noexcept { return 480; }
 
   bool owns_window() const noexcept { return m_owns_window; }
 
@@ -359,9 +356,6 @@ protected:
   }
 
 private:
-  static constexpr int m_initial_width{640};
-  static constexpr int m_initial_height{480};
-
   static std::atomic_uint &window_ref_count() {
     static std::atomic_uint ref_count{0};
     return ref_count;
