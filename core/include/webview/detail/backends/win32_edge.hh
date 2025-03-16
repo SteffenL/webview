@@ -97,7 +97,6 @@ public:
   webview2_com_handler(HWND hwnd, msg_cb_t msgCb, webview2_com_handler_cb_t cb)
       : m_window(hwnd), m_msgCb(msgCb), m_cb(cb) {}
 
-  virtual ~webview2_com_handler() = default;
   webview2_com_handler(const webview2_com_handler &other) = delete;
   webview2_com_handler &operator=(const webview2_com_handler &other) = delete;
   webview2_com_handler(webview2_com_handler &&other) = delete;
@@ -227,6 +226,8 @@ public:
   }
 
 private:
+  virtual ~webview2_com_handler() = default;
+
   HWND m_window;
   msg_cb_t m_msgCb;
   webview2_com_handler_cb_t m_cb;
