@@ -753,7 +753,7 @@ private:
     bool got_quit_msg = false;
     {
       MSG msg;
-      auto busy{get_event_loop_busy_helper()};
+      auto temp_loop_running{get_temp_event_loop_running_helper()};
       while (flag.test_and_set() && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
         if (msg.message == WM_QUIT) {
           got_quit_msg = true;
@@ -866,6 +866,7 @@ private:
 
   // Blocks while depleting the run loop of events.
   void deplete_run_loop_event_queue() {
+    auto temp_loop_running{get_temp_event_loop_running_helper()};
     bool done{};
     dispatch([&] { done = true; });
     while (!done) {

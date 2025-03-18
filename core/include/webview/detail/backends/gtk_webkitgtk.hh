@@ -145,6 +145,7 @@ public:
                                                                   true);
       webkit_settings_set_enable_developer_extras(settings, true);
     }
+    on_created();
   }
 
   gtk_webkit_engine(const gtk_webkit_engine &) = delete;
@@ -168,7 +169,6 @@ public:
       g_object_unref(m_webview);
     }
     if (owns_window()) {
-      auto busy{get_event_loop_busy_helper()};
       // Needed for the window to close immediately.
       deplete_run_loop_event_queue();
     }
