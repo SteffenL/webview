@@ -308,7 +308,7 @@ private:
 
 class win32_edge_engine : public engine_base {
 public:
-  win32_edge_engine(bool debug, void *window) : engine_base{!window} {
+  win32_edge_engine(bool debug, void *window) : m_owns_window{!window} {
     if (!is_webview2_available()) {
       throw exception{WEBVIEW_ERROR_MISSING_DEPENDENCY,
                       "WebView2 is unavailable"};
@@ -751,14 +751,17 @@ private:
 
     // Pump the message loop until WebView2 has finished initialization.
     bool got_quit_msg = false;
-    MSG msg;
-    while (flag.test_and_set() && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
-      if (msg.message == WM_QUIT) {
-        got_quit_msg = true;
-        break;
+    {
+      MSG msg;
+      auto busy{get_event_loop_busy_helper()};
+      while (flag.test_and_set() && GetMessageW(&msg, nullptr, 0, 0) >= 0) {
+        if (msg.message == WM_QUIT) {
+          got_quit_msg = true;
+          break;
+        }
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
       }
-      TranslateMessage(&msg);
-      DispatchMessageW(&msg);
     }
     if (got_quit_msg) {
       return error_info{WEBVIEW_ERROR_CANCELED};
@@ -874,6 +877,8 @@ private:
     }
   }
 
+  bool owns_window() const override { return m_owns_window; }
+
   // The app is expected to call CoInitializeEx before
   // CreateCoreWebView2EnvironmentWithOptions.
   // Source: https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/webview2-idl#createcorewebview2environmentwithoptions
@@ -889,6 +894,7 @@ private:
   webview2_com_handler *m_com_handler = nullptr;
   mswebview2::loader m_webview2_loader;
   int m_dpi{};
+  bool m_owns_window{};
 };
 
 } // namespace detail

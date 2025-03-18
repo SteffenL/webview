@@ -46,8 +46,6 @@ namespace detail {
 
 class engine_base {
 public:
-  engine_base(bool owns_window) : m_owns_window{owns_window} {}
-
   virtual ~engine_base() = default;
 
   noresult navigate(const std::string &url) {
@@ -120,30 +118,29 @@ window.__webview__.onUnbind(" +
   noresult resolve(const std::string &id, int status,
                    const std::string &result) {
     // NOLINTNEXTLINE(modernize-avoid-bind): Lambda with move requires C++14
-    return dispatch(std::bind(
-        [id, status, this](std::string escaped_result) {
-          std::string js = "window.__webview__.onReply(" + json_escape(id) +
-                           ", " + std::to_string(status) + ", " +
-                           escaped_result + ")";
-          eval(js);
-        },
-        result.empty() ? "undefined" : json_escape(result)));
+    dispatch(std::bind(
+                 [id, status, this](std::string escaped_result) {
+                   std::string js =
+                       "window.__webview__.onReply(" + json_escape(id) + ", " +
+                       std::to_string(status) + ", " + escaped_result + ")";
+                   eval(js);
+                 },
+                 result.empty() ? "undefined" : json_escape(result)),
+             dispatch_priority::low);
+    return {};
   }
 
   result<void *> window() { return window_impl(); }
   result<void *> widget() { return widget_impl(); }
   result<void *> browser_controller() { return browser_controller_impl(); }
+  noresult run() { return run_impl(); }
+  noresult terminate() { return terminate_impl(); }
 
-  noresult run() {
-    while (!m_dispatch_on_run_queue.empty()) {
-      dispatch(std::move(m_dispatch_on_run_queue.front()));
-      m_dispatch_on_run_queue.pop();
-    }
-    return run_impl();
+  noresult dispatch(std::function<void()> f) {
+    dispatch(std::move(f), dispatch_priority::medium);
+    return {};
   }
 
-  noresult terminate() { return terminate_impl(); }
-  noresult dispatch(std::function<void()> f) { return dispatch_impl(f); }
   noresult set_title(const std::string &title) { return set_title_impl(title); }
 
   noresult set_size(int width, int height, webview_hint_t hints) {
@@ -326,19 +323,9 @@ protected:
     dispatch([=] { context.call(id, args); });
   }
 
-  void on_created() {
-    if (m_owns_window) {
-      dispatch_on_run([this] {
-        if (!m_has_set_visibility) {
-          set_visible(true);
-        }
-      });
-    }
-  }
+  void on_window_created() { inc_window_count(); }
 
-  virtual void on_window_created() { inc_window_count(); }
-
-  virtual void on_window_destroyed(bool skip_termination = false) {
+  void on_window_destroyed(bool skip_termination = false) {
     if (dec_window_count() <= 0) {
       if (!skip_termination) {
         terminate();
@@ -346,13 +333,68 @@ protected:
     }
   }
 
+  virtual bool owns_window() const = 0;
+
   static constexpr int get_default_width() noexcept { return 640; }
   static constexpr int get_default_height() noexcept { return 480; }
 
-  bool owns_window() const noexcept { return m_owns_window; }
+  class event_loop_busy_helper {
+  public:
+    template <typename IncRefFn, typename DecRefFn>
+    event_loop_busy_helper(IncRefFn &&inc_ref, DecRefFn &&dec_ref)
+        : m_dec_ref{std::forward<DecRefFn>(dec_ref)} {
+      std::forward<IncRefFn>(inc_ref)();
+    }
 
-  void dispatch_on_run(std::function<void()> f) {
-    m_dispatch_on_run_queue.push(std::move(f));
+    ~event_loop_busy_helper() { m_dec_ref(); }
+
+  private:
+    std::function<void()> m_dec_ref;
+  };
+
+  event_loop_busy_helper get_event_loop_busy_helper() {
+    return {[this] { ++m_event_loop_busy_count; },
+            [this] { --m_event_loop_busy_count; }};
+  }
+
+  bool is_event_loop_busy() const noexcept {
+    return m_event_loop_busy_count > 0;
+  }
+
+  enum dispatch_priority : int { high = 10, medium = 20, low = 30 };
+
+  void dispatch(std::function<void()> f, dispatch_priority priority) {
+    m_dispatch_queues[priority].push(std::move(f));
+  }
+
+  bool invoke_next_dispatched_fn(dispatch_priority priority) {
+    auto queue_it{m_dispatch_queues.find(priority)};
+    if (queue_it == m_dispatch_queues.end()) {
+      return false;
+    }
+    auto &queue{queue_it->second};
+    if (queue.empty()) {
+      m_dispatch_queues.erase(queue_it);
+      return false;
+    }
+    auto fn{std::move(queue.front())};
+    queue.pop();
+    if (queue.empty()) {
+      m_dispatch_queues.erase(queue_it);
+    }
+    fn();
+    return true;
+  }
+
+  void deplete_dispatch_queues() {
+    std::vector<dispatch_priority> priorities;
+    priorities.reserve(m_dispatch_queues.size());
+    for (auto &kv : m_dispatch_queues) {
+      priorities.push_back(kv.first);
+    }
+    for (auto priority : priorities) {
+      invoke_next_dispatched_fn(priority);
+    }
   }
 
 private:
@@ -376,7 +418,9 @@ private:
   std::list<user_script> m_user_scripts;
   bool m_has_set_visibility{};
   bool m_owns_window{};
-  std::queue<std::function<void()>> m_dispatch_on_run_queue;
+  std::map<dispatch_priority, std::queue<std::function<void()>>>
+      m_dispatch_queues;
+  std::atomic_uint m_event_loop_busy_count{};
 };
 
 } // namespace detail

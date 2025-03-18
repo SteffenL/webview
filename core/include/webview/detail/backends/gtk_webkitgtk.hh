@@ -100,7 +100,7 @@ private:
 class gtk_webkit_engine : public engine_base {
 public:
   gtk_webkit_engine(bool debug, void *window)
-      : engine_base{!window}, m_window(static_cast<GtkWidget *>(window)) {
+      : m_window(static_cast<GtkWidget *>(window)), m_owns_window{!window} {
     if (owns_window()) {
       if (!gtk_compat::init_check()) {
         throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
@@ -108,7 +108,6 @@ public:
       m_window = gtk_compat::window_new();
       gtk_compat::window_set_size(GTK_WINDOW(m_window), get_default_width(),
                                   get_default_height());
-      on_window_created();
       auto on_window_destroy = +[](GtkWidget *, gpointer arg) {
         auto *w = static_cast<gtk_webkit_engine *>(arg);
         w->m_window = nullptr;
@@ -116,6 +115,7 @@ public:
       };
       g_signal_connect(G_OBJECT(m_window), "destroy",
                        G_CALLBACK(on_window_destroy), this);
+      on_window_created();
     }
     webkit_dmabuf::apply_webkit_dmabuf_workaround();
     // Initialize webview widget
@@ -145,8 +145,6 @@ public:
                                                                   true);
       webkit_settings_set_enable_developer_extras(settings, true);
     }
-
-    on_created();
   }
 
   gtk_webkit_engine(const gtk_webkit_engine &) = delete;
@@ -170,6 +168,7 @@ public:
       g_object_unref(m_webview);
     }
     if (owns_window()) {
+      auto busy{get_event_loop_busy_helper()};
       // Needed for the window to close immediately.
       deplete_run_loop_event_queue();
     }
@@ -332,10 +331,13 @@ private:
     }
   }
 
+  bool owns_window() const override { return m_owns_window; }
+
   GtkWidget *m_window{};
   GtkWidget *m_webview{};
   WebKitUserContentManager *m_user_content_manager{};
   bool m_stop_run_loop{};
+  bool m_owns_window{};
 };
 
 } // namespace detail
