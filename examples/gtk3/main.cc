@@ -45,7 +45,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
   // Create counter label with custom styling
   auto *counter_label{
       gtk_label_new(std::to_string(app_context->counter).c_str())};
-  auto *style_provider = gtk_css_provider_new();
+  auto *style_provider{gtk_css_provider_new()};
   auto *style_context{gtk_widget_get_style_context(counter_label)};
   gtk_style_context_add_provider(style_context,
                                  GTK_STYLE_PROVIDER(style_provider),
@@ -57,7 +57,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
   // Create go button
   auto *go_button{gtk_button_new_with_label("Go")};
   g_signal_connect(G_OBJECT(go_button), "clicked",
-                   G_CALLBACK(+[](GtkButton *self, gpointer user_data) {
+                   G_CALLBACK(+[](GtkButton * /*self*/, gpointer user_data) {
                      auto *app_context{static_cast<app_context_t *>(user_data)};
                      auto *url{gtk_entry_buffer_get_text(gtk_entry_get_buffer(
                          GTK_ENTRY(app_context->location_entry)))};
@@ -66,6 +66,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
                    app_context);
 
   // Create webview instance
+  // Problem: A GtkWindow is required and the widget will be embedded into the window
   app_context->w = std::unique_ptr<webview::webview>{
       new webview::webview{false, GTK_WINDOW(window)}};
 
@@ -78,6 +79,10 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
   app_context->w->set_html(html);
 
+  // Remove the webview widget from the window so that we can add it where it's supposed to go
+  auto *widget{GTK_WIDGET(app_context->w->widget().value())};
+  gtk_container_remove(GTK_CONTAINER(window), widget);
+
   // Set up UI layout
   auto *top_box{gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)};
   gtk_box_pack_start(GTK_BOX(top_box), GTK_WIDGET(location_entry), TRUE, TRUE,
@@ -86,8 +91,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
   auto *bottom_box{gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)};
   gtk_box_set_homogeneous(GTK_BOX(bottom_box), TRUE);
-  gtk_box_pack_start(GTK_BOX(bottom_box), GTK_WIDGET(app_context->w->widget()),
-                     TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(bottom_box), widget, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(bottom_box), counter_label, TRUE, TRUE, 0);
 
   auto *box{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)};
@@ -95,13 +99,14 @@ static void activate(GtkApplication *app, gpointer user_data) {
   gtk_box_pack_start(GTK_BOX(box), bottom_box, TRUE, TRUE, 0);
 
   gtk_container_add(GTK_CONTAINER(window), box);
+
   gtk_widget_show_all(window);
 }
 
 int main(int argc, char **argv) {
   app_context_t app_context;
   auto *app{
-      gtk_application_new("dev.webview.example", G_APPLICATION_FLAGS_NONE)};
+      gtk_application_new("dev.webview.example", G_APPLICATION_DEFAULT_FLAGS)};
   g_signal_connect(app, "activate", G_CALLBACK(activate), &app_context);
   auto status{g_application_run(G_APPLICATION(app), argc, argv)};
   g_object_unref(app);
