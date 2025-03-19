@@ -868,7 +868,6 @@ private:
 
   // Blocks while depleting the run loop of events.
   void deplete_run_loop_event_queue() {
-    auto temp_loop_running{get_temp_event_loop_running_helper()};
     bool done{};
     dispatch_impl([&] { done = true; });
     while (!done) {
