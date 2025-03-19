@@ -113,6 +113,7 @@ public:
         // because the launch event is only sent once. Instead, proceed to
         // create a window.
         if (get_and_set_is_first_instance()) {
+          auto temp_loop_running{get_temp_event_loop_running_helper()};
           objc::msg_send<void>(app, "run"_sel);
         } else {
           set_up_window();
