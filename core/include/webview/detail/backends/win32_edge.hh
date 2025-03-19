@@ -557,6 +557,7 @@ public:
       m_window = nullptr;
     }
     if (owns_window()) {
+      auto temp_loop_running{get_temp_event_loop_running_helper()};
       // Not strictly needed for windows to close immediately but aligns
       // behavior across backends.
       deplete_run_loop_event_queue();
@@ -685,6 +686,7 @@ protected:
     auto res =
         m_webview->AddScriptToExecuteOnDocumentCreated(wjs.c_str(), &handler);
     if (SUCCEEDED(res)) {
+      auto temp_loop_running{get_temp_event_loop_running_helper()};
       // Sadly we need to pump the even loop in order to get the script ID.
       while (!done) {
         deplete_run_loop_event_queue();

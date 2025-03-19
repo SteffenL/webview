@@ -169,6 +169,7 @@ public:
       g_object_unref(m_webview);
     }
     if (owns_window()) {
+      auto temp_loop_running{get_temp_event_loop_running_helper()};
       // Needed for the window to close immediately.
       deplete_run_loop_event_queue();
     }

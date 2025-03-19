@@ -367,11 +367,27 @@ protected:
 
   temp_event_loop_running_helper get_temp_event_loop_running_helper() {
     return {[this] { ++m_temp_event_loop_running_counter; },
-            [this] { --m_temp_event_loop_running_counter; }};
+            [this] {
+              // FIXME: This needs to be one atomic operation
+              if (m_temp_event_loop_running_counter > 1) {
+                --m_temp_event_loop_running_counter;
+                return;
+              }
+              --m_temp_event_loop_running_counter;
+              dispatch([this] { process_delayed_dispatch_queue(); });
+            }};
   }
 
   bool is_temp_event_loop_running() const noexcept {
     return m_temp_event_loop_running_counter > 0;
+  }
+
+  void process_delayed_dispatch_queue() {
+    while (!m_delayed_dispatch_queue.empty()) {
+      auto &item{m_delayed_dispatch_queue.front()};
+      m_delayed_dispatch_queue.pop();
+      item();
+    }
   }
 
 private:
@@ -394,6 +410,7 @@ private:
   user_script *m_bind_script{};
   std::list<user_script> m_user_scripts;
   bool m_has_set_visibility{};
+  std::queue<std::function<void()>> m_dispatch_queue;
   std::queue<std::function<void()>> m_delayed_dispatch_queue;
   std::atomic_uint m_temp_event_loop_running_counter{};
 };
