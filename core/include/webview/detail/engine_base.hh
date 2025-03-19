@@ -38,7 +38,6 @@
 #include <functional>
 #include <list>
 #include <map>
-#include <queue>
 #include <string>
 
 namespace webview {
