@@ -17,14 +17,12 @@ constexpr const auto html =
   <button id="compute">Compute</button>
   <span>Result: <span id="computeResult">(not started)</span></span>
 </div>
-<hr />
-<div><button id="peekaboo">Peek-a-boo</button></div>
 <script type="module">
   const getElements = ids => Object.assign({}, ...ids.map(
     id => ({ [id]: document.getElementById(id) })));
   const ui = getElements([
     "increment", "decrement", "counterResult", "compute",
-    "computeResult", "peekaboo"
+    "computeResult"
   ]);
   ui.increment.addEventListener("click", async () => {
     ui.counterResult.textContent = await window.count(1);
@@ -37,9 +35,6 @@ constexpr const auto html =
     ui.computeResult.textContent = "(pending)";
     ui.computeResult.textContent = await window.compute(6, 7);
     ui.compute.disabled = false;
-  });
-  ui.peekaboo.addEventListener("click", async () => {
-    await window.peekaboo();
   });
 </script>)html";
 
@@ -54,7 +49,7 @@ int main() {
 
     webview::webview w(true, nullptr);
     w.set_title("Bind Example");
-    //w.set_size(480, 320, WEBVIEW_HINT_NONE);
+    w.set_size(480, 320, WEBVIEW_HINT_NONE);
 
     // A binding that counts up or down and immediately returns the new value.
     w.bind("count", [&](const std::string &req) -> std::string {
