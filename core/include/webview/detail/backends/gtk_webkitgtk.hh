@@ -267,7 +267,7 @@ protected:
 
   noresult set_visible_impl(bool visible) override {
     if (visible) {
-      //gtk_widget_grab_focus(GTK_WIDGET(m_webview));
+      gtk_widget_grab_focus(GTK_WIDGET(m_webview));
     }
     gtk_compat::widget_set_visible(GTK_WIDGET(m_window), visible);
     return {};
