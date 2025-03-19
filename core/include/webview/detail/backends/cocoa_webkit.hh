@@ -369,8 +369,10 @@ private:
       objc_registerClassPair(cls);
     }
     auto instance = objc::msg_send<id>((id)cls, "new"_sel);
-    objc_setAssociatedObject(instance, "webview", (id)this,
-                             OBJC_ASSOCIATION_ASSIGN);
+    objc_setAssociatedObject(
+        instance, "webview",
+        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+        OBJC_ASSOCIATION_RETAIN);
     return instance;
   }
   static id create_webkit_ui_delegate() {
@@ -447,8 +449,12 @@ private:
     return objc::msg_send<id>("NSApplication"_cls, "sharedApplication"_sel);
   }
   static cocoa_wkwebview_engine *get_associated_webview(id object) {
-    auto w =
-        (cocoa_wkwebview_engine *)objc_getAssociatedObject(object, "webview");
+    id assoc_obj = objc_getAssociatedObject(object, "webview");
+    if (!objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
+      return nullptr;
+    }
+    cocoa_wkwebview_engine *w{};
+    objc::msg_send<void>(assoc_obj, "getValue:size:"_sel, &w, sizeof(w));
     assert(w);
     return w;
   }
@@ -522,9 +528,8 @@ private:
     set_up_web_view();
     set_up_widget();
 
-    objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
-
     if (m_owns_window) {
+      objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
       objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
     }
   }
