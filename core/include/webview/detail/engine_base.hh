@@ -137,7 +137,7 @@ window.__webview__.onUnbind(" +
   noresult dispatch(std::function<void()> f) {
     return dispatch_impl([this, f]() mutable {
       if (is_temp_event_loop_running()) {
-        dispatch(std::move(f));
+        m_delayed_dispatch_queue.push(std::move(f));
         return;
       }
       f();
@@ -394,7 +394,7 @@ private:
   user_script *m_bind_script{};
   std::list<user_script> m_user_scripts;
   bool m_has_set_visibility{};
-  std::queue<std::function<void()>> m_dispatch_queue;
+  std::queue<std::function<void()>> m_delayed_dispatch_queue;
   std::atomic_uint m_temp_event_loop_running_counter{};
 };
 
