@@ -46,6 +46,7 @@ namespace detail {
 
 class engine_base {
 public:
+  engine_base(bool owns_window) : m_owns_window{owns_window} {}
   virtual ~engine_base() = default;
 
   noresult navigate(const std::string &url) {
@@ -336,7 +337,7 @@ protected:
     }
   }
 
-  virtual bool owns_window() const = 0;
+  bool owns_window() const noexcept { return m_owns_window; }
 
   static constexpr int get_default_width() noexcept { return 640; }
   static constexpr int get_default_height() noexcept { return 480; }
@@ -390,6 +391,7 @@ private:
   user_script *m_bind_script{};
   std::list<user_script> m_user_scripts;
   unsigned int m_temp_event_loop_running_counter{};
+  bool m_owns_window{};
 };
 
 } // namespace detail

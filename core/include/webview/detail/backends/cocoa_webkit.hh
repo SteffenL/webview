@@ -88,7 +88,7 @@ public:
   cocoa_wkwebview_engine(bool debug, void *window)
       : m_debug{debug},
         m_window{static_cast<id>(window)},
-        m_owns_window{!window} {
+        engine_base{!window} {
     auto app = get_shared_application();
     // See comments related to application lifecycle in create_app_delegate().
     if (!owns_window()) {
@@ -703,8 +703,6 @@ private:
     }
   }
 
-  bool owns_window() const override { return m_owns_window; }
-
   bool m_debug{};
   id m_app_delegate{};
   id m_window_delegate{};
@@ -712,7 +710,6 @@ private:
   id m_widget{};
   id m_webview{};
   id m_manager{};
-  bool m_owns_window{};
   bool m_has_shown_window{};
 };
 

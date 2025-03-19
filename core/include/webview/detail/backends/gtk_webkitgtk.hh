@@ -100,7 +100,7 @@ private:
 class gtk_webkit_engine : public engine_base {
 public:
   gtk_webkit_engine(bool debug, void *window)
-      : m_window(static_cast<GtkWidget *>(window)), m_owns_window{!window} {
+      : engine_base{!window}, m_window(static_cast<GtkWidget *>(window)) {
     if (owns_window()) {
       if (!gtk_compat::init_check()) {
         throw exception{WEBVIEW_ERROR_UNSPECIFIED, "GTK init failed"};
@@ -331,13 +331,10 @@ private:
     }
   }
 
-  bool owns_window() const override { return m_owns_window; }
-
   GtkWidget *m_window{};
   GtkWidget *m_webview{};
   WebKitUserContentManager *m_user_content_manager{};
   bool m_stop_run_loop{};
-  bool m_owns_window{};
 };
 
 } // namespace detail
