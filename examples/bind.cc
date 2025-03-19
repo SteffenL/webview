@@ -78,19 +78,6 @@ int main() {
         },
         nullptr);
 
-    w.bind(
-        "peekaboo",
-        [&](const std::string &id, const std::string &req, void * /*arg*/) {
-          w.set_visible(false);
-          std::thread([&, id, req] {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            w.dispatch([&] { w.set_visible(true); });
-            w.resolve(id, 0, "");
-          }).detach();
-        },
-        nullptr);
-
-    //w.set_visible(true);
     w.set_html(html);
     w.run();
   } catch (const webview::exception &e) {

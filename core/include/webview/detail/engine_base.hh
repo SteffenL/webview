@@ -159,12 +159,6 @@ window.__webview__.onUnbind(" +
 
   noresult eval(const std::string &js) { return eval_impl(js); }
 
-  noresult set_visible(bool visible) {
-    auto result{set_visible_impl(visible)};
-    m_has_set_visibility = true;
-    return result;
-  }
-
 protected:
   virtual noresult navigate_impl(const std::string &url) = 0;
   virtual result<void *> window_impl() = 0;
@@ -328,11 +322,7 @@ protected:
 
   void on_created() {
     if (owns_window()) {
-      dispatch([this] {
-        if (!m_has_set_visibility) {
-          set_visible(true);
-        }
-      });
+      dispatch([this] { set_visible_impl(true); });
     }
   }
 
