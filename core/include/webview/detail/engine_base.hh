@@ -135,7 +135,13 @@ window.__webview__.onUnbind(" +
   noresult terminate() { return terminate_impl(); }
 
   noresult dispatch(std::function<void()> f) {
-    return dispatch_impl(std::move(f));
+    return dispatch_impl([this, f] {
+      if (is_temp_event_loop_running()) {
+        dispatch(f);
+        return;
+      }
+      f();
+    });
   }
 
   noresult set_title(const std::string &title) { return set_title_impl(title); }
@@ -320,7 +326,15 @@ protected:
     dispatch([=] { context.call(id, args); });
   }
 
-  void on_created() { m_created = true; }
+  void on_created() {
+    if (owns_window()) {
+      dispatch([this] {
+        if (!m_has_set_visibility) {
+          set_visible(true);
+        }
+      });
+    }
+  }
 
   void on_window_created() { inc_window_count(); }
 
@@ -359,26 +373,11 @@ protected:
                 return;
               }
               m_temp_event_loop_running_counter = 0;
-              ///dispatch([this] { process_delayed_dispatch_queue(); });
             }};
   }
 
   bool is_temp_event_loop_running() const noexcept {
     return m_temp_event_loop_running_counter > 0;
-  }
-
-  void process_delayed_dispatch_queue() {
-    /*bool have_internal_items{};
-    std::queue<dispatch_queue_item> saved_items;
-    while (!m_delayed_dispatch_queue.empty()) {
-      auto &item{m_delayed_dispatch_queue.front()};
-      m_delayed_dispatch_queue.pop();
-      item.call();
-    }*/
-  }
-
-  noresult dispatch_internal(std::function<void()> f, bool internal) {
-    m_delayed_dispatch_queue.emplace(f, internal);
   }
 
 private:
@@ -397,25 +396,10 @@ private:
     return 0;
   }
 
-  struct dispatch_queue_item {
-  public:
-    dispatch_queue_item(std::function<void()> fn, bool internal)
-        : m_fn{std::move(fn)}, m_internal{internal} {}
-
-    void call() { m_fn(); }
-    bool is_internal() const noexcept { return m_internal; }
-
-  private:
-    std::function<void()> m_fn;
-    bool m_internal{};
-  };
-
   std::map<std::string, binding_ctx_t> bindings;
   user_script *m_bind_script{};
   std::list<user_script> m_user_scripts;
   bool m_has_set_visibility{};
-  std::queue<std::function<void()>> m_dispatch_queue;
-  std::queue<dispatch_queue_item> m_delayed_dispatch_queue;
   unsigned int m_temp_event_loop_running_counter{};
   bool m_created{};
 };

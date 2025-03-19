@@ -54,7 +54,7 @@ int main() {
 
     webview::webview w(true, nullptr);
     w.set_title("Bind Example");
-    w.set_size(480, 320, WEBVIEW_HINT_NONE);
+    //w.set_size(480, 320, WEBVIEW_HINT_NONE);
 
     // A binding that counts up or down and immediately returns the new value.
     w.bind("count", [&](const std::string &req) -> std::string {
