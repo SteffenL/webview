@@ -870,7 +870,7 @@ private:
   void deplete_run_loop_event_queue() {
     auto temp_loop_running{get_temp_event_loop_running_helper()};
     bool done{};
-    dispatch([&] { done = true; });
+    dispatch_impl([&] { done = true; });
     while (!done) {
       MSG msg;
       if (GetMessageW(&msg, nullptr, 0, 0) > 0) {
