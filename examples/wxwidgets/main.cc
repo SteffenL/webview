@@ -89,10 +89,10 @@ public:
     Layout();
   }
 
-  MyFrame(const MyFrame&) = delete;
-  MyFrame(MyFrame&&) = delete;
-  MyFrame& operator=(const MyFrame&) = delete;
-  MyFrame& operator=(MyFrame&&) = delete;
+  MyFrame(const MyFrame &) = delete;
+  MyFrame(MyFrame &&) = delete;
+  MyFrame &operator=(const MyFrame &) = delete;
+  MyFrame &operator=(MyFrame &&) = delete;
 
   virtual ~MyFrame() {
     // Give wxWidgets a chance to dissociate itself with the webview widget
