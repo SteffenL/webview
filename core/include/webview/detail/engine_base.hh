@@ -389,9 +389,7 @@ private:
   std::map<std::string, binding_ctx_t> bindings;
   user_script *m_bind_script{};
   std::list<user_script> m_user_scripts;
-  bool m_has_set_visibility{};
   unsigned int m_temp_event_loop_running_counter{};
-  bool m_created{};
 };
 
 } // namespace detail
