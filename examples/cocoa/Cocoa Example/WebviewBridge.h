@@ -3,8 +3,8 @@
 //  Cocoa Example
 //
 
-#import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -14,7 +14,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSView *)widget;
 - (void)setHTML:(NSString *)html;
 - (void)navigate:(NSString *)url;
-- (void)bindWithName:(NSString *)name block:(NSString *(^)(NSString * req))block;
+- (void)bindWithName:(NSString *)name
+               block:(NSString * (^)(NSString *req))block;
 
 @end
 
