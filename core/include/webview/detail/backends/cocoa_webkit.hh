@@ -532,8 +532,9 @@ private:
     set_up_web_view();
     set_up_widget();
 
+    objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
+
     if (m_owns_window) {
-      objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
       objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
     }
   }
