@@ -11,6 +11,10 @@
  * was observed to be called twice for unknown reasons. This doesn't appear to
  * happen with wxWidgets 3.1.7. Closing the app normally or sending
  * WM_QUERYENDSESSION/WM_ENDSESSION shows no abnormality.
+ *
+ * SteffenL (2025-03-20):
+ * Maybe the above crash has been fixed in wxWidgets 3.2.7:
+ * https://github.com/wxWidgets/wxWidgets/pull/24903
  */
 
 #include "webview.h"
