@@ -6,8 +6,10 @@
  * directly instead.
  */
 
-#include "webview.h"
+#include "webview/webview.h"
+
 #include <gtk/gtk.h>
+
 #include <memory>
 #include <string>
 
