@@ -2,9 +2,18 @@ if((NOT UNIX OR APPLE) AND WEBVIEW_WEBKITGTK_API VERSION_GREATER "4.1")
     return()
 endif()
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK REQUIRED gtk+-3.0)
-pkg_check_modules(WEBKITGTK REQUIRED webkit2gtk-4.1)
+find_package(PkgConfig)
+
+if(NOT PkgConfig_FOUND)
+    return()
+endif()
+
+pkg_check_modules(GTK gtk+-3.0)
+pkg_check_modules(WEBKITGTK webkit2gtk-4.1)
+
+if(NOT GTK_FOUND OR NOT WEBKITGTK_FOUND)
+    return()
+endif()
 
 add_executable(webview_example_gtk3)
 target_sources(webview_example_gtk3 PRIVATE main.cc)
