@@ -53,8 +53,8 @@ static void activate(GtkApplication *app, gpointer user_data) {
                                  GTK_STYLE_PROVIDER(style_provider),
                                  GTK_STYLE_PROVIDER_PRIORITY_USER - 1);
   std::string css{"label { font-size: 72pt; }"};
-  gtk_css_provider_load_from_data(style_provider, css.c_str(), css.size(),
-                                  nullptr);
+  gtk_css_provider_load_from_data(style_provider, css.c_str(),
+                                  static_cast<gssize>(css.size()), nullptr);
 
   // Create go button
   auto *go_button{gtk_button_new_with_label("Go")};
