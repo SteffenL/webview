@@ -41,7 +41,7 @@ public:
     // Create go button control
     auto *goButton = new wxButton{this, wxID_ANY, "Go"};
     goButton->Bind(
-        wxEVT_BUTTON, [this, locationTextCtrl](wxCommandEvent &event) {
+        wxEVT_BUTTON, [this, locationTextCtrl](wxCommandEvent & /*event*/) {
           m_webview->navigate(locationTextCtrl->GetValue().ToStdString());
         });
 
@@ -59,7 +59,8 @@ public:
         new webview::webview{false, GetHandle()}};
 #ifdef wxHAS_NATIVE_WINDOW
     m_webviewWidget = new wxNativeWindow{
-        this, wxID_ANY, static_cast<wxNativeWindowHandle>(m_webview->widget())};
+        this, wxID_ANY,
+        static_cast<wxNativeWindowHandle>(m_webview->widget().value())};
 #else
 #error wxWidgets >= 3.1 is required for wxNativeWindow.
 #endif
