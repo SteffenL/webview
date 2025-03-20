@@ -46,7 +46,8 @@ public:
   }
 
 private:
-  static LRESULT wndproc_wrapper(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+  static LRESULT __stdcall wndproc_wrapper(HWND hwnd, UINT msg, WPARAM wp,
+                                           LPARAM lp) {
     MainWindow *self{};
     if (msg == WM_NCCREATE) {
       auto *lpcs{reinterpret_cast<LPCREATESTRUCT>(lp)};
