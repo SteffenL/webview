@@ -28,6 +28,10 @@ if(MSVC)
     target_compile_definitions(webview_example_bind_c PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
 
+add_executable(webview_example_multiwindow MACOSX_BUNDLE WIN32)
+target_sources(webview_example_multiwindow PRIVATE multiwindow.cc ${SHARED_SOURCES})
+target_link_libraries(webview_example_multiwindow PRIVATE webview::core)
+
 add_executable(webview_example_bind_cc MACOSX_BUNDLE WIN32)
 target_sources(webview_example_bind_cc PRIVATE bind.cc ${SHARED_SOURCES})
 target_link_libraries(webview_example_bind_cc PRIVATE webview::core Threads::Threads)
