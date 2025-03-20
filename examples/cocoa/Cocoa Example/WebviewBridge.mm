@@ -4,7 +4,7 @@
 //
 
 #import "WebviewBridge.h"
-#include "webview.h"
+#include "webview/webview.h"
 
 @implementation WebviewBridge
 
@@ -18,7 +18,7 @@ std::unique_ptr<webview::webview> _webview;
 }
 
 - (NSView *)widget {
-    return (__bridge NSView *)_webview->widget();
+    return (__bridge NSView *)_webview->widget().value();
 }
 
 - (void)setHTML:(NSString *)html {
