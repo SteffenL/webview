@@ -125,12 +125,12 @@ private:
       auto main_width{main_rect.right - main_rect.left};
       auto main_half_width{main_width / 2};
       auto main_height{main_rect.bottom - main_rect.top};
-      auto location_edit_width = main_width - button_width;
+      auto location_edit_width{main_width - button_width};
       MoveWindow(m_location_edit, main_rect.left, main_rect.top,
                  location_edit_width, top_neight, TRUE);
       MoveWindow(m_go_button, main_rect.left + location_edit_width,
                  main_rect.top, button_width, top_neight, TRUE);
-      MoveWindow(static_cast<HWND>(m_webview->widget()), main_rect.left,
+      MoveWindow(static_cast<HWND>(m_webview->widget().value()), main_rect.left,
                  main_rect.top + top_neight, main_width / 2,
                  main_height - top_neight, TRUE);
       MoveWindow(m_counter_static, main_rect.left + main_half_width,
@@ -153,7 +153,7 @@ private:
         // Update the counter static control when the go button is pressed
         auto length{GetWindowTextLengthW(m_location_edit)};
         std::wstring url(length + 1, 0);
-        GetWindowTextW(m_location_edit, url.data(), url.size());
+        GetWindowTextW(m_location_edit, &url[0], url.size());
         url.resize(length);
         // webview internals are used here for simplicity - you should use your
         // own solution.
@@ -177,8 +177,8 @@ private:
   HWND m_counter_static{};
 };
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                   LPSTR lpCmdLine, int nShowCmd) {
+int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
+                   LPSTR /*lpCmdLine*/, int /*nShowCmd*/) {
   CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
   // Create the main window
