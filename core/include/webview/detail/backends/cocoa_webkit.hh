@@ -100,8 +100,10 @@ public:
         set_up_window();
       } else {
         m_app_delegate = create_app_delegate();
-        objc_setAssociatedObject(m_app_delegate, "webview", (id)this,
-                                 OBJC_ASSOCIATION_ASSIGN);
+        objc_setAssociatedObject(
+            m_app_delegate, "webview",
+            objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+            OBJC_ASSOCIATION_RETAIN);
         objc::msg_send<void>(app, "setDelegate:"_sel, m_app_delegate);
 
         // Start the main run loop so that the app delegate gets the
@@ -450,7 +452,7 @@ private:
   }
   static cocoa_wkwebview_engine *get_associated_webview(id object) {
     id assoc_obj = objc_getAssociatedObject(object, "webview");
-    if (!objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
+    if (!assoc_obj || !objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
       return nullptr;
     }
     cocoa_wkwebview_engine *w{};
@@ -518,8 +520,10 @@ private:
           CGRectMake(0, 0, 0, 0), style, NSBackingStoreBuffered, NO);
 
       m_window_delegate = create_window_delegate();
-      objc_setAssociatedObject(m_window_delegate, "webview", (id)this,
-                               OBJC_ASSOCIATION_ASSIGN);
+      objc_setAssociatedObject(
+          m_window_delegate, "webview",
+          objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+          OBJC_ASSOCIATION_RETAIN);
       objc::msg_send<void>(m_window, "setDelegate:"_sel, m_window_delegate);
 
       on_window_created();
@@ -587,8 +591,10 @@ private:
                              NSViewHeightSizable | NSViewMaxYMargin;
     objc::msg_send<void>(m_webview, "setAutoresizingMask:"_sel,
                          autoresizing_mask);
-    objc_setAssociatedObject(ui_delegate, "webview", (id)this,
-                             OBJC_ASSOCIATION_ASSIGN);
+    objc_setAssociatedObject(
+        ui_delegate, "webview",
+        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+        OBJC_ASSOCIATION_RETAIN);
     objc::msg_send<void>(m_webview, "setUIDelegate:"_sel, ui_delegate);
 
     if (m_debug) {
