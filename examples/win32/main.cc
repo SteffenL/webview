@@ -153,7 +153,7 @@ private:
         // Update the counter static control when the go button is pressed
         auto length{GetWindowTextLengthW(m_location_edit)};
         std::wstring url(length + 1, 0);
-        GetWindowTextW(m_location_edit, &url[0], url.size());
+        GetWindowTextW(m_location_edit, &url[0], static_cast<int>(url.size()));
         url.resize(length);
         // webview internals are used here for simplicity - you should use your
         // own solution.
