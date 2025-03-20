@@ -34,3 +34,4 @@ target_link_libraries(webview_example_bind_cc PRIVATE webview::core Threads::Thr
 
 add_subdirectory(gtk3)
 add_subdirectory(win32)
+add_subdirectory(wxwidgets)
