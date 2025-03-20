@@ -452,7 +452,8 @@ private:
   }
   static cocoa_wkwebview_engine *get_associated_webview(id object) {
     id assoc_obj = objc_getAssociatedObject(object, "webview");
-    if (!assoc_obj || !objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
+    if (!assoc_obj ||
+        !objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
       return nullptr;
     }
     cocoa_wkwebview_engine *w{};
