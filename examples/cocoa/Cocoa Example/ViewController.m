@@ -29,7 +29,7 @@ static NSString *html =
 
   _locationTextField.stringValue = @"https://github.com/webview/webview";
   _bridge = [[WebviewBridge alloc] initWithDebug:NO
-                                          window:_webContainer.window];
+                                          parent:_webContainer];
   _counter = @0;
 
   NSView *widget = _bridge.widget;

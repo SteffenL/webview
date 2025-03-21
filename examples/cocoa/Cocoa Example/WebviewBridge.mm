@@ -10,10 +10,10 @@
 
 std::unique_ptr<webview::webview> _webview;
 
-- (instancetype)initWithDebug:(BOOL)debug window:(NSWindow *)window {
+- (instancetype)initWithDebug:(BOOL)debug parent:(NSResponder *)parent {
   if ((self = [super init])) {
     _webview = std::unique_ptr<webview::webview>(
-        new webview::webview{!!debug, (__bridge void *)window});
+        new webview::webview{!!debug, (__bridge void *)parent});
   }
   return self;
 }

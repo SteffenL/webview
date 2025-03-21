@@ -141,9 +141,7 @@ public:
         m_webview = nullptr;
       }
       if (m_widget) {
-        if (m_widget == objc::msg_send<id>(m_window, "contentView"_sel)) {
-          objc::msg_send<void>(m_window, "setContentView:"_sel, nullptr);
-        }
+        deembed_widget();
         objc::msg_send<void>(m_widget, "release"_sel);
         m_widget = nullptr;
       }
@@ -532,9 +530,9 @@ private:
 
     set_up_web_view();
     set_up_widget();
+    embed_widget();
 
     if (m_owns_window) {
-      objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
       objc::msg_send<void>(m_window, "makeKeyAndOrderFront:"_sel, nullptr);
     }
   }
@@ -656,6 +654,23 @@ private:
         type, CGPointMake(0, 0), 0, 0, 0, nullptr, 0, 0, 0);
     objc::msg_send<void>(app, "postEvent:atStart:"_sel, event, YES);
   }
+  void embed_widget() {
+    if (object_is_window(m_window)) {
+      objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
+    } else if (object_is_view(m_window)) {
+      objc::msg_send<void>(m_window, "addSubview:"_sel, m_widget);
+    }
+  }
+  void deembed_widget() {
+    if (object_is_window(m_window)) {
+      // User may have changed the content view
+      if (m_widget == objc::msg_send<id>(m_window, "contentView"_sel)) {
+        objc::msg_send<void>(m_window, "setContentView:"_sel, nullptr);
+      }
+    } else if (object_is_view(m_window)) {
+      objc::msg_send<void>(m_widget, "removeFromSuperview"_sel);
+    }
+  }
   static bool get_and_set_is_first_instance() noexcept {
     static std::atomic_bool first{true};
     bool temp = first;
@@ -684,6 +699,16 @@ private:
         objc::msg_send<void>(app, "sendEvent:"_sel, event);
       }
     }
+  }
+
+  static bool object_is_window(id object) {
+    return object &&
+           objc::msg_send<BOOL>(object, "isKindOfClass:"_sel, "NSWindow"_cls);
+  }
+
+  static bool object_is_view(id object) {
+    return object &&
+           objc::msg_send<BOOL>(object, "isKindOfClass:"_sel, "NSView"_cls);
   }
 
   bool m_debug{};
