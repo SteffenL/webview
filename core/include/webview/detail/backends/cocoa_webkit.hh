@@ -449,6 +449,7 @@ private:
     return objc::msg_send<id>("NSApplication"_cls, "sharedApplication"_sel);
   }
   static cocoa_wkwebview_engine *get_associated_webview(id object) {
+    objc::autoreleasepool arp;
     id assoc_obj = objc_getAssociatedObject(object, "webview");
     if (!assoc_obj ||
         !objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
