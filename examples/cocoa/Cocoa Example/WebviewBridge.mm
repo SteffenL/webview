@@ -11,7 +11,7 @@
 std::unique_ptr<webview::webview> _webview;
 
 - (instancetype)initWithDebug:(BOOL)debug window:(NSWindow *)window {
-  if ((self = [WebviewBridge alloc])) {
+  if ((self = [super init])) {
     _webview = std::unique_ptr<webview::webview>(
         new webview::webview{!!debug, (__bridge void *)window});
   }
