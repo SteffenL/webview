@@ -99,7 +99,6 @@ static void activate(GtkApplication *app, gpointer user_data) {
   gtk_box_pack_start(GTK_BOX(box), bottom_box, TRUE, TRUE, 0);
 
   gtk_container_add(GTK_CONTAINER(window), box);
-
   gtk_widget_show_all(window);
 }
 
