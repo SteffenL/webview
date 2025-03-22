@@ -67,10 +67,12 @@ static void activate(GtkApplication *app, gpointer user_data) {
                    }),
                    app_context);
 
+  // Create container for the webview widget
+  auto *web_container{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)};
+
   // Create webview instance
-  // Problem: A GtkWindow is required and the widget will be embedded into the window
   app_context->w = std::unique_ptr<webview::webview>{
-      new webview::webview{false, GTK_WINDOW(window)}};
+      new webview::webview{false, web_container}};
 
   app_context->w->bind(
       "increment", [=](const std::string & /*req*/) -> std::string {
@@ -81,10 +83,6 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
   app_context->w->set_html(html);
 
-  // Remove the webview widget from the window so that we can add it where it's supposed to go
-  auto *widget{GTK_WIDGET(app_context->w->widget().value())};
-  gtk_container_remove(GTK_CONTAINER(window), widget);
-
   // Set up UI layout
   auto *top_box{gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)};
   gtk_box_pack_start(GTK_BOX(top_box), GTK_WIDGET(location_entry), TRUE, TRUE,
@@ -93,7 +91,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
   auto *bottom_box{gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)};
   gtk_box_set_homogeneous(GTK_BOX(bottom_box), TRUE);
-  gtk_box_pack_start(GTK_BOX(bottom_box), widget, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(bottom_box), web_container, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(bottom_box), counter_label, TRUE, TRUE, 0);
 
   auto *box{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)};
