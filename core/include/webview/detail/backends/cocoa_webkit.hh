@@ -141,7 +141,6 @@ public:
         m_webview = nullptr;
       }
       if (m_widget) {
-        deembed_widget();
         objc::msg_send<void>(m_widget, "release"_sel);
         m_widget = nullptr;
       }
@@ -660,16 +659,6 @@ private:
       objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
     } else if (object_is_view(m_window)) {
       objc::msg_send<void>(m_window, "addSubview:"_sel, m_widget);
-    }
-  }
-  void deembed_widget() {
-    if (object_is_window(m_window)) {
-      // User may have changed the content view
-      if (m_widget == objc::msg_send<id>(m_window, "contentView"_sel)) {
-        objc::msg_send<void>(m_window, "setContentView:"_sel, nullptr);
-      }
-    } else if (object_is_view(m_window)) {
-      objc::msg_send<void>(m_widget, "removeFromSuperview"_sel);
     }
   }
   static bool get_and_set_is_first_instance() noexcept {
