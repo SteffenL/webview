@@ -35,27 +35,46 @@ extern "C" {
 #endif
 
 /**
- * Creates a new webview instance.
+ * Creates a new webview instance with application lifecycle management,
+ * top-level windows containing browser widgets, and browser operations.
  *
- * @param debug Enable developer tools if supported by the backend.
- * @param window Optional native window handle, i.e. @c GtkWindow pointer
- *        @c NSWindow pointer (Cocoa) or @c HWND (Win32). If non-null,
- *        the webview widget is embedded into the given window, and the
- *        caller is expected to assume responsibility for the window as
- *        well as application lifecycle. If the window handle is null,
- *        a new window is created and both the window and application
- *        lifecycle are managed by the webview instance.
- * @remark Win32: The function also accepts a pointer to @c HWND (Win32) in the
- *         window parameter for backward compatibility.
+ * For historical reasons, this function has limited support for passing in
+ * existing top-level windows as the @c window parameter, and some support
+ * for other types of containers.
+ *
+ * If @c window is @c NULL then:
+ * - A new window is created and both the window and application lifecycle are
+     managed by the webview instance.
+ *
+ * If @c window is not @c NULL then:
+ * - Caller is responsible for the window and application lifecycle.
+ * - Calling window-specific API such as @c webview_set_title() and
+ *   @c webview_set_size() invokes undefined behavior.
+ *
+ * ## Supported Types
+ *
+ * Backend       | Type             | Method of embedding
+ * ------------- | ---------------- | -------------------
+ * Cocoa         | @c NSWindow*     | `setContentView:`
+ * Cocoa         | @c NSView*       | `addSubview:`
+ * GTK           | @c GtkGrid*      | `gtk_grid_attach()` at position <tt>(0, 0)</tt>.
+ * GTK           | @c GtkBox*       | `gtk_box_pack_start()`
+ * GTK 4         | @c GtkWindow*    | `gtk_window_set_child()`
+ * GTK 3         | @c GtkContainer* | `gtk_container_add()`
+ * Win32         | @c HWND          | Used as a parent window handle.
+ * Win32         | @c HWND*         | For backward compatibility—don't use.
+ *
+ * @param debug If @c TRUE, enables developer tools when supported by the
+          backend.
+ * @param window Optional container in which to embed the webview widget
+          (see support table), or omit this by passing @c NULL.
  * @remark Win32/WebView2: @c CoInitializeEx should be called with
  *         @c COINIT_APARTMENTTHREADED before attempting to call this function
  *         with an existing window. Omitting this step may cause WebView2
  *         initialization to fail.
- * @return @c NULL on failure. Creation can fail for various reasons such
- *         as when required runtime dependencies are missing or when window
- *         creation fails.
- * @retval WEBVIEW_ERROR_MISSING_DEPENDENCY
- *         May be returned if WebView2 is unavailable on Windows.
+ * @return The new webview instance on success, or @c NULL on failure.
+ *         Creation can fail for various reasons such as when required runtime
+ *         dependencies are missing or when window creation fails.
  */
 WEBVIEW_API webview_t webview_create(int debug, void *window);
 
