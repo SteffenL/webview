@@ -58,8 +58,9 @@ extern "C" {
  * Cocoa         | @c NSWindow*     | `setContentView:`
  * Cocoa         | @c NSView*       | `addSubview:`
  * GTK           | @c GtkGrid*      | @c gtk_grid_attach() at position `(0, 0)`.
- * GTK           | @c GtkBox*       | @c gtk_box_pack_start()
+ * GTK 4         | @c GtkBox*       | @c gtk_box_append()
  * GTK 4         | @c GtkWindow*    | @c gtk_window_set_child()
+ * GTK 3         | @c GtkBox*       | @c gtk_box_pack_start()
  * GTK 3         | @c GtkContainer* | @c gtk_container_add()
  * Win32         | @c HWND          | Used as a parent window handle.
  * Win32         | @c HWND*         | For backward compatibility—don't use.
