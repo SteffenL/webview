@@ -57,17 +57,17 @@ extern "C" {
  * ------------- | ---------------- | -------------------
  * Cocoa         | @c NSWindow*     | `setContentView:`
  * Cocoa         | @c NSView*       | `addSubview:`
- * GTK           | @c GtkGrid*      | `gtk_grid_attach()` at position <tt>(0, 0)</tt>.
- * GTK           | @c GtkBox*       | `gtk_box_pack_start()`
- * GTK 4         | @c GtkWindow*    | `gtk_window_set_child()`
- * GTK 3         | @c GtkContainer* | `gtk_container_add()`
+ * GTK           | @c GtkGrid*      | @c gtk_grid_attach() at position `(0, 0)`.
+ * GTK           | @c GtkBox*       | @c gtk_box_pack_start()
+ * GTK 4         | @c GtkWindow*    | @c gtk_window_set_child()
+ * GTK 3         | @c GtkContainer* | @c gtk_container_add()
  * Win32         | @c HWND          | Used as a parent window handle.
  * Win32         | @c HWND*         | For backward compatibility—don't use.
  *
  * @param debug If @c TRUE, enables developer tools when supported by the
           backend.
  * @param window Optional container in which to embed the webview widget
-          (see support table), or omit this by passing @c NULL.
+          (see support table).
  * @remark Win32/WebView2: @c CoInitializeEx should be called with
  *         @c COINIT_APARTMENTTHREADED before attempting to call this function
  *         with an existing window. Omitting this step may cause WebView2
