@@ -69,8 +69,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
                    app_context);
 
   // Create container for the webview widget
-  auto *web_container{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)};
-  gtk_box_set_homogeneous(GTK_BOX(web_container), TRUE);
+  auto *web_container{gtk_grid_new()};
 
   // Create webview instance
   app_context->w = std::unique_ptr<webview::webview>{
@@ -86,35 +85,32 @@ static void activate(GtkApplication *app, gpointer user_data) {
   app_context->w->set_html(html);
 
   // Set up UI layout
-  auto *top_box{gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)};
-  gtk_widget_set_hexpand(top_box, TRUE);
+  auto *top_grid{gtk_grid_new()};
+  gtk_grid_attach(GTK_GRID(top_grid), location_entry, 0, 0, 1, 1);
+  gtk_grid_attach(GTK_GRID(top_grid), go_button, 1, 0, 1, 1);
 
-  gtk_box_append(GTK_BOX(top_box), location_entry);
+  auto *bottom_grid{gtk_grid_new()};
+  gtk_grid_attach(GTK_GRID(bottom_grid), web_container, 0, 1, 1, 1);
+  gtk_grid_attach(GTK_GRID(bottom_grid), counter_label, 1, 1, 1, 1);
+  gtk_grid_set_column_homogeneous(GTK_GRID(bottom_grid), TRUE);
+
+  auto *main_grid{gtk_grid_new()};
+  gtk_grid_attach(GTK_GRID(main_grid), top_grid, 0, 0, 1, 1);
+  gtk_grid_attach(GTK_GRID(main_grid), bottom_grid, 0, 1, 1, 1);
+
+  gtk_widget_set_hexpand(top_grid, TRUE);
   gtk_widget_set_hexpand(location_entry, TRUE);
 
-  gtk_box_append(GTK_BOX(top_box), go_button);
-
-  auto *bottom_box{gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)};
-  gtk_widget_set_vexpand(bottom_box, TRUE);
-  gtk_widget_set_hexpand(bottom_box, TRUE);
-  gtk_box_set_homogeneous(GTK_BOX(bottom_box), TRUE);
-
-  gtk_box_append(GTK_BOX(bottom_box), web_container);
+  gtk_widget_set_hexpand(bottom_grid, TRUE);
+  gtk_widget_set_vexpand(bottom_grid, TRUE);
   gtk_widget_set_vexpand(web_container, TRUE);
   gtk_widget_set_hexpand(web_container, TRUE);
-
-  gtk_box_append(GTK_BOX(bottom_box), counter_label);
+  gtk_widget_set_vexpand(GTK_WIDGET(app_context->w->widget().value()), TRUE);
+  gtk_widget_set_hexpand(GTK_WIDGET(app_context->w->widget().value()), TRUE);
   gtk_widget_set_vexpand(counter_label, TRUE);
   gtk_widget_set_hexpand(counter_label, TRUE);
 
-  auto *box{gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)};
-  gtk_widget_set_vexpand(box, TRUE);
-  gtk_widget_set_hexpand(box, TRUE);
-  gtk_box_append(GTK_BOX(box), top_box);
-  gtk_box_append(GTK_BOX(box), bottom_box);
-
-  gtk_window_set_child(GTK_WINDOW(window), box);
-
+  gtk_window_set_child(GTK_WINDOW(window), main_grid);
   gtk_window_present(GTK_WINDOW(window));
 }
 
