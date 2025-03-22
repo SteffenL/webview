@@ -55,7 +55,13 @@ static void activate(GtkApplication *app, gpointer user_data) {
       display, GTK_STYLE_PROVIDER(style_provider),
       GTK_STYLE_PROVIDER_PRIORITY_USER - 1);
   std::string css{".counter { font-size: 72pt; }"};
+
+#if GTK_MAJOR_VERSION > 4 || (GTK_MAJOR_VERSION == 4 && GTK_MINOR_VERSION >= 12)
   gtk_css_provider_load_from_string(style_provider, css.c_str());
+#else
+  gtk_css_provider_load_from_data(style_provider, css.c_str(),
+                                  static_cast<gssize>(css.size()));
+#endif
 
   // Create go button
   auto *go_button{gtk_button_new_with_label("Go")};
