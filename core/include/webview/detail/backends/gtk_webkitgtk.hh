@@ -165,13 +165,6 @@ public:
         gtk_window_close(GTK_WINDOW(m_window));
         on_window_destroyed(true);
       } else {
-        // Widget may no longer be a direct child of the window.
-        // Window may also already be destroyed so widget parent may be null.
-        auto *widget_parent{gtk_widget_get_parent(m_webview)};
-        if (widget_parent && widget_parent == m_window) {
-          gtk_compat::window_remove_child(GTK_WINDOW(m_window),
-                                          GTK_WIDGET(m_webview));
-        }
         g_object_unref(m_window);
       }
     }
