@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface WebviewBridge : NSObject
 
-- (instancetype)initWithDebug:(BOOL)debug parent:(NSResponder *)parent;
+- (instancetype)initWithDebug:(BOOL)debug window:(NSResponder *)window;
 - (NSView *)widget;
 - (void)setHTML:(NSString *)html;
 - (void)navigate:(NSString *)url;

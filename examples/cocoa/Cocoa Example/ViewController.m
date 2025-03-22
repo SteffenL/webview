@@ -28,8 +28,7 @@ static NSString *html =
   // Do any additional setup after loading the view.
 
   _locationTextField.stringValue = @"https://github.com/webview/webview";
-  _bridge = [[WebviewBridge alloc] initWithDebug:NO
-                                          parent:_webContainer];
+  _bridge = [[WebviewBridge alloc] initWithDebug:NO window:_webContainer];
   _counter = @0;
 
   NSView *widget = _bridge.widget;
