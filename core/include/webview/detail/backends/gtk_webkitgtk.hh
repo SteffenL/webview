@@ -134,7 +134,7 @@ public:
   return window.webkit.messageHandlers.__webview__.postMessage(message);\n\
 }");
 
-    gtk_compat::window_set_child(GTK_WINDOW(m_window), GTK_WIDGET(m_webview));
+    gtk_compat::container_add(m_window, GTK_WIDGET(m_webview));
     gtk_compat::widget_set_visible(GTK_WIDGET(m_webview), true);
 
     WebKitSettings *settings =

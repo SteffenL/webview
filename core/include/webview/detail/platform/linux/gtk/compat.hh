@@ -90,6 +90,28 @@ public:
 #endif
   }
 
+  static void container_add(GtkWidget *container, GtkWidget *widget) {
+    if (GTK_IS_BOX(container)) {
+      gtk_box_pack_start(GTK_BOX(container), widget, TRUE, TRUE, 0);
+      return;
+    }
+    if (GTK_IS_GRID(container)) {
+      gtk_grid_attach(GTK_GRID(container), widget, 0, 0, 1, 1);
+      return;
+    }
+#if GTK_MAJOR_VERSION >= 4
+    if (GTK_IS_WINDOW(container)) {
+      gtk_window_set_child(GTK_WINDOW(window), widget);
+      return;
+    }
+#else
+    if (GTK_IS_CONTAINER(container)) {
+      gtk_container_add(GTK_CONTAINER(container), widget);
+      return;
+    }
+#endif
+  }
+
   static void widget_set_visible(GtkWidget *widget, bool visible) {
 #if GTK_MAJOR_VERSION >= 4
     gtk_widget_set_visible(widget, visible ? TRUE : FALSE);
