@@ -101,7 +101,7 @@ public:
     }
 #if GTK_MAJOR_VERSION >= 4
     if (GTK_IS_WINDOW(container)) {
-      gtk_window_set_child(GTK_WINDOW(window), widget);
+      gtk_window_set_child(GTK_WINDOW(container), widget);
       return;
     }
 #else
