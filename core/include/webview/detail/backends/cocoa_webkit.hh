@@ -518,7 +518,7 @@ private:
   return window.webkit.messageHandlers.__webview__.postMessage(message);\n\
 }");
     set_up_widget();
-    NSWindow_set_contentView(m_window, m_widget);
+    embed_widget();
     if (owns_window()) {
       NSWindow_makeKeyAndOrderFront(m_window);
     }
@@ -544,10 +544,9 @@ private:
   }
   void embed_widget() {
     if (object_is_window(m_window)) {
-      objc::msg_send<void>(m_window, objc::selector("setContentView:"),
-                           m_widget);
+      NSWindow_set_contentView(m_window, m_widget);
     } else if (object_is_view(m_window)) {
-      objc::msg_send<void>(m_window, objc::selector("addSubview:"), m_widget);
+      NSView_addSubview(m_window, m_widget);
     }
   }
   static bool get_and_set_is_first_instance() noexcept {
@@ -575,8 +574,11 @@ private:
     }
 
     m_app_delegate = create_app_delegate();
-    objc_setAssociatedObject(m_app_delegate, "webview", (id)this,
-                             OBJC_ASSOCIATION_ASSIGN);
+    objc_setAssociatedObject(
+        m_app_delegate, "webview",
+        objc::msg_send<id>(objc::get_class("NSValue"),
+                           objc::selector("valueWithPointer:"), this),
+        OBJC_ASSOCIATION_RETAIN);
     NSApplication_set_delegate(m_app, m_app_delegate);
 
     // Start the main run loop so that the app delegate gets the
