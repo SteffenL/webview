@@ -72,24 +72,6 @@ public:
 #endif
   }
 
-  static void window_set_child(GtkWindow *window, GtkWidget *widget) {
-#if GTK_MAJOR_VERSION >= 4
-    gtk_window_set_child(window, widget);
-#else
-    gtk_container_add(GTK_CONTAINER(window), widget);
-#endif
-  }
-
-  static void window_remove_child(GtkWindow *window, GtkWidget *widget) {
-#if GTK_MAJOR_VERSION >= 4
-    if (gtk_window_get_child(window) == widget) {
-      gtk_window_set_child(window, nullptr);
-    }
-#else
-    gtk_container_remove(GTK_CONTAINER(window), widget);
-#endif
-  }
-
   static void container_add(GtkWidget *container, GtkWidget *widget) {
     if (GTK_IS_GRID(container)) {
       gtk_grid_attach(GTK_GRID(container), widget, 0, 0, 1, 1);
