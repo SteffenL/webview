@@ -23,60 +23,32 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_PLATFORM_DARWIN_OBJC_HH
-#define WEBVIEW_PLATFORM_DARWIN_OBJC_HH
+#ifndef WEBVIEW_PLATFORM_DARWIN_OBJC_AUTORELEASEPOOL_HH
+#define WEBVIEW_PLATFORM_DARWIN_OBJC_AUTORELEASEPOOL_HH
 
 #if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
-#include "../../../macros.h"
+#include "../../../../macros.h"
 
 #if defined(WEBVIEW_PLATFORM_DARWIN)
 
-#include <cstddef>
+#include "invoke.hh"
 
-#include <objc/NSObjCRuntime.h>
 #include <objc/objc-runtime.h>
 
 namespace webview {
 namespace detail {
 namespace objc {
 
-// A convenient template function for unconditionally casting the specified
-// C-like function into a function that can be called with the given return
-// type and arguments. Caller takes full responsibility for ensuring that
-// the function call is valid. It is assumed that the function will not
-// throw exceptions.
-template <typename Result, typename Callable, typename... Args>
-Result invoke(Callable callable, Args... args) noexcept {
-  return reinterpret_cast<Result (*)(Args...)>(callable)(args...);
-}
-
-// Calls objc_msgSend.
-template <typename Result, typename... Args>
-Result msg_send(Args... args) noexcept {
-  return invoke<Result>(objc_msgSend, args...);
-}
-
-// Calls objc_msgSend_stret or objc_msgSend depending on architecture.
-template <typename Result, typename... Args>
-Result msg_send_stret(Args... args) noexcept {
-#if defined(__arm64__)
-  return invoke<Result>(objc_msgSend, args...);
-#else
-  return invoke<Result>(objc_msgSend_stret, args...);
-#endif
-}
-
 // Wrapper around NSAutoreleasePool that drains the pool on destruction.
 class autoreleasepool {
 public:
   autoreleasepool()
-      : m_pool(msg_send<id>(objc_getClass("NSAutoreleasePool"),
-                            sel_registerName("new"))) {}
+      : m_pool(msg_send<id>(get_class("NSAutoreleasePool"), selector("new"))) {}
 
   ~autoreleasepool() {
     if (m_pool) {
-      msg_send<void>(m_pool, sel_registerName("drain"));
+      msg_send<void>(m_pool, selector("drain"));
     }
   }
 
@@ -89,31 +61,10 @@ private:
   id m_pool{};
 };
 
-inline id autoreleased(id object) {
-  msg_send<void>(object, sel_registerName("autorelease"));
-  return object;
-}
-
-namespace literals {
-
-// Convenient conversion of string literals.
-inline id operator"" _cls(const char *s, std::size_t) {
-  return (id)objc_getClass(s);
-}
-
-inline SEL operator"" _sel(const char *s, std::size_t) {
-  return sel_registerName(s);
-}
-
-inline id operator"" _str(const char *s, std::size_t) {
-  return msg_send<id>("NSString"_cls, "stringWithUTF8String:"_sel, s);
-}
-
-} // namespace literals
 } // namespace objc
 } // namespace detail
 } // namespace webview
 
 #endif // defined(WEBVIEW_PLATFORM_DARWIN)
 #endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
-#endif // WEBVIEW_PLATFORM_DARWIN_OBJC_HH
+#endif // WEBVIEW_PLATFORM_DARWIN_OBJC_AUTORELEASEPOOL_HH

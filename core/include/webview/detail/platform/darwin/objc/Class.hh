@@ -23,47 +23,33 @@
  * SOFTWARE.
  */
 
-#ifndef WEBVIEW_PLATFORM_DARWIN_COCOA_HH
-#define WEBVIEW_PLATFORM_DARWIN_COCOA_HH
+#ifndef WEBVIEW_PLATFORM_DARWIN_OBJC_CLASS_HH
+#define WEBVIEW_PLATFORM_DARWIN_OBJC_CLASS_HH
 
 #if defined(__cplusplus) && !defined(WEBVIEW_HEADER)
 
-#include "../../../macros.h"
+#include "../../../../macros.h"
 
-#if defined(WEBVIEW_PLATFORM_DARWIN) && defined(WEBVIEW_COCOA)
+#if defined(WEBVIEW_PLATFORM_DARWIN)
 
-#include <objc/NSObjCRuntime.h>
+#include "invoke.hh"
+
+#include <objc/objc-runtime.h>
 
 namespace webview {
 namespace detail {
+namespace objc {
 
-enum NSBackingStoreType : NSUInteger { NSBackingStoreBuffered = 2 };
+inline id Class_new(Class class_) {
+  return msg_send<id>(class_, selector("new"));
+}
 
-enum NSWindowStyleMask : NSUInteger {
-  NSWindowStyleMaskTitled = 1,
-  NSWindowStyleMaskClosable = 2,
-  NSWindowStyleMaskMiniaturizable = 4,
-  NSWindowStyleMaskResizable = 8
-};
+inline Class get_class(const char *name) { return objc_getClass(name); }
 
-enum NSApplicationActivationPolicy : NSInteger {
-  NSApplicationActivationPolicyRegular = 0
-};
-
-enum NSModalResponse : NSInteger { NSModalResponseOK = 1 };
-
-enum NSAutoresizingMaskOptions : NSUInteger {
-  NSViewMinXMargin = 1,
-  NSViewWidthSizable = 2,
-  NSViewMaxXMargin = 4,
-  NSViewMinYMargin = 8,
-  NSViewHeightSizable = 16,
-  NSViewMaxYMargin = 32
-};
-
+} // namespace objc
 } // namespace detail
 } // namespace webview
 
 #endif // defined(WEBVIEW_PLATFORM_DARWIN) && defined(WEBVIEW_COCOA)
 #endif // defined(__cplusplus) && !defined(WEBVIEW_HEADER)
-#endif // WEBVIEW_PLATFORM_DARWIN_COCOA_HH
+#endif // WEBVIEW_PLATFORM_DARWIN_OBJC_CLASS_HH
