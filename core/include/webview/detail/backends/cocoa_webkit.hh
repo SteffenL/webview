@@ -384,15 +384,17 @@ private:
   }
   static cocoa_wkwebview_engine *get_associated_webview(id object) {
     objc::autoreleasepool arp;
-    id assoc_obj = objc_getAssociatedObject(object, "webview");
-    if (!assoc_obj ||
-        !NSObject_isKindOfClass(assoc_obj, objc::get_class("NSValue"))) {
-      return nullptr;
+    if (id assoc_obj{objc_getAssociatedObject(object, "webview")}) {
+      cocoa_wkwebview_engine *w{};
+      NSValue_getValue(assoc_obj, &w, sizeof(w));
+      return w;
     }
-    cocoa_wkwebview_engine *w{};
-    NSValue_getValue(assoc_obj, &w, sizeof(w));
-    assert(w);
-    return w;
+    return nullptr;
+  }
+  static void set_associated_webview(id object, cocoa_wkwebview_engine *w) {
+    objc::autoreleasepool arp;
+    objc_setAssociatedObject(object, "webview", NSValue_valueWithPointer(w),
+                             OBJC_ASSOCIATION_RETAIN);
   }
   static void set_associated_webview(id object, cocoa_wkwebview_engine *w) {
     objc::autoreleasepool arp;
