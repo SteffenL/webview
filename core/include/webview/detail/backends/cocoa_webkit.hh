@@ -45,6 +45,7 @@
 #include "../../types.hh"
 #include "../engine_base.hh"
 #include "../platform/darwin/cocoa/cocoa.hh"
+#include "../platform/darwin/cocoa/compat.hh"
 #include "../platform/darwin/objc/objc.hh"
 #include "../platform/darwin/webkit/webkit.hh"
 #include "../user_script.hh"
@@ -510,7 +511,7 @@ private:
   return window.webkit.messageHandlers.__webview__.postMessage(message);\n\
 }");
     set_up_widget();
-    embed_widget();
+    compat::container_add(m_window, m_widget);
     if (owns_window()) {
       NSWindow_makeKeyAndOrderFront(m_window);
     }
@@ -533,13 +534,6 @@ private:
         NSEventTypeApplicationDefined, NSPointMake(0, 0),
         NSEventModifierFlags{}, 0, 0, nullptr, 0, 0, 0)};
     NSApplication_postEvent(m_app, event, true);
-  }
-  void embed_widget() {
-    if (object_is_window(m_window)) {
-      NSWindow_set_contentView(m_window, m_widget);
-    } else if (object_is_view(m_window)) {
-      NSView_addSubview(m_window, m_widget);
-    }
   }
   static bool get_and_set_is_first_instance() noexcept {
     static std::atomic_bool first{true};
@@ -606,15 +600,6 @@ private:
         NSApplication_sendEvent(m_app, event);
       }
     }
-  }
-
-  static bool object_is_window(id object) {
-    return object &&
-           NSObject_isKindOfClass(object, objc::get_class("NSWindow"));
-  }
-
-  static bool object_is_view(id object) {
-    return object && NSObject_isKindOfClass(object, objc::get_class("NSView"));
   }
 
   id m_app{};
