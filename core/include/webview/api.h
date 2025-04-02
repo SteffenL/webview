@@ -36,7 +36,7 @@ extern "C" {
 
 /**
  * Creates a new webview instance with application lifecycle management,
- * top-level windows containing browser widgets, and browser operations.
+ * a top-level window containing a browser widget, and browser operations.
  *
  * For historical reasons, this function has limited support for passing in
  * existing top-level windows as the @c window parameter, and some support
