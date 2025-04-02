@@ -317,7 +317,8 @@ private:
     auto instance{objc::Class_new(cls)};
     objc_setAssociatedObject(
         instance, "webview",
-        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+        objc::msg_send<id>(objc::get_class("NSValue"),
+                           objc::selector("valueWithPointer:"), this),
         OBJC_ASSOCIATION_RETAIN);
     return instance;
   }
@@ -389,11 +390,13 @@ private:
     objc::autoreleasepool arp;
     id assoc_obj = objc_getAssociatedObject(object, "webview");
     if (!assoc_obj ||
-        !objc::msg_send<BOOL>(assoc_obj, "isKindOfClass:"_sel, "NSValue"_cls)) {
+        !objc::msg_send<BOOL>(assoc_obj, objc::selector("isKindOfClass:"),
+                              objc::get_class("NSValue"))) {
       return nullptr;
     }
     cocoa_wkwebview_engine *w{};
-    objc::msg_send<void>(assoc_obj, "getValue:size:"_sel, &w, sizeof(w));
+    objc::msg_send<void>(assoc_obj, objc::selector("getValue:size:"), &w,
+                         sizeof(w));
     assert(w);
     return w;
   }
@@ -490,7 +493,8 @@ private:
     NSView_set_autoresizingMask(m_webview, autoresizing_mask);
     objc_setAssociatedObject(
         ui_delegate, "webview",
-        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+        objc::msg_send<id>(objc::get_class("NSValue"),
+                           objc::selector("valueWithPointer:"), this),
         OBJC_ASSOCIATION_RETAIN);
     WKWebView_set_UIDelegate(m_webview, ui_delegate);
 
@@ -540,9 +544,10 @@ private:
   }
   void embed_widget() {
     if (object_is_window(m_window)) {
-      objc::msg_send<void>(m_window, "setContentView:"_sel, m_widget);
+      objc::msg_send<void>(m_window, objc::selector("setContentView:"),
+                           m_widget);
     } else if (object_is_view(m_window)) {
-      objc::msg_send<void>(m_window, "addSubview:"_sel, m_widget);
+      objc::msg_send<void>(m_window, objc::selector("addSubview:"), m_widget);
     }
   }
   static bool get_and_set_is_first_instance() noexcept {
@@ -590,7 +595,8 @@ private:
     m_window_delegate = create_window_delegate();
     objc_setAssociatedObject(
         m_window_delegate, "webview",
-        objc::msg_send<id>("NSValue"_cls, "valueWithPointer:"_sel, this),
+        objc::msg_send<id>(objc::get_class("NSValue"),
+                           objc::selector("valueWithPointer:"), this),
         OBJC_ASSOCIATION_RETAIN);
     NSWindow_set_delegate(m_window, m_window_delegate);
     on_window_created();
@@ -619,12 +625,14 @@ private:
 
   static bool object_is_window(id object) {
     return object &&
-           objc::msg_send<BOOL>(object, "isKindOfClass:"_sel, "NSWindow"_cls);
+           objc::msg_send<BOOL>(object, objc::selector("isKindOfClass:"),
+                                objc::get_class("NSWindow"));
   }
 
   static bool object_is_view(id object) {
     return object &&
-           objc::msg_send<BOOL>(object, "isKindOfClass:"_sel, "NSView"_cls);
+           objc::msg_send<BOOL>(object, objc::selector("isKindOfClass:"),
+                                objc::get_class("NSView"));
   }
 
   id m_app{};
