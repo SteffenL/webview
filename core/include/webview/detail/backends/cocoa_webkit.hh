@@ -396,11 +396,6 @@ private:
     objc_setAssociatedObject(object, "webview", NSValue_valueWithPointer(w),
                              OBJC_ASSOCIATION_RETAIN);
   }
-  static void set_associated_webview(id object, cocoa_wkwebview_engine *w) {
-    objc::autoreleasepool arp;
-    objc_setAssociatedObject(object, "webview", NSValue_valueWithPointer(w),
-                             OBJC_ASSOCIATION_RETAIN);
-  }
   static bool is_app_bundled() noexcept {
     auto bundle = NSBundle_get_mainBundle();
     if (!bundle) {
